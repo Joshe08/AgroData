@@ -1,0 +1,157 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/client"
+  moduleFormat = "cjs"
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  PROPIETARIO
+  ADMIN_PRODUCCION
+  TRABAJADOR
+  AGRONOMO
+  CONTADOR
+}
+
+model Organization {
+  id           String       @id @default(uuid())
+  name         String
+  nit          String?
+  subscription String       @default("FREE") // FREE, PREMIUM, ENTERPRISE
+  users        User[]
+  fincas       Finca[]
+  inventarios  Inventario[]
+  finanzas     Finanza[]
+  empleados    Empleado[]
+  maquinarias  Maquinaria[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model User {
+  id             String       @id @default(uuid())
+  email          String       @unique
+  passwordHash   String?      // Optional for Google OAuth sign-in
+  name           String
+  role           UserRole     @default(TRABAJADOR)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Finca {
+  id             String       @id @default(uuid())
+  name           String
+  location       String
+  area           Float        // In hectares
+  latitude       Float?
+  longitude      Float?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  lotes          Lote[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Lote {
+  id           String       @id @default(uuid())
+  name         String
+  area         Float        // In hectares
+  soilType     String?
+  fincaId      String
+  finca        Finca        @relation(fields: [fincaId], references: [id])
+  producciones Produccion[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Produccion {
+  id            String             @id @default(uuid())
+  name          String
+  type          String             // e.g. "AGRICOLA_CAFE", "AGRICOLA_MAIZ", "PECUARIA_GANADO", "ACUICOLA_TILAPIA", "APICOLA_MIEL"
+  status        String             @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
+  startDate     DateTime
+  endDate       DateTime?
+  expectedYield Float?
+  actualYield   Float?
+  unit          String?            // e.g. "kg", "liters", "units"
+  loteId        String
+  lote          Lote               @relation(fields: [loteId], references: [id])
+  diarios       DiarioProduccion[]
+  metadata      String?            // JSON string for custom attributes (variety, breed, pond size, etc.)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model DiarioProduccion {
+  id             String     @id @default(uuid())
+  date           DateTime   @default(now())
+  activity       String
+  observations   String?
+  photoUrl       String?
+  diseases       String?
+  fertilizerUsed String?
+  waterIrrigation Float?     // in liters
+  yieldObtained  Float?
+  produccionId   String
+  produccion     Produccion @relation(fields: [produccionId], references: [id])
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Inventario {
+  id              String       @id @default(uuid())
+  name            String
+  category        String       // SEMILLA, FERTILIZANTE, HERRAMIENTA, INSUMO, etc.
+  quantity        Float
+  unit            String       // e.g. "kg", "bags", "liters", "units"
+  minAlertQuantity Float        @default(10.0)
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Finanza {
+  id             String       @id @default(uuid())
+  type           String       // INGRESO, GASTO
+  category       String       // e.g. SEMILLA, FERTILIZANTE, MANO_DE_OBRA, TRANSPORTE, VENTA, etc.
+  amount         Float
+  description    String?
+  date           DateTime     @default(now())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Empleado {
+  id             String       @id @default(uuid())
+  name           String
+  role           String
+  status         String       @default("ACTIVE") // ACTIVE, INACTIVE
+  dailyRate      Float?
+  phone          String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Maquinaria {
+  id              String       @id @default(uuid())
+  name            String
+  status          String       @default("OPERATIVE") // OPERATIVE, MAINTENANCE, BROKEN
+  lastMaintenance DateTime?
+  maintenanceCost Float        @default(0.0)
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
