@@ -28,7 +28,7 @@ function PersonalModal({ persona, fincas, onClose, onSave }: { persona?: Persona
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true);
     try {
-      const p = { ...form, fincaId: parseInt(form.fincaId), salario: form.salario ? parseFloat(form.salario) : undefined };
+      const p = { ...form, fincaId: form.fincaId, salario: form.salario ? parseFloat(form.salario) : undefined };
       if (persona) await personalApi.update(persona.id, p); else await personalApi.create(p);
       onSave(); onClose();
     } catch { alert('Error al guardar'); } finally { setLoading(false); }

@@ -47,7 +47,7 @@ function TransaccionModal({ fincas, onClose, onSave }: { fincas: Finca[]; onClos
       await finanzasApi.create({
         ...form,
         monto: parseFloat(form.monto),
-        fincaId: parseInt(form.fincaId),
+        fincaId: form.fincaId,
       });
       onSave();
       onClose();

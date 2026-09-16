@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface Produccion {
-  id: number;
+  id: number | string;
   tipo: string;
   variedad?: string;
   estado: string;
@@ -15,12 +15,12 @@ interface Produccion {
   fechaEstimadaCosecha?: string;
   cantidadSembrada?: number;
   unidadMedida?: string;
-  fincaId: number;
+  fincaId: number | string;
   finca?: { nombre: string };
 }
 
 interface Finca {
-  id: number;
+  id: number | string;
   nombre: string;
 }
 
@@ -63,7 +63,7 @@ function ProduccionModal({
     try {
       const payload = {
         ...form,
-        fincaId: parseInt(form.fincaId),
+        fincaId: form.fincaId,
         cantidadSembrada: form.cantidadSembrada ? parseFloat(form.cantidadSembrada) : undefined,
         fechaEstimadaCosecha: form.fechaEstimadaCosecha || undefined,
       };
@@ -195,7 +195,7 @@ export default function ProduccionesPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number | string) => {
     if (!confirm('¿Eliminar esta producción?')) return;
     try {
       await produccionesApi.delete(id);

@@ -232,56 +232,56 @@ export const fincasApi = {
   getOne: (id: number | string) => withData(api.get(`/fincas/${id}`), mapFinca),
   create: (data: unknown) => withData(api.post('/fincas', fincaPayload(data as AnyRecord)), mapFinca),
   update: (id: number | string, data: unknown) => withData(api.put(`/fincas/${id}`, fincaPayload(data as AnyRecord)), (res) => res),
-  delete: (id: number) => api.delete(`/fincas/${id}`),
+  delete: (id: number | string) => api.delete(`/fincas/${id}`),
 };
 
 // Producciones
 export const produccionesApi = {
-  getAll: (fincaId?: number) =>
+  getAll: (fincaId?: number | string) =>
     withData(api.get('/producciones', { params: fincaId ? { fincaId } : {} }), (data) => mapArray(data, mapProduccion)),
   getOne: (id: number | string) => withData(api.get(`/producciones/${id}`), mapProduccion),
   create: async (data: unknown) => withData(api.post('/producciones', await produccionPayload(data as AnyRecord)), mapProduccion),
   update: async (id: number | string, data: unknown) => withData(api.put(`/producciones/${id}`, await produccionPayload(data as AnyRecord)), mapProduccion),
-  delete: (id: number) => api.delete(`/producciones/${id}`),
+  delete: (id: number | string) => api.delete(`/producciones/${id}`),
 };
 
 // Inventario
 export const inventarioApi = {
-  getAll: (fincaId?: number) =>
+  getAll: (fincaId?: number | string) =>
     withData(api.get('/inventario', { params: fincaId ? { fincaId } : {} }), (data) => mapArray(data, mapInventario)),
   create: (data: unknown) => withData(api.post('/inventario', inventarioPayload(data as AnyRecord)), mapInventario),
   update: (id: number | string, data: unknown) => withData(api.put(`/inventario/${id}`, inventarioPayload(data as AnyRecord)), (res) => res),
-  delete: (id: number) => api.delete(`/inventario/${id}`),
+  delete: (id: number | string) => api.delete(`/inventario/${id}`),
   alertas: () => withData(api.get('/inventario/alertas'), (data) => mapArray(data, mapInventario)),
 };
 
 // Finanzas
 export const finanzasApi = {
-  getAll: (fincaId?: number) =>
+  getAll: (fincaId?: number | string) =>
     withData(api.get('/finanzas', { params: fincaId ? { fincaId } : {} }), (data) => mapArray(data, mapFinanza)),
-  resumen: (fincaId?: number) =>
+  resumen: (fincaId?: number | string) =>
     api.get('/finanzas/resumen', { params: fincaId ? { fincaId } : {} }),
   create: (data: unknown) => withData(api.post('/finanzas', finanzaPayload(data as AnyRecord)), mapFinanza),
   update: (id: number | string, data: unknown) => withData(api.put(`/finanzas/${id}`, finanzaPayload(data as AnyRecord)), (res) => res),
-  delete: (id: number) => api.delete(`/finanzas/${id}`),
+  delete: (id: number | string) => api.delete(`/finanzas/${id}`),
 };
 
 // Personal
 export const personalApi = {
-  getAll: (fincaId?: number) =>
+  getAll: (fincaId?: number | string) =>
     withData(api.get('/personal', { params: fincaId ? { fincaId } : {} }), (data) => mapArray(data, mapPersonal)),
   create: (data: unknown) => withData(api.post('/personal', personalPayload(data as AnyRecord)), mapPersonal),
   update: (id: number | string, data: unknown) => withData(api.put(`/personal/${id}`, personalPayload(data as AnyRecord)), (res) => res),
-  delete: (id: number) => api.delete(`/personal/${id}`),
+  delete: (id: number | string) => api.delete(`/personal/${id}`),
 };
 
 // Maquinaria
 export const maquinariaApi = {
-  getAll: (fincaId?: number) =>
+  getAll: (fincaId?: number | string) =>
     withData(api.get('/maquinaria', { params: fincaId ? { fincaId } : {} }), (data) => mapArray(data, mapMaquinaria)),
   create: (data: unknown) => withData(api.post('/maquinaria', maquinariaPayload(data as AnyRecord)), mapMaquinaria),
   update: (id: number | string, data: unknown) => withData(api.put(`/maquinaria/${id}`, maquinariaPayload(data as AnyRecord)), (res) => res),
-  delete: (id: number) => api.delete(`/maquinaria/${id}`),
+  delete: (id: number | string) => api.delete(`/maquinaria/${id}`),
 };
 
 // Clima

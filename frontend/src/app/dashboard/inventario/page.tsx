@@ -43,7 +43,7 @@ function ItemModal({ item, fincas, onClose, onSave }: { item?: Item; fincas: Fin
     setLoading(true);
     setError('');
     try {
-      const payload = { ...form, cantidad: parseFloat(form.cantidad), fincaId: parseInt(form.fincaId), stockMinimo: form.stockMinimo ? parseFloat(form.stockMinimo) : undefined, costo: form.costo ? parseFloat(form.costo) : undefined };
+      const payload = { ...form, cantidad: parseFloat(form.cantidad), fincaId: form.fincaId, stockMinimo: form.stockMinimo ? parseFloat(form.stockMinimo) : undefined, costo: form.costo ? parseFloat(form.costo) : undefined };
       if (item) { await inventarioApi.update(item.id, payload); }
       else { await inventarioApi.create(payload); }
       onSave(); onClose();

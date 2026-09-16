@@ -32,7 +32,7 @@ function MaquinaModal({ maquina, fincas, onClose, onSave }: { maquina?: Maquina;
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true);
     try {
-      const p = { ...form, fincaId: parseInt(form.fincaId), horasUso: form.horasUso ? parseFloat(form.horasUso) : undefined, proximoMantenimiento: form.proximoMantenimiento || undefined };
+      const p = { ...form, fincaId: form.fincaId, horasUso: form.horasUso ? parseFloat(form.horasUso) : undefined, proximoMantenimiento: form.proximoMantenimiento || undefined };
       if (maquina) await maquinariaApi.update(maquina.id, p); else await maquinariaApi.create(p);
       onSave(); onClose();
     } catch { alert('Error al guardar'); } finally { setLoading(false); }
