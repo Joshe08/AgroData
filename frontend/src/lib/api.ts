@@ -233,6 +233,10 @@ export const fincasApi = {
   create: (data: unknown) => withData(api.post('/fincas', fincaPayload(data as AnyRecord)), mapFinca),
   update: (id: number | string, data: unknown) => withData(api.put(`/fincas/${id}`, fincaPayload(data as AnyRecord)), (res) => res),
   delete: (id: number | string) => api.delete(`/fincas/${id}`),
+  getLotes: (fincaId: string | number) => api.get(`/fincas/${fincaId}/lotes`),
+  createLote: (fincaId: string | number, data: { name: string; area: number; soilType?: string }) =>
+    api.post(`/fincas/${fincaId}/lotes`, data),
+  deleteLote: (loteId: string | number) => api.delete(`/fincas/lotes/${loteId}`),
 };
 
 // Producciones

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { finanzasApi, fincasApi } from '@/lib/api';
+import { useToastStore } from '@/store/toastStore';
 import { DollarSign, Plus, Trash2, Search, X, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -10,17 +11,17 @@ import {
 } from 'recharts';
 
 interface Transaccion {
-  id: number;
+  id: string | number;
   tipo: 'INGRESO' | 'GASTO';
   categoria: string;
   monto: number;
   descripcion?: string;
   fecha: string;
-  fincaId: number;
-  finca?: { nombre: string };
+  fincaId: string | number;
+  finca?: { id: string | number; nombre: string };
 }
 
-interface Finca { id: number; nombre: string; }
+interface Finca { id: string | number; nombre: string; }
 
 function TransaccionModal({ fincas, onClose, onSave }: { fincas: Finca[]; onClose: () => void; onSave: () => void; }) {
   const [form, setForm] = useState({
@@ -35,8 +36,29 @@ function TransaccionModal({ fincas, onClose, onSave }: { fincas: Finca[]; onClos
   const [error, setError] = useState('');
 
   const categorias = {
-    INGRESO: ['Venta de cosecha', 'Subsidio', 'Venta de animales', 'Arriendo', 'Otro ingreso'],
-    GASTO: ['Fertilizantes', 'Semillas', 'Mano de obra', 'Combustible', 'Mantenimiento', 'Transporte', 'Servicios', 'Otro gasto'],
+    INGRESO: [
+      'Venta de cosechas agrícolas',
+      'Venta de café / pergamino',
+      'Venta de ganado en pie / canal',
+      'Venta de leche y derivados',
+      'Venta de peces / alevinos',
+      'Venta de aves / huevos',
+      'Venta de cerdos',
+      'Subsidios e incentivos del sector',
+      'Otros ingresos',
+    ],
+    GASTO: [
+      'Insumos y fertilizantes',
+      'Semillas y material vegetal',
+      'Mano de obra / Jornales de campo',
+      'Medicamentos veterinarios y vacunas',
+      'Combustibles y lubricantes',
+      'Mantenimiento de maquinaria y equipos',
+      'Fletes y transporte de cosecha',
+      'Concentrado y nutrición animal',
+      'Servicios públicos y arriendos',
+      'Otros gastos operativos',
+    ],
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,12 +175,15 @@ export default function FinanzasPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number | string) => {
     if (!confirm('¿Eliminar esta transacción?')) return;
     try {
       await finanzasApi.delete(id);
-      setTransacciones(t => t.filter(x => x.id !== id));
-    } catch { alert('Error al eliminar'); }
+      setTransacciones((t) => t.filter((x) => x.id !== id));
+      useToastStore.getState().success('Transacción eliminada.');
+    } catch {
+      useToastStore.getState().error('Error al eliminar la transacción.');
+    }
   };
 
   const formatCOP = (v: number) =>

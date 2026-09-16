@@ -1,12 +1,34 @@
 import { create } from 'zustand';
 
+export interface Lote {
+  id: string | number;
+  nombre: string;
+  hectareas: number;
+  tipoSuelo?: string;
+  fincaId?: string | number;
+}
+
 export interface Finca {
-  id: number;
+  id: string | number;
   nombre: string;
   ubicacion: string;
   hectareas: number;
+  unidadMedida?: string;
   tipoSuelo?: string;
   descripcion?: string;
+  departamento?: string;
+  municipio?: string;
+  vereda?: string;
+  referenciaAcceso?: string;
+  tipoExplotacion?: string;
+  estado?: string;
+  fuenteAgua?: string;
+  sistemaRiego?: string;
+  tipoAcceso?: string;
+  actividades?: string[];
+  latitude?: number;
+  longitude?: number;
+  lotes?: Lote[];
   createdAt?: string;
 }
 
@@ -19,7 +41,7 @@ interface FincasState {
   setLoading: (loading: boolean) => void;
   addFinca: (finca: Finca) => void;
   updateFinca: (finca: Finca) => void;
-  removeFinca: (id: number) => void;
+  removeFinca: (id: string | number) => void;
 }
 
 export const useFincasStore = create<FincasState>((set) => ({
