@@ -1,9 +1,26 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { aiApi, fincasApi, produccionesApi } from '@/lib/api';
-import { Bot, Send, Loader2, Sprout, CloudSun, DollarSign, Lightbulb, ChevronRight, RefreshCw } from 'lucide-react';
-import { useEffect } from 'react';
+import {
+  Bot,
+  Send,
+  Loader2,
+  Sprout,
+  CloudSun,
+  DollarSign,
+  Lightbulb,
+  ChevronRight,
+  RefreshCw,
+  Droplets,
+  Bug,
+  FlaskConical,
+  TrendingUp,
+  Wheat,
+  Layers,
+  CloudRain,
+  ShieldAlert,
+} from 'lucide-react';
 
 interface Recomendacion {
   titulo: string;
@@ -18,8 +35,8 @@ interface AIResponse {
   fuente?: string;
 }
 
-interface Finca { id: number; nombre: string; ubicacion: string; hectareas: number; }
-interface Produccion { id: number; tipo: string; variedad?: string; estado: string; }
+interface Finca { id: number | string; nombre: string; ubicacion: string; hectareas: number; }
+interface Produccion { id: number | string; tipo: string; variedad?: string; estado: string; }
 
 const PRIORIDAD_STYLE: Record<string, { color: string; badge: string; dot: string }> = {
   alta:  { color: '#f87171', badge: 'badge-danger',  dot: '#ef4444' },
@@ -27,17 +44,24 @@ const PRIORIDAD_STYLE: Record<string, { color: string; badge: string; dot: strin
   baja:  { color: '#4ade80', badge: 'badge-success', dot: '#22c55e' },
 };
 
-const CAT_EMOJI: Record<string, string> = {
-  CLIMA: '🌦️', RIEGO: '💧', PLAGAS: '🐛', FERTILIZACION: '🧪',
-  COSECHA: '🌾', ECONOMICO: '💰', SUELO: '🌱', GENERAL: '💡',
-};
+function getCategoryIcon(cat: string) {
+  const c = (cat || '').toUpperCase();
+  if (c.includes('CLIMA')) return <CloudRain size={16} color="#38bdf8" />;
+  if (c.includes('RIEGO')) return <Droplets size={16} color="#38bdf8" />;
+  if (c.includes('PLAGA') || c.includes('ENFERMEDAD')) return <Bug size={16} color="#f87171" />;
+  if (c.includes('FERTIL')) return <FlaskConical size={16} color="#a78bfa" />;
+  if (c.includes('COSECHA')) return <Wheat size={16} color="#fbbf24" />;
+  if (c.includes('ECONOM') || c.includes('COSTO')) return <TrendingUp size={16} color="#34d399" />;
+  if (c.includes('SUELO')) return <Layers size={16} color="#fb923c" />;
+  return <Lightbulb size={16} color="#4ade80" />;
+}
 
 const PROMPT_SUGERIDOS = [
-  { label: 'Riego óptimo', prompt: 'Cuál es la frecuencia de riego óptima para mis cultivos en el Cesar con el clima actual?', icon: '💧' },
-  { label: 'Control de plagas', prompt: 'Qué plagas debo vigilar en esta época del año y cómo prevenirlas?', icon: '🐛' },
-  { label: 'Fertilización', prompt: 'Cuándo y cómo aplicar fertilizantes para maximizar el rendimiento?', icon: '🧪' },
-  { label: 'Optimizar costos', prompt: 'Cómo puedo reducir los costos de producción sin afectar el rendimiento?', icon: '💰' },
-  { label: 'Época de siembra', prompt: 'Cuál es la mejor época para sembrar teniendo en cuenta el clima del Cesar?', icon: '🌱' },
+  { label: 'Riego óptimo', prompt: '¿Cuál es la frecuencia y volumen de riego óptimo para mis cultivos en el Cesar considerando las condiciones agrometeorológicas actuales?', icon: <Droplets size={14} color="#38bdf8" /> },
+  { label: 'Control fitosanitario', prompt: '¿Qué plagas y enfermedades debo monitorear prioritariamente en esta época en el departamento del Cesar y cuáles son las medidas preventivas recomendadas?', icon: <Bug size={14} color="#f87171" /> },
+  { label: 'Plan de fertilización', prompt: '¿Qué recomendaciones de fertilización y nutrición vegetal optimizan el rendimiento para los tipos de suelo predominantes en la región?', icon: <FlaskConical size={14} color="#a78bfa" /> },
+  { label: 'Optimización de costos', prompt: '¿Cómo optimizar los costos operativos y de insumos en el ciclo productivo sin sacrificar rendimiento ni calidad de cosecha?', icon: <TrendingUp size={14} color="#34d399" /> },
+  { label: 'Calendario de siembra', prompt: '¿Cuál es el calendario y ventana de siembra óptima en el Cesar teniendo en cuenta el régimen pluviométrico?', icon: <Sprout size={14} color="#4ade80" /> },
 ];
 
 export default function AIPage() {
@@ -229,11 +253,27 @@ export default function AIPage() {
                   style={{ padding: '20px 24px', borderLeft: `3px solid ${style.dot}` }}
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 22 }}>{CAT_EMOJI[rec.categoria] || '💡'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 10,
+                          background: 'var(--color-surface-2)',
+                          border: '1px solid var(--color-border)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {getCategoryIcon(rec.categoria)}
+                      </div>
                       <div>
                         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>{rec.titulo}</h3>
-                        <span style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>{rec.categoria}</span>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                          {rec.categoria}
+                        </span>
                       </div>
                     </div>
                     <span className={`badge ${style.badge}`} style={{ flexShrink: 0, fontSize: 11 }}>

@@ -13,29 +13,34 @@ type AnyRecord = Record<string, any>;
 const withData = <T>(request: Promise<any>, mapper: (data: any) => T) =>
   request.then((response) => ({ ...response, data: mapper(response.data) }));
 
-const mapArray = <T>(data: any, mapper: (item: AnyRecord) => T) =>
-  Array.isArray(data) ? data.map(mapper) : data;
+const mapArray = <T>(data: any, mapper: (item: AnyRecord) => T): T[] =>
+  Array.isArray(data) ? data.filter(Boolean).map(mapper).filter(Boolean) : [];
 
 const normalizeUser = (user: AnyRecord) => ({
   ...user,
-  nombre: user.nombre ?? user.name ?? '',
-  rol: user.rol ?? user.role ?? '',
+  nombre: user?.nombre ?? user?.name ?? '',
+  rol: user?.rol ?? user?.role ?? '',
 });
 
-const mapFinca = (finca: AnyRecord) => ({
-  ...finca,
-  nombre: finca.nombre ?? finca.name ?? '',
-  ubicacion: finca.ubicacion ?? finca.location ?? '',
-  hectareas: finca.hectareas ?? finca.area ?? 0,
-  lotes: Array.isArray(finca.lotes)
-    ? finca.lotes.map((lote: AnyRecord) => ({
-        ...lote,
-        nombre: lote.nombre ?? lote.name ?? '',
-        hectareas: lote.hectareas ?? lote.area ?? 0,
-        tipoSuelo: lote.tipoSuelo ?? lote.soilType ?? '',
-      }))
-    : finca.lotes,
-});
+const mapFinca = (finca: AnyRecord) => {
+  if (!finca) return null as any;
+  return {
+    ...finca,
+    nombre: finca.nombre ?? finca.name ?? '',
+    ubicacion: finca.ubicacion ?? finca.location ?? '',
+    hectareas: finca.hectareas ?? finca.area ?? 0,
+    latitude: finca.latitude != null ? Number(finca.latitude) : null,
+    longitude: finca.longitude != null ? Number(finca.longitude) : null,
+    lotes: Array.isArray(finca.lotes)
+      ? finca.lotes.map((lote: AnyRecord) => ({
+          ...lote,
+          nombre: lote.nombre ?? lote.name ?? '',
+          hectareas: lote.hectareas ?? lote.area ?? 0,
+          tipoSuelo: lote.tipoSuelo ?? lote.soilType ?? '',
+        }))
+      : [],
+  };
+};
 
 const parseMetadata = (metadata: unknown) => {
   if (!metadata) return {};
@@ -48,6 +53,7 @@ const parseMetadata = (metadata: unknown) => {
 };
 
 const mapProduccion = (prod: AnyRecord) => {
+  if (!prod) return null as any;
   const metadata = parseMetadata(prod.metadata);
   const finca = prod.finca ?? prod.lote?.finca;
   return {

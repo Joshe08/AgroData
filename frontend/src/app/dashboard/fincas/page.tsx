@@ -18,7 +18,11 @@ import {
   FileText,
   ChevronRight,
   ChevronDown,
+  LayoutGrid,
+  Map as MapIcon,
 } from 'lucide-react';
+import MapPicker from '@/components/maps/MapPicker';
+import FincasMapOverview from '@/components/maps/FincasMapOverview';
 
 const TIPOS_EXPLOTACION = [
   { value: 'MIXTA', label: 'Mixta (Agrícola y Pecuaria)' },
@@ -345,11 +349,34 @@ function FincaModal({
                 </div>
               </div>
 
+              {/* Interactive Map Picker */}
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                  Geolocalización en Mapa Interactivo
+                </label>
+                <p style={{ fontSize: 12, color: 'var(--color-text-subtle)', marginBottom: 10 }}>
+                  Haz clic en el mapa, busca el municipio o arrastra el pin verde para ubicar exactamente el predio en el departamento del Cesar.
+                </p>
+                <MapPicker
+                  latitude={form.latitude ? parseFloat(form.latitude) : null}
+                  longitude={form.longitude ? parseFloat(form.longitude) : null}
+                  height="280px"
+                  onChange={({ latitude, longitude, address }) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      latitude: String(latitude),
+                      longitude: String(longitude),
+                      ...(address && !prev.municipio ? { municipio: address } : {}),
+                    }));
+                  }}
+                />
+              </div>
+
               {/* GPS Coordinates & Geolocation */}
               <div style={{ padding: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
-                    Coordenadas Geográficas
+                    Coordenadas Decimales Registradas
                   </div>
                   <button
                     type="button"
@@ -718,6 +745,7 @@ export default function FincasPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editFinca, setEditFinca] = useState<Finca | undefined>();
   const [deleting, setDeleting] = useState<string | number | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   // Lotes management state
   const [selectedFincaForLotes, setSelectedFincaForLotes] = useState<string | number | null>(null);
@@ -823,29 +851,95 @@ export default function FincasPage() {
         </button>
       </div>
 
-      {/* Search */}
-      <div style={{ position: 'relative', marginBottom: 24, maxWidth: 380 }}>
-        <Search
-          size={16}
-          style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }}
-        />
-        <input
-          className="input-field"
-          style={{ paddingLeft: 38 }}
-          placeholder="Buscar por predio o ubicación..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      {/* Search & View Mode Switcher */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: 380, minWidth: 220 }}>
+          <Search
+            size={16}
+            style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }}
+          />
+          <input
+            className="input-field"
+            style={{ paddingLeft: 38 }}
+            placeholder="Buscar por predio o ubicación..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* View Mode Toggle Buttons */}
+        <div style={{ display: 'flex', background: 'var(--color-surface-2)', padding: 4, borderRadius: 10, border: '1px solid var(--color-border)' }}>
+          <button
+            type="button"
+            onClick={() => setViewMode('grid')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 14px',
+              borderRadius: 8,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 500,
+              background: viewMode === 'grid' ? 'var(--color-surface)' : 'transparent',
+              color: viewMode === 'grid' ? '#4ade80' : 'var(--color-text-muted)',
+              boxShadow: viewMode === 'grid' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none',
+              transition: 'all 0.2s',
+            }}
+          >
+            <LayoutGrid size={15} />
+            <span>Cuadrícula</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('map')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 14px',
+              borderRadius: 8,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 500,
+              background: viewMode === 'map' ? 'var(--color-surface)' : 'transparent',
+              color: viewMode === 'map' ? '#4ade80' : 'var(--color-text-muted)',
+              boxShadow: viewMode === 'map' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none',
+              transition: 'all 0.2s',
+            }}
+          >
+            <MapIcon size={15} />
+            <span>Mapa Satelital</span>
+          </button>
+        </div>
       </div>
 
-      {/* Fincas Grid */}
-      {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="skeleton" style={{ height: 220, borderRadius: 16 }} />
-          ))}
+      {viewMode === 'map' ? (
+        <div style={{ marginBottom: 24 }}>
+          <FincasMapOverview
+            fincas={filtered}
+            onSelectFinca={(f) => {
+              const fullFinca = fincas.find((item) => String(item.id) === String(f.id));
+              if (fullFinca) {
+                setEditFinca(fullFinca);
+                setModalOpen(true);
+              }
+            }}
+            height="560px"
+          />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : (
+        <>
+          {/* Fincas Grid */}
+          {loading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="skeleton" style={{ height: 220, borderRadius: 16 }} />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
         <div
           style={{
             textAlign: 'center',
@@ -1041,6 +1135,8 @@ export default function FincasPage() {
             );
           })}
         </div>
+      )}
+      </>
       )}
 
       {/* Modal Finca */}

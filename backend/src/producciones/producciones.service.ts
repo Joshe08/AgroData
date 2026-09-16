@@ -6,22 +6,31 @@ export class ProduccionesService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(orgId: string) {
-    return this.prisma.produccion.findMany({
-      where: {
-        lote: {
-          finca: {
-            organizationId: orgId,
+    if (!orgId) return [];
+    try {
+      return await this.prisma.produccion.findMany({
+        where: {
+          lote: {
+            finca: {
+              organizationId: orgId,
+            },
           },
         },
-      },
-      include: {
-        lote: {
-          include: {
-            finca: true,
+        include: {
+          lote: {
+            include: {
+              finca: true,
+            },
           },
         },
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+    } catch (error) {
+      console.error('Error al consultar producciones en ProduccionesService.findAll:', error);
+      return [];
+    }
   }
 
   async findOne(id: string, orgId: string) {

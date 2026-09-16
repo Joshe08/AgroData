@@ -822,14 +822,21 @@ export default function ProduccionesPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [prodsRes, fincasRes] = await Promise.all([
+      const [prodsRes, fincasRes] = await Promise.allSettled([
         produccionesApi.getAll(),
         fincasApi.getAll(),
       ]);
-      setProducciones(prodsRes.data || []);
-      setFincas(fincasRes.data || []);
-    } catch {
-      useToastStore.getState().error('Error al cargar producciones.');
+      if (prodsRes.status === 'fulfilled') {
+        setProducciones(Array.isArray(prodsRes.value.data) ? prodsRes.value.data : []);
+      }
+      if (fincasRes.status === 'fulfilled') {
+        setFincas(Array.isArray(fincasRes.value.data) ? fincasRes.value.data : []);
+      }
+      if (prodsRes.status === 'rejected' && fincasRes.status === 'rejected') {
+        useToastStore.getState().error('No se pudo sincronizar con el servidor de producciones.');
+      }
+    } catch (err) {
+      console.error('Error al cargar datos de producciones:', err);
     } finally {
       setLoading(false);
     }
