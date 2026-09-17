@@ -133,6 +133,16 @@ function ProduccionModal({
     fechaSalida: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
   });
 
+  const [apic, setApic] = useState({
+    tipoAbeja: prod?.metadata?.tipoAbeja || 'Apis mellifera (Africanizada)',
+    numColmenas: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
+    proposito: prod?.metadata?.proposito || 'Miel',
+    floraPredominante: prod?.metadata?.floraPredominante || '',
+    fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
+    fechaCosecha: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
+    kilosEstimados: prod?.metadata?.kilosEstimados || '',
+  });
+
   // Load lotes when fincaId changes
   const fetchLotes = useCallback(async (fId: string | number) => {
     if (!fId) return;
@@ -214,6 +224,13 @@ function ProduccionModal({
         expectedYield = pesca.cantidadAlevinos ? parseFloat(pesca.cantidadAlevinos) : undefined;
         unit = 'Alevinos / Peces';
         metadata = { ...pesca, tipoProduccion: 'PISCICULTURA' };
+      } else if (tipo === 'APICULTURA') {
+        name = `Apiario - ${apic.numColmenas || '0'} Colmenas (${apic.proposito})`;
+        startDate = apic.fechaInicio;
+        endDate = apic.fechaCosecha || undefined;
+        expectedYield = apic.numColmenas ? parseFloat(apic.numColmenas) : undefined;
+        unit = 'Colmenas';
+        metadata = { ...apic, tipoProduccion: 'APICULTURA' };
       } else {
         name = `${tipo} - Lote Producción`;
         startDate = avesCerdos.fechaInicio;
@@ -309,6 +326,7 @@ function ProduccionModal({
                 <option value="PISCICULTURA">Piscicultura (Peces / Estanques)</option>
                 <option value="AVICULTURA">Avicultura (Aves / Galpón)</option>
                 <option value="PORCICULTURA">Porcicultura (Cerdos / Corral)</option>
+                <option value="APICULTURA">Apicultura (Abejas / Miel / Apiario)</option>
               </select>
             </div>
           </div>
@@ -778,6 +796,113 @@ function ProduccionModal({
             </div>
           )}
 
+          {/* DYNAMIC FORM 6: APICULTURA */}
+          {tipo === 'APICULTURA' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Tipo / Especie de abeja *
+                  </label>
+                  <select
+                    className="input-field"
+                    value={apic.tipoAbeja}
+                    onChange={(e) => setApic((a) => ({ ...a, tipoAbeja: e.target.value }))}
+                  >
+                    <option value="Apis mellifera (Africanizada)">Apis mellifera (Africanizada)</option>
+                    <option value="Apis mellifera (Europea/Italiana)">Apis mellifera (Europea/Italiana)</option>
+                    <option value="Meliponas (Sin aguijón)">Meliponas (Sin aguijón)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Propósito productivo
+                  </label>
+                  <select
+                    className="input-field"
+                    value={apic.proposito}
+                    onChange={(e) => setApic((a) => ({ ...a, proposito: e.target.value }))}
+                  >
+                    <option value="Miel">Miel de abejas</option>
+                    <option value="Polen">Polen</option>
+                    <option value="Propóleo">Propóleo</option>
+                    <option value="Cera">Cera</option>
+                    <option value="Polinización">Servicio de Polinización</option>
+                    <option value="Núcleos">Venta de Núcleos / Reinas</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Número de colmenas activas *
+                  </label>
+                  <input
+                    className="input-field"
+                    type="number"
+                    min="1"
+                    placeholder="Ej: 20"
+                    value={apic.numColmenas}
+                    onChange={(e) => setApic((a) => ({ ...a, numColmenas: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Flora predominante / Melífera
+                  </label>
+                  <input
+                    className="input-field"
+                    placeholder="Ej: Café, Eucalipto, Cítricos, Bosque nativo"
+                    value={apic.floraPredominante}
+                    onChange={(e) => setApic((a) => ({ ...a, floraPredominante: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Fecha de postura / inicio *
+                  </label>
+                  <input
+                    className="input-field"
+                    type="date"
+                    value={apic.fechaInicio}
+                    onChange={(e) => setApic((a) => ({ ...a, fechaInicio: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Fecha estimada de cosecha / castra
+                  </label>
+                  <input
+                    className="input-field"
+                    type="date"
+                    value={apic.fechaCosecha}
+                    onChange={(e) => setApic((a) => ({ ...a, fechaCosecha: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                  Producción estimada (kg de miel por ciclo)
+                </label>
+                <input
+                  className="input-field"
+                  type="number"
+                  step="0.1"
+                  placeholder="Ej: 350"
+                  value={apic.kilosEstimados}
+                  onChange={(e) => setApic((a) => ({ ...a, kilosEstimados: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Estado de la Producción */}
           <div>
             <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
@@ -952,6 +1077,7 @@ export default function ProduccionesPage() {
           <option value="PISCICULTURA">Piscicultura</option>
           <option value="AVICULTURA">Avicultura</option>
           <option value="PORCICULTURA">Porcicultura</option>
+          <option value="APICULTURA">Apicultura</option>
         </select>
 
         <select

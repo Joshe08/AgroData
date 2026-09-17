@@ -29,6 +29,7 @@ const mapFinca = (finca: AnyRecord) => {
     nombre: finca.nombre ?? finca.name ?? '',
     ubicacion: finca.ubicacion ?? finca.location ?? '',
     hectareas: finca.hectareas ?? finca.area ?? 0,
+    descripcion: finca.descripcion ?? finca.description ?? '',
     latitude: finca.latitude != null ? Number(finca.latitude) : null,
     longitude: finca.longitude != null ? Number(finca.longitude) : null,
     lotes: Array.isArray(finca.lotes)
@@ -60,13 +61,14 @@ const mapProduccion = (prod: AnyRecord) => {
     ...prod,
     tipo: prod.tipo ?? prod.type ?? 'CULTIVO',
     variedad: prod.variedad ?? metadata.variedad ?? metadata.variety ?? prod.name ?? '',
-    estado: prod.estado ?? prod.status ?? 'ACTIVE',
+    estado: metadata.etapa ?? prod.estado ?? prod.status ?? 'ACTIVE',
     fechaInicio: prod.fechaInicio ?? prod.startDate,
     fechaEstimadaCosecha: prod.fechaEstimadaCosecha ?? prod.endDate,
     cantidadSembrada: prod.cantidadSembrada ?? prod.expectedYield,
     unidadMedida: prod.unidadMedida ?? prod.unit,
     fincaId: prod.fincaId ?? finca?.id,
     finca: finca ? mapFinca(finca) : prod.finca,
+    metadata,
   };
 };
 
@@ -132,6 +134,7 @@ const fincaPayload = (data: AnyRecord) => ({
   name: data.name ?? data.nombre,
   location: data.location ?? data.ubicacion,
   area: data.area ?? data.hectareas,
+  description: data.description ?? data.descripcion ?? null,
   latitude: data.latitude,
   longitude: data.longitude,
 });
@@ -183,20 +186,31 @@ const ensureLoteId = async (fincaId?: string | number) => {
   return newLote.data.id;
 };
 
+const mapStatusToBackend = (st?: string) => {
+  if (!st) return 'ACTIVE';
+  const s = String(st).toUpperCase();
+  if (s === 'FINALIZADO' || s === 'COMPLETED' || s === 'TERMINADO') return 'COMPLETED';
+  if (s === 'CANCELADO' || s === 'CANCELLED') return 'CANCELLED';
+  return 'ACTIVE';
+};
+
 const produccionPayload = async (data: AnyRecord) => {
   const loteId = data.loteId ?? (await ensureLoteId(data.fincaId));
   const variedad = data.variedad ?? data.name;
+  const uiStatus = data.estado ?? data.status ?? 'ACTIVE';
+  const backendStatus = mapStatusToBackend(uiStatus);
   return {
     name: data.name ?? [data.tipo ?? data.type ?? 'Produccion', variedad].filter(Boolean).join(' - '),
     type: data.type ?? data.tipo,
-    status: data.status ?? data.estado ?? 'ACTIVE',
+    status: backendStatus,
     startDate: data.startDate ?? data.fechaInicio,
     endDate: data.endDate ?? data.fechaEstimadaCosecha,
-    expectedYield: data.expectedYield ?? data.cantidadSembrada,
+    expectedYield: data.expectedYield !== undefined && data.expectedYield !== '' ? parseFloat(data.expectedYield) : (data.cantidadSembrada !== undefined && data.cantidadSembrada !== '' ? parseFloat(data.cantidadSembrada) : undefined),
     unit: data.unit ?? data.unidadMedida,
     loteId,
     metadata: {
       ...(typeof data.metadata === 'object' ? data.metadata : {}),
+      etapa: uiStatus,
       variedad,
       fincaId: data.fincaId,
     },

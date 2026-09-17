@@ -51,11 +51,26 @@ export default function LeafletMapInner({
   const [isSearching, setIsSearching] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [searchError, setSearchError] = useState('');
+  const [isMapActive, setIsMapActive] = useState(false);
 
   const streetTiles = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   const satelliteTiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
   const satelliteLabels = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    if (isMapActive) {
+      map.dragging.enable();
+      map.scrollWheelZoom.enable();
+      if ((map as any).touchZoom) (map as any).touchZoom.enable();
+    } else {
+      map.dragging.disable();
+      map.scrollWheelZoom.disable();
+      if ((map as any).touchZoom) (map as any).touchZoom.disable();
+    }
+  }, [isMapActive]);
 
   const updateLocation = useCallback((lat: number, lng: number, address?: string) => {
     setCurrentCoords({ lat, lng });
@@ -100,6 +115,7 @@ export default function LeafletMapInner({
       zoom: initialZoom,
       zoomControl: false,
       scrollWheelZoom: false,
+      dragging: false,
     });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -441,6 +457,69 @@ export default function LeafletMapInner({
       )}
 
       <div ref={mapContainerRef} style={{ width: '100%', height, background: '#1e293b' }} />
+
+      {!isMapActive && (
+        <div
+          onClick={() => setIsMapActive(true)}
+          onTouchStart={() => setIsMapActive(true)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 995,
+            background: 'rgba(15, 23, 42, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          <div
+            style={{
+              padding: '8px 16px',
+              background: 'rgba(15, 23, 42, 0.9)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: 20,
+              color: '#ffffff',
+              fontSize: 12,
+              fontWeight: 600,
+              boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+              pointerEvents: 'none',
+            }}
+          >
+            Toca o haz clic para interactuar con el mapa
+          </div>
+        </div>
+      )}
+
+      {isMapActive && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMapActive(false);
+          }}
+          style={{
+            position: 'absolute',
+            top: 56,
+            right: 12,
+            zIndex: 996,
+            padding: '6px 12px',
+            background: 'rgba(15, 23, 42, 0.9)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: 8,
+            color: '#38bdf8',
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
+          Bloquear desplazamiento
+        </button>
+      )}
 
       <div
         style={{

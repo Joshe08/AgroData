@@ -50,7 +50,6 @@ interface WeatherData {
   indiceUv?: number;
   icono?: string;
   alertas?: WeatherAlert[];
-  recomendaciones?: string[];
   hourly?: Array<{
     hora: string;
     temperatura: number;
@@ -574,55 +573,6 @@ export default function ClimaPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Agricultural Technical Recommendations */}
-          {weather.recomendaciones && weather.recomendaciones.length > 0 && (
-            <div
-              className="card"
-              style={{
-                padding: '24px',
-                marginBottom: 20,
-                borderColor: 'rgba(22, 163, 74, 0.3)',
-                background: 'rgba(22, 163, 74, 0.03)',
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  marginBottom: 14,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  color: '#4ade80',
-                }}
-              >
-                <Sprout size={18} />
-                Recomendaciones técnicas de manejo agronómico
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {weather.recomendaciones.map((r, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex',
-                      gap: 12,
-                      padding: '12px 16px',
-                      background: 'rgba(22, 163, 74, 0.06)',
-                      borderRadius: 10,
-                      border: '1px solid rgba(22, 163, 74, 0.15)',
-                      fontSize: 14,
-                      color: 'var(--color-text)',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: 2, color: '#4ade80' }} />
-                    <span>{r}</span>
-                  </div>
-                ))}
               </div>
             </div>
           )}

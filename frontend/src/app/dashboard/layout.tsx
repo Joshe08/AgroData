@@ -24,6 +24,7 @@ import {
   UserCircle,
   X,
 } from 'lucide-react';
+import ThemeToggle from '@/components/common/ThemeToggle';
 
 const baseNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -188,6 +189,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <UserCircle size={14} style={{ flexShrink: 0, color: 'var(--color-text-subtle)' }} />
           </div>
         </Link>
+        <div style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+          <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 500 }}>Modo Visual</span>
+          <ThemeToggle />
+        </div>
         <button
           onClick={handleLogout}
           className="nav-item"
@@ -280,7 +285,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="mobile-logo font-display" style={{ fontSize: 16, fontWeight: 700 }}>
             <span className="gradient-text">AgroData</span>
           </div>
-          <div style={{ width: 44 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }} className="desktop-header-org">
+              {user.organizationName || 'AgroData'}
+            </span>
+            <ThemeToggle />
+          </div>
         </header>
 
         {/* Page content */}
@@ -293,10 +303,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <ToastContainer />
 
       <style>{`
+        .desktop-header-org { display: none; }
         @media (min-width: 768px) {
           .desktop-sidebar { display: block !important; }
           .mobile-menu-btn { display: none !important; }
           .mobile-logo { display: none !important; }
+          .desktop-header-org { display: inline !important; }
         }
       `}</style>
     </div>

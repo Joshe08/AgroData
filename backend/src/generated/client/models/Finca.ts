@@ -43,6 +43,7 @@ export type FincaMinAggregateOutputType = {
   name: string | null
   location: string | null
   area: number | null
+  description: string | null
   latitude: number | null
   longitude: number | null
   organizationId: string | null
@@ -55,6 +56,7 @@ export type FincaMaxAggregateOutputType = {
   name: string | null
   location: string | null
   area: number | null
+  description: string | null
   latitude: number | null
   longitude: number | null
   organizationId: string | null
@@ -67,6 +69,7 @@ export type FincaCountAggregateOutputType = {
   name: number
   location: number
   area: number
+  description: number
   latitude: number
   longitude: number
   organizationId: number
@@ -93,6 +96,7 @@ export type FincaMinAggregateInputType = {
   name?: true
   location?: true
   area?: true
+  description?: true
   latitude?: true
   longitude?: true
   organizationId?: true
@@ -105,6 +109,7 @@ export type FincaMaxAggregateInputType = {
   name?: true
   location?: true
   area?: true
+  description?: true
   latitude?: true
   longitude?: true
   organizationId?: true
@@ -117,6 +122,7 @@ export type FincaCountAggregateInputType = {
   name?: true
   location?: true
   area?: true
+  description?: true
   latitude?: true
   longitude?: true
   organizationId?: true
@@ -216,6 +222,7 @@ export type FincaGroupByOutputType = {
   name: string
   location: string
   area: number
+  description: string | null
   latitude: number | null
   longitude: number | null
   organizationId: string
@@ -251,6 +258,7 @@ export type FincaWhereInput = {
   name?: Prisma.StringFilter<"Finca"> | string
   location?: Prisma.StringFilter<"Finca"> | string
   area?: Prisma.FloatFilter<"Finca"> | number
+  description?: Prisma.StringNullableFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   organizationId?: Prisma.StringFilter<"Finca"> | string
@@ -266,6 +274,7 @@ export type FincaOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   location?: Prisma.SortOrder
   area?: Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
@@ -284,6 +293,7 @@ export type FincaWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"Finca"> | string
   location?: Prisma.StringFilter<"Finca"> | string
   area?: Prisma.FloatFilter<"Finca"> | number
+  description?: Prisma.StringNullableFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   organizationId?: Prisma.StringFilter<"Finca"> | string
@@ -299,6 +309,7 @@ export type FincaOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   location?: Prisma.SortOrder
   area?: Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
@@ -319,6 +330,7 @@ export type FincaScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"Finca"> | string
   location?: Prisma.StringWithAggregatesFilter<"Finca"> | string
   area?: Prisma.FloatWithAggregatesFilter<"Finca"> | number
+  description?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableWithAggregatesFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableWithAggregatesFilter<"Finca"> | number | null
   organizationId?: Prisma.StringWithAggregatesFilter<"Finca"> | string
@@ -331,6 +343,7 @@ export type FincaCreateInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   createdAt?: Date | string
@@ -345,6 +358,7 @@ export type FincaUncheckedCreateInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   organizationId: string
@@ -359,6 +373,7 @@ export type FincaUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -373,6 +388,7 @@ export type FincaUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -387,6 +403,7 @@ export type FincaCreateManyInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   organizationId: string
@@ -399,6 +416,7 @@ export type FincaUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -410,6 +428,7 @@ export type FincaUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -432,6 +451,7 @@ export type FincaCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   location?: Prisma.SortOrder
   area?: Prisma.SortOrder
+  description?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
@@ -450,6 +470,7 @@ export type FincaMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   location?: Prisma.SortOrder
   area?: Prisma.SortOrder
+  description?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
@@ -462,6 +483,7 @@ export type FincaMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   location?: Prisma.SortOrder
   area?: Prisma.SortOrder
+  description?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
@@ -578,6 +600,7 @@ export type FincaCreateWithoutOrganizationInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   createdAt?: Date | string
@@ -591,6 +614,7 @@ export type FincaUncheckedCreateWithoutOrganizationInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   createdAt?: Date | string
@@ -632,6 +656,7 @@ export type FincaScalarWhereInput = {
   name?: Prisma.StringFilter<"Finca"> | string
   location?: Prisma.StringFilter<"Finca"> | string
   area?: Prisma.FloatFilter<"Finca"> | number
+  description?: Prisma.StringNullableFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   organizationId?: Prisma.StringFilter<"Finca"> | string
@@ -644,6 +669,7 @@ export type FincaCreateWithoutLotesInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   createdAt?: Date | string
@@ -657,6 +683,7 @@ export type FincaUncheckedCreateWithoutLotesInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   organizationId: string
@@ -686,6 +713,7 @@ export type FincaUpdateWithoutLotesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -699,6 +727,7 @@ export type FincaUncheckedUpdateWithoutLotesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -712,6 +741,7 @@ export type FincaCreateWithoutInventariosInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   createdAt?: Date | string
@@ -725,6 +755,7 @@ export type FincaUncheckedCreateWithoutInventariosInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   organizationId: string
@@ -754,6 +785,7 @@ export type FincaUpdateWithoutInventariosInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -767,6 +799,7 @@ export type FincaUncheckedUpdateWithoutInventariosInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -780,6 +813,7 @@ export type FincaCreateManyOrganizationInput = {
   name: string
   location: string
   area: number
+  description?: string | null
   latitude?: number | null
   longitude?: number | null
   createdAt?: Date | string
@@ -791,6 +825,7 @@ export type FincaUpdateWithoutOrganizationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -804,6 +839,7 @@ export type FincaUncheckedUpdateWithoutOrganizationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -817,6 +853,7 @@ export type FincaUncheckedUpdateManyWithoutOrganizationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   location?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -868,6 +905,7 @@ export type FincaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   name?: boolean
   location?: boolean
   area?: boolean
+  description?: boolean
   latitude?: boolean
   longitude?: boolean
   organizationId?: boolean
@@ -884,6 +922,7 @@ export type FincaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   name?: boolean
   location?: boolean
   area?: boolean
+  description?: boolean
   latitude?: boolean
   longitude?: boolean
   organizationId?: boolean
@@ -897,6 +936,7 @@ export type FincaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   name?: boolean
   location?: boolean
   area?: boolean
+  description?: boolean
   latitude?: boolean
   longitude?: boolean
   organizationId?: boolean
@@ -910,6 +950,7 @@ export type FincaSelectScalar = {
   name?: boolean
   location?: boolean
   area?: boolean
+  description?: boolean
   latitude?: boolean
   longitude?: boolean
   organizationId?: boolean
@@ -917,7 +958,7 @@ export type FincaSelectScalar = {
   updatedAt?: boolean
 }
 
-export type FincaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "location" | "area" | "latitude" | "longitude" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["finca"]>
+export type FincaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "location" | "area" | "description" | "latitude" | "longitude" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["finca"]>
 export type FincaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
   lotes?: boolean | Prisma.Finca$lotesArgs<ExtArgs>
@@ -943,6 +984,7 @@ export type $FincaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     name: string
     location: string
     area: number
+    description: string | null
     latitude: number | null
     longitude: number | null
     organizationId: string
@@ -1378,6 +1420,7 @@ export interface FincaFieldRefs {
   readonly name: Prisma.FieldRef<"Finca", 'String'>
   readonly location: Prisma.FieldRef<"Finca", 'String'>
   readonly area: Prisma.FieldRef<"Finca", 'Float'>
+  readonly description: Prisma.FieldRef<"Finca", 'String'>
   readonly latitude: Prisma.FieldRef<"Finca", 'Float'>
   readonly longitude: Prisma.FieldRef<"Finca", 'Float'>
   readonly organizationId: Prisma.FieldRef<"Finca", 'String'>

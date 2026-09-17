@@ -827,6 +827,18 @@ function FincaDetailModal({
           </div>
         </div>
 
+        {/* Descripción del Predio */}
+        {finca.descripcion && (
+          <div style={{ padding: '14px 16px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 12, marginBottom: 20 }}>
+            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
+              Descripción del Predio
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+              {finca.descripcion}
+            </p>
+          </div>
+        )}
+
         {/* Mapa de Ubicación */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>

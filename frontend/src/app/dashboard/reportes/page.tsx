@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { fincasApi, produccionesApi, inventarioApi, finanzasApi, personalApi } from '@/lib/api';
+import { fincasApi, produccionesApi, inventarioApi, finanzasApi, personalApi, maquinariaApi } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useToastStore } from '@/store/toastStore';
 import {
@@ -301,78 +301,194 @@ interface KpiItem {
   const exportFullReport = async () => {
     setLoading(true);
     try {
-      const [fincasRes, prodsRes, invRes, finRes, persRes] = await Promise.allSettled([
+      const [fincasRes, prodsRes, invRes, finRes, persRes, maqRes] = await Promise.allSettled([
         fincasApi.getAll(),
         produccionesApi.getAll(),
         inventarioApi.getAll(),
         finanzasApi.getAll(),
         personalApi.getAll(),
+        maquinariaApi.getAll(),
       ]);
 
       const wb = XLSX.utils.book_new();
       const orgName = user?.organizationName || 'AgroData';
       const dateStr = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es });
 
-      // 1. Resumen
+      const fincas = fincasRes.status === 'fulfilled' && Array.isArray(fincasRes.value.data) ? fincasRes.value.data : [];
+      const prods = prodsRes.status === 'fulfilled' && Array.isArray(prodsRes.value.data) ? prodsRes.value.data : [];
+      const inv = invRes.status === 'fulfilled' && Array.isArray(invRes.value.data) ? invRes.value.data : [];
+      const fin = finRes.status === 'fulfilled' && Array.isArray(finRes.value.data) ? finRes.value.data : [];
+      const pers = persRes.status === 'fulfilled' && Array.isArray(persRes.value.data) ? persRes.value.data : [];
+      const maq = maqRes.status === 'fulfilled' && Array.isArray(maqRes.value.data) ? maqRes.value.data : [];
+
+      const totalHectareas = fincas.reduce((acc: number, f: any) => acc + Number(f.hectareas || f.area || 0), 0);
+      const totalIngresos = fin.filter((t: any) => (t.tipo || t.type) === 'INGRESO').reduce((acc: number, t: any) => acc + Number(t.monto || t.amount || 0), 0);
+      const totalGastos = fin.filter((t: any) => (t.tipo || t.type) === 'GASTO').reduce((acc: number, t: any) => acc + Number(t.monto || t.amount || 0), 0);
+      const totalValorInv = inv.reduce((acc: number, i: any) => acc + (Number(i.cantidad || i.quantity || 0) * Number(i.costo || 0)), 0);
+      const inventarioCritico = inv.filter((i: any) => Number(i.cantidad || i.quantity || 0) <= Number(i.stockMinimo || i.minAlertQuantity || 10));
+
+      // 1. Resumen Consolidado
       const wsResumen = XLSX.utils.aoa_to_sheet([
-        ['AGRODATA - REPORTE CONSOLIDADO'],
-        ['Empresa / Organización:', orgName],
-        ['Fecha de Expedición:', dateStr],
+        ['AGRODATA - REPORTE GERENCIAL INTEGRAL MULTIMÓDULO'],
+        ['Organización / Empresa:', orgName],
+        ['Fecha y Hora de Emisión:', dateStr],
         [],
-        ['Módulo', 'Total Registros'],
-        ['Fincas', fincasRes.status === 'fulfilled' ? fincasRes.value.data?.length || 0 : 0],
-        ['Producciones', prodsRes.status === 'fulfilled' ? prodsRes.value.data?.length || 0 : 0],
-        ['Inventario', invRes.status === 'fulfilled' ? invRes.value.data?.length || 0 : 0],
-        ['Finanzas', finRes.status === 'fulfilled' ? finRes.value.data?.length || 0 : 0],
-        ['Personal', persRes.status === 'fulfilled' ? persRes.value.data?.length || 0 : 0],
+        ['INDICADOR CLAVE (KPI)', 'VALOR CONSOLIDADO'],
+        ['Predios / Fincas Registradas', fincas.length],
+        ['Área Total Administrada (ha)', Number(totalHectareas.toFixed(2))],
+        ['Ciclos Productivos Totales', prods.length],
+        ['Producciones Activas en Campo', prods.filter((p: any) => (p.estado || p.status) === 'ACTIVE').length],
+        ['Total Referencias en Bodega', inv.length],
+        ['Valoración Estimada de Inventario (COP)', totalValorInv],
+        ['Insumos en Nivel de Alerta / Crítico', inventarioCritico.length],
+        ['Ingresos / Ventas Acumuladas (COP)', totalIngresos],
+        ['Gastos / Compras Operativas (COP)', totalGastos],
+        ['Balance Financiero Neto (COP)', totalIngresos - totalGastos],
+        ['Colaboradores / Empleados', pers.length],
+        ['Maquinaria y Equipos', maq.length],
       ]);
-      XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+      wsResumen['!cols'] = [{ wch: 38 }, { wch: 28 }];
+      XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen Gerencial');
 
       // 2. Fincas
-      if (fincasRes.status === 'fulfilled' && fincasRes.value.data) {
-        const headers = ['ID', 'Nombre', 'Ubicación', 'Hectáreas'];
-        const rows = fincasRes.value.data.map((f: any) => [f.id, f.nombre, f.ubicacion, f.hectareas]);
+      if (fincas.length > 0) {
+        const headers = ['ID', 'Nombre del Predio', 'Ubicación Geográfica', 'Área (ha)', 'Parcelas / Lotes'];
+        const rows = fincas.map((f: any) => [
+          f.id,
+          f.nombre || f.name,
+          f.ubicacion || f.location || 'N/A',
+          Number(f.hectareas || f.area || 0),
+          f.lotes?.length || 0,
+        ]);
         const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 30 }, { wch: 12 }, { wch: 16 }];
         XLSX.utils.book_append_sheet(wb, ws, 'Fincas');
       }
 
       // 3. Producciones
-      if (prodsRes.status === 'fulfilled' && prodsRes.value.data) {
-        const headers = ['ID', 'Producción', 'Tipo', 'Estado', 'Fecha Inicio', 'Cantidad'];
-        const rows = prodsRes.value.data.map((p: any) => [p.id, p.name || p.variedad || p.tipo, p.tipo, p.estado || p.status, p.startDate || p.fechaInicio, p.expectedYield || p.cantidadSembrada]);
+      if (prods.length > 0) {
+        const headers = ['ID', 'Producción / Variedad', 'Sector Agropecuario', 'Estado', 'Predio', 'Fecha Inicio', 'Fecha Cosecha', 'Rendimiento Esperado', 'Unidad'];
+        const rows = prods.map((p: any) => [
+          p.id,
+          p.name || p.variedad || p.tipo,
+          p.tipo || p.type,
+          p.estado || p.status,
+          p.finca?.nombre || 'N/A',
+          p.startDate || p.fechaInicio || 'N/A',
+          p.endDate || p.fechaEstimadaCosecha || 'N/A',
+          Number(p.expectedYield || p.cantidadSembrada || 0),
+          p.unit || p.unidadMedida || 'ha',
+        ]);
         const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [{ wch: 15 }, { wch: 26 }, { wch: 20 }, { wch: 16 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 12 }];
         XLSX.utils.book_append_sheet(wb, ws, 'Producciones');
       }
 
-      // 4. Inventario
-      if (invRes.status === 'fulfilled' && invRes.value.data) {
-        const headers = ['ID', 'Producto', 'Categoría', 'Cantidad', 'Unidad', 'Costo'];
-        const rows = invRes.value.data.map((i: any) => [i.id, i.nombre || i.name, i.categoria, i.cantidad || i.quantity, i.unidad || i.unit, i.costo]);
+      // 4. Inventario Completo
+      if (inv.length > 0) {
+        const headers = ['ID', 'Insumo / Producto', 'Categoría', 'Stock Actual', 'Unidad', 'Stock Mínimo', 'Costo Unitario (COP)', 'Valor Total (COP)', 'Predio Bodega'];
+        const rows = inv.map((i: any) => [
+          i.id,
+          i.nombre || i.name,
+          i.categoria || i.category,
+          Number(i.cantidad || i.quantity || 0),
+          i.unidad || i.unit || 'unidades',
+          Number(i.stockMinimo || i.minAlertQuantity || 10),
+          Number(i.costo || 0),
+          Number(i.cantidad || i.quantity || 0) * Number(i.costo || 0),
+          i.finca?.nombre || 'Bodega Central',
+        ]);
         const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
         XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
       }
 
-      // 5. Finanzas
-      if (finRes.status === 'fulfilled' && finRes.value.data) {
-        const headers = ['ID', 'Tipo', 'Categoría', 'Monto', 'Fecha'];
-        const rows = finRes.value.data.map((t: any) => [t.id, t.tipo || t.type, t.categoria, t.monto || t.amount, t.fecha || t.date]);
+      // 5. Ventas e Ingresos
+      const ingresos = fin.filter((t: any) => (t.tipo || t.type) === 'INGRESO');
+      if (ingresos.length > 0) {
+        const headers = ['ID', 'Categoría de Ingreso', 'Concepto / Detalle', 'Monto Recibido (COP)', 'Fecha de Registro'];
+        const rows = ingresos.map((t: any) => [
+          t.id,
+          t.categoria || t.category || 'Venta de Cosecha',
+          t.descripcion || t.description || 'N/A',
+          Number(t.monto || t.amount || 0),
+          t.fecha || t.date || 'N/A',
+        ]);
         const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        XLSX.utils.book_append_sheet(wb, ws, 'Finanzas');
+        ws['!cols'] = [{ wch: 15 }, { wch: 22 }, { wch: 32 }, { wch: 22 }, { wch: 18 }];
+        XLSX.utils.book_append_sheet(wb, ws, 'Ventas e Ingresos');
       }
 
-      // 6. Personal
-      if (persRes.status === 'fulfilled' && persRes.value.data) {
-        const headers = ['ID', 'Nombre', 'Cargo', 'Salario'];
-        const rows = persRes.value.data.map((p: any) => [p.id, p.nombre || p.name, p.cargo || p.role, p.salario || p.dailyRate]);
+      // 6. Compras y Gastos
+      const gastos = fin.filter((t: any) => (t.tipo || t.type) === 'GASTO');
+      if (gastos.length > 0) {
+        const headers = ['ID', 'Categoría de Egreso', 'Concepto / Detalle', 'Monto Pagado (COP)', 'Fecha de Registro'];
+        const rows = gastos.map((t: any) => [
+          t.id,
+          t.categoria || t.category || 'Gasto Operativo',
+          t.descripcion || t.description || 'N/A',
+          Number(t.monto || t.amount || 0),
+          t.fecha || t.date || 'N/A',
+        ]);
         const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [{ wch: 15 }, { wch: 22 }, { wch: 32 }, { wch: 22 }, { wch: 18 }];
+        XLSX.utils.book_append_sheet(wb, ws, 'Compras y Gastos');
+      }
+
+      // 7. Personal
+      if (pers.length > 0) {
+        const headers = ['ID', 'Nombre', 'Cargo / Rol', 'Salario (COP)', 'Modalidad Contrato', 'Teléfono'];
+        const rows = pers.map((p: any) => [
+          p.id,
+          p.nombre || p.name,
+          p.cargo || p.role,
+          Number(p.salario || p.dailyRate || 0),
+          p.tipoContrato || p.status || 'Activo',
+          p.telefono || p.phone || 'N/A',
+        ]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [{ wch: 15 }, { wch: 24 }, { wch: 20 }, { wch: 18 }, { wch: 20 }, { wch: 16 }];
         XLSX.utils.book_append_sheet(wb, ws, 'Personal');
       }
 
-      XLSX.writeFile(wb, `AgroData_Consolidado_${format(new Date(), 'yyyyMMdd')}.xlsx`);
-      useToastStore.getState().success('Reporte completo exportado a Excel.');
+      // 8. Maquinaria
+      if (maq.length > 0) {
+        const headers = ['ID', 'Equipo / Maquinaria', 'Tipo', 'Estado Operativo', 'Próximo Mantenimiento', 'Costo Mantenimiento (COP)'];
+        const rows = maq.map((m: any) => [
+          m.id,
+          m.nombre || m.name,
+          m.tipo || 'Maquinaria',
+          m.estado || m.status,
+          m.proximoMantenimiento || m.lastMaintenance || 'N/A',
+          Number(m.costoMantenimiento || m.maintenanceCost || 0),
+        ]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [{ wch: 15 }, { wch: 26 }, { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 24 }];
+        XLSX.utils.book_append_sheet(wb, ws, 'Maquinaria');
+      }
+
+      // 9. Alertas Críticas
+      if (inventarioCritico.length > 0) {
+        const headers = ['ID Insumo', 'Producto en Alerta', 'Categoría', 'Stock Actual', 'Stock Mínimo Permitido', 'Unidad', 'Acción Requerida'];
+        const rows = inventarioCritico.map((i: any) => [
+          i.id,
+          i.nombre || i.name,
+          i.categoria || i.category,
+          Number(i.cantidad || i.quantity || 0),
+          Number(i.stockMinimo || i.minAlertQuantity || 10),
+          i.unidad || i.unit || 'unidades',
+          'Reponer existencias urgentemente antes de la próxima aplicación',
+        ]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [{ wch: 15 }, { wch: 24 }, { wch: 18 }, { wch: 14 }, { wch: 22 }, { wch: 12 }, { wch: 45 }];
+        XLSX.utils.book_append_sheet(wb, ws, 'Alertas de Abastecimiento');
+      }
+
+      XLSX.writeFile(wb, `AgroData_Informe_Oficial_${format(new Date(), 'yyyyMMdd_HHmm')}.xlsx`);
+      useToastStore.getState().success('Reporte integral multimódulo exportado exitosamente a Excel.');
     } catch (err) {
-      console.error(err);
-      useToastStore.getState().error('Error al generar el reporte completo.');
+      console.error('Error al generar el reporte integral:', err);
+      useToastStore.getState().error('Error al generar el reporte multimódulo.');
     } finally {
       setLoading(false);
     }

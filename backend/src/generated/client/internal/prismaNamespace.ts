@@ -1221,6 +1221,7 @@ export const FincaScalarFieldEnum = {
   name: 'name',
   location: 'location',
   area: 'area',
+  description: 'description',
   latitude: 'latitude',
   longitude: 'longitude',
   organizationId: 'organizationId',

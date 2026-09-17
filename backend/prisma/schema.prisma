@@ -51,6 +51,7 @@ model Finca {
   name           String
   location       String
   area           Float        // In hectares
+  description    String?      // Descripción general del predio (optional)
   latitude       Float?
   longitude      Float?
   organizationId String

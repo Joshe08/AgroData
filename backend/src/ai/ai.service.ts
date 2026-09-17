@@ -158,8 +158,8 @@ export class AiService {
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `
-        Eres AgroIA, el asistente experto y analista agrícola de AgroData para el departamento del Cesar, Colombia.
-        El usuario ha preguntado: "${consulta}"
+        Eres AgroIA, el asesor agronómico y analista técnico de AgroData para el departamento del Cesar, Colombia.
+        El usuario ha consultado: "${consulta}"
 
         DATOS REALES DE LA ORGANIZACIÓN DEL USUARIO:
         - Fincas (${fincas.length}): ${JSON.stringify(fincas.map((f) => ({ nombre: f.name, hectareas: f.area, ubicacion: f.location, lotes: f.lotes.length })))}
@@ -169,14 +169,17 @@ export class AiService {
         - Finanzas (últimos registros): Ingresos totales acumulados: ${finances.filter((f) => f.type === 'INGRESO').reduce((s, f) => s + f.amount, 0)}, Gastos totales acumulados: ${finances.filter((f) => f.type === 'GASTO').reduce((s, f) => s + f.amount, 0)}
         - Clima actual: ${weather.temperature}°C, humedad ${weather.humidity}%, ${weather.conditions}.
 
-        Responde a la pregunta del usuario utilizando sus datos REALES. No inventes cifras ni nombres.
-        Devuelve estrictamente un objeto JSON con el siguiente formato:
+        REGLAS DE RESPUESTA:
+        1. Responde a la pregunta del usuario utilizando ÚNICAMENTE sus datos REALES. No inventes cifras, predios ni nombres.
+        2. Si no existen datos suficientes para responder con precisión, tu resumen debe iniciar exactamente con: "No hay información suficiente para realizar esta consulta." y explicar qué dato falta registrar.
+        3. Prohibido usar frases como "Como modelo de lenguaje", "Como IA", "Como inteligencia artificial". Habla con tono técnico y profesional de analista de campo.
+        4. Devuelve estrictamente un objeto JSON con el siguiente formato:
         {
-          "resumen": "Respuesta clara, ejecutiva y con datos exactos.",
+          "resumen": "Respuesta clara, ejecutiva y fundamentada en datos exactos.",
           "recomendaciones": [
             {
-              "titulo": "Título de la recomendación",
-              "descripcion": "Descripción del paso a seguir.",
+              "titulo": "Título técnico",
+              "descripcion": "Instrucción agronómica u operativa precisa.",
               "prioridad": "alta" | "media" | "baja",
               "categoria": "CLIMA" | "RIEGO" | "PLAGAS" | "FERTILIZACION" | "COSECHA" | "ECONOMICO" | "SUELO" | "GENERAL"
             }
@@ -450,12 +453,26 @@ export class AiService {
       };
     }
 
+    if (fincas.length === 0 && productions.length === 0) {
+      return {
+        resumen: 'No hay información suficiente para realizar esta consulta. Aún no tienes fincas ni producciones registradas en el sistema.',
+        recomendaciones: [
+          {
+            titulo: 'Registrar Predio Principal',
+            descripcion: 'Ingresa al módulo "Mis Fincas" para registrar las hectáreas y coordenadas de tu predio.',
+            prioridad: 'alta',
+            categoria: 'GENERAL',
+          },
+        ],
+      };
+    }
+
     return {
-      resumen: `Análisis para ${fincaNombre}: Cuenta con ${fincas.length} predio(s) y ${productions.length} producción(es) activa(s). Con clima actual de ${weather.temperature}°C y humedad al ${weather.humidity}%, el sistema recomienda mantener al día el inventario y el diario de labores.`,
+      resumen: `Análisis técnico para ${fincaNombre}: Cuentas con ${fincas.length} predio(s) y ${productions.length} producción(es) activa(s). Con clima actual de ${weather.temperature}°C y humedad al ${weather.humidity}%, se recomienda mantener al día el inventario y los diarios de labor.`,
       recomendaciones: [
         {
           titulo: 'Planificación Agronómica Integral',
-          descripcion: 'Revise los lotes asignados y confirme la disponibilidad de insumos en bodega antes de programar jornales.',
+          descripcion: 'Revisa los lotes asignados y confirma la disponibilidad de insumos en bodega antes de programar jornales de campo.',
           prioridad: 'media',
           categoria: 'GENERAL',
         },
