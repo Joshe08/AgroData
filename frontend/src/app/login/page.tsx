@@ -73,8 +73,8 @@ export default function LoginPage() {
       style={{
         minHeight: '100vh',
         display: 'flex',
-        background: 'radial-gradient(ellipse at 20% 50%, #06170d 0%, #030a06 60%, #020503 100%)',
-        color: '#ffffff',
+        background: 'var(--color-bg)',
+        color: 'var(--color-text)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -99,7 +99,7 @@ export default function LoginPage() {
           right: '5%',
           width: '550px',
           height: '550px',
-          background: 'radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%)',
           filter: 'blur(70px)',
           pointerEvents: 'none',
         }}
@@ -114,7 +114,7 @@ export default function LoginPage() {
           flexDirection: 'column',
           justifyContent: 'space-between',
           padding: '64px 56px',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRight: '1px solid var(--color-border)',
           position: 'relative',
           zIndex: 1,
         }}
@@ -126,20 +126,20 @@ export default function LoginPage() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              background: 'var(--gradient-primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 8px 24px rgba(16, 185, 129, 0.35)',
+              boxShadow: 'var(--shadow-glow)',
             }}
           >
             <Sprout size={24} color="#ffffff" />
           </div>
           <div>
             <div className="font-display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>
-              AgroData <span style={{ color: '#4ade80' }}>SaaS</span>
+              AgroData <span style={{ color: 'var(--color-primary)' }}>SaaS</span>
             </div>
-            <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.6)' }}>
+            <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
               Inteligencia y Gestión Agropecuaria
             </div>
           </div>
@@ -156,7 +156,7 @@ export default function LoginPage() {
               borderRadius: 20,
               background: 'rgba(16, 185, 129, 0.12)',
               border: '1px solid rgba(16, 185, 129, 0.25)',
-              color: '#4ade80',
+              color: 'var(--color-primary)',
               fontSize: 12,
               fontWeight: 600,
               marginBottom: 24,
@@ -179,7 +179,7 @@ export default function LoginPage() {
             Toma de decisiones{' '}
             <span
               style={{
-                background: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 100%)',
+                background: 'var(--gradient-primary)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
@@ -189,7 +189,7 @@ export default function LoginPage() {
             para el campo.
           </h1>
 
-          <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 16, lineHeight: 1.6, marginBottom: 36 }}>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: 16, lineHeight: 1.6, marginBottom: 36 }}>
             Monitorea predios por satélite, controla ciclos de cultivo y ganadería, administra inventarios en bodega, analiza finanzas y recibe alertas agronómicas en tiempo real.
           </p>
 
@@ -199,34 +199,34 @@ export default function LoginPage() {
               style={{
                 padding: '16px 18px',
                 borderRadius: 14,
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.07)',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
                 backdropFilter: 'blur(10px)',
               }}
             >
-              <MapPin size={20} style={{ color: '#4ade80', marginBottom: 8 }} />
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#ffffff', marginBottom: 2 }}>Mapeo Satelital</div>
-              <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.55)' }}>Predios georreferenciados y parcelas</div>
+              <MapPin size={20} style={{ color: 'var(--color-primary)', marginBottom: 8 }} />
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 2 }}>Mapeo Satelital</div>
+              <div style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>Predios georreferenciados y parcelas</div>
             </div>
 
             <div
               style={{
                 padding: '16px 18px',
                 borderRadius: 14,
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.07)',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
                 backdropFilter: 'blur(10px)',
               }}
             >
               <CloudSun size={20} style={{ color: '#38bdf8', marginBottom: 8 }} />
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#ffffff', marginBottom: 2 }}>Clima Agrícola Real</div>
-              <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.55)' }}>Alertas de lluvia, radiación UV y viento</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 2 }}>Clima Agrícola Real</div>
+              <div style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>Alertas de lluvia, radiación UV y viento</div>
             </div>
           </div>
         </div>
 
         {/* Footer info */}
-        <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.4)' }}>
+        <div style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
           © {new Date().getFullYear()} AgroData. Todos los derechos reservados.
         </div>
       </section>
@@ -249,12 +249,12 @@ export default function LoginPage() {
           style={{
             width: '100%',
             maxWidth: 440,
-            background: 'rgba(15, 23, 18, 0.75)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'var(--gradient-card)',
+            border: '1px solid var(--color-border)',
             borderRadius: 24,
             padding: '36px 32px',
             backdropFilter: 'blur(20px)',
-            boxShadow: '0 24px 64px rgba(0, 0, 0, 0.5)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           {/* Mobile Brand Header */}
@@ -264,7 +264,7 @@ export default function LoginPage() {
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                background: '#10b981',
+                background: 'var(--color-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -274,14 +274,14 @@ export default function LoginPage() {
             </div>
             <div>
               <div className="font-display" style={{ fontSize: 17, fontWeight: 700 }}>AgroData</div>
-              <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.5)' }}>Gestión Agrícola Inteligente</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Gestión Agrícola Inteligente</div>
             </div>
           </div>
 
-          <h2 className="font-display" style={{ fontSize: 26, fontWeight: 700, marginBottom: 6, color: '#ffffff' }}>
+          <h2 className="font-display" style={{ fontSize: 26, fontWeight: 700, marginBottom: 6, color: 'var(--color-text)' }}>
             Iniciar sesión
           </h2>
-          <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 13, marginBottom: 28 }}>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: 13, marginBottom: 28 }}>
             Ingresa tus credenciales para acceder a tu plataforma
           </p>
 
@@ -334,7 +334,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="login-email"
-                style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255, 255, 255, 0.8)', marginBottom: 8 }}
+                style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--color-text)', marginBottom: 8 }}
               >
                 Correo electrónico
               </label>
@@ -346,7 +346,7 @@ export default function LoginPage() {
                     left: 14,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    color: 'rgba(255, 255, 255, 0.4)',
+                    color: 'var(--color-text-muted)',
                     pointerEvents: 'none',
                   }}
                 />
@@ -362,10 +362,10 @@ export default function LoginPage() {
                   style={{
                     width: '100%',
                     padding: '12px 14px 12px 42px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    background: 'var(--color-surface-2)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: 12,
-                    color: '#ffffff',
+                    color: 'var(--color-text)',
                     fontSize: 14,
                     outline: 'none',
                     transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -378,7 +378,7 @@ export default function LoginPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <label
                   htmlFor="login-password"
-                  style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255, 255, 255, 0.8)' }}
+                  style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text)' }}
                 >
                   Contraseña
                 </label>
@@ -391,7 +391,7 @@ export default function LoginPage() {
                     left: 14,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    color: 'rgba(255, 255, 255, 0.4)',
+                    color: 'var(--color-text-muted)',
                     pointerEvents: 'none',
                   }}
                 />
@@ -407,10 +407,10 @@ export default function LoginPage() {
                   style={{
                     width: '100%',
                     padding: '12px 44px 12px 42px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    background: 'var(--color-surface-2)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: 12,
-                    color: '#ffffff',
+                    color: 'var(--color-text)',
                     fontSize: 14,
                     outline: 'none',
                     transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -428,7 +428,7 @@ export default function LoginPage() {
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    color: 'rgba(255, 255, 255, 0.5)',
+                    color: 'var(--color-text-muted)',
                     padding: 4,
                   }}
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
@@ -448,8 +448,8 @@ export default function LoginPage() {
                 borderRadius: 12,
                 border: 'none',
                 background: busy
-                  ? 'rgba(16, 185, 129, 0.6)'
-                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  ? 'var(--color-primary-dark)'
+                  : 'var(--gradient-primary)',
                 color: '#ffffff',
                 fontSize: 14,
                 fontWeight: 600,
@@ -458,7 +458,7 @@ export default function LoginPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                boxShadow: busy ? 'none' : '0 6px 20px rgba(16, 185, 129, 0.4)',
+                boxShadow: busy ? 'none' : 'var(--shadow-glow)',
                 transition: 'all 0.2s',
               }}
             >

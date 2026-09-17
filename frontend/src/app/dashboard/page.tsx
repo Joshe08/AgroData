@@ -104,6 +104,7 @@ interface DashboardData {
   ingresos: number;
   gastos: number;
   alertasInventario: number;
+  richAlerts?: any[];
   empleados: number;
   resumenFinanciero: unknown[];
   distribProds: unknown[];
@@ -673,6 +674,49 @@ export default function DashboardPage() {
           Actualizar
         </button>
       </div>
+
+      {/* Global Alerts panel for real-data notifications */}
+      {data.richAlerts && data.richAlerts.length > 0 && (
+        <div style={{ marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {data.richAlerts.map((alerta) => {
+            const isCritical = alerta.type === 'CRITICAL';
+            const isWarning = alerta.type === 'WARNING';
+            const bg = isCritical ? 'rgba(239,68,68,0.1)' : isWarning ? 'rgba(245,158,11,0.1)' : 'rgba(14,165,233,0.08)';
+            const border = isCritical ? 'rgba(239,68,68,0.3)' : isWarning ? 'rgba(245,158,11,0.3)' : 'rgba(14,165,233,0.25)';
+            const textColor = isCritical ? '#f87171' : isWarning ? '#fbbf24' : '#38bdf8';
+            
+            return (
+              <div
+                key={alerta.id}
+                style={{
+                  padding: '16px 20px',
+                  background: bg,
+                  border: `1px solid ${border}`,
+                  borderRadius: 14,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 14,
+                }}
+              >
+                <AlertTriangle size={20} color={textColor} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>
+                      {alerta.title}
+                    </div>
+                    <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, color: textColor }}>
+                      {alerta.source}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+                    {alerta.message}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Role-specific content */}
       {(rol === 'AGRONOMO') && <AgronomoDashboard data={data} />}

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import * as XLSX from 'xlsx';
 
 type ReportCategory = 'produccion' | 'finanzas' | 'inventario' | 'fincas' | 'personal';
 type PeriodOption = 'TODO' | 'MES_ACTUAL' | 'ULTIMOS_30_DIAS' | 'ANIO_ACTUAL';
@@ -189,15 +190,14 @@ interface KpiItem {
     return [];
   }, [reportType, filteredData]);
 
-  // Safe string quoting for CSV to prevent column displacement in Excel
-  const csvEscape = (text: any) => {
-    if (text === null || text === undefined) return '""';
-    const str = String(text).replace(/"/g, '""');
-    return `"${str}"`;
+  // Safe string formatting for Excel
+  const safeStr = (text: any) => {
+    if (text === null || text === undefined) return '';
+    return String(text);
   };
 
-  // Export to professional CSV
-  const exportToCSV = () => {
+  // Export current view to Excel
+  const exportToExcel = () => {
     if (filteredData.length === 0) {
       useToastStore.getState().warning('No hay datos disponibles para exportar con los filtros seleccionados.');
       return;
@@ -206,102 +206,175 @@ interface KpiItem {
     try {
       const orgName = user?.organizationName || 'AgroData';
       const fechaGeneracion = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es });
-      const fincaLabel = selectedFinca === 'ALL' ? 'Todas las fincas' : fincas.find((f) => String(f.id) === selectedFinca)?.nombre || selectedFinca;
-      const periodoLabel = period.replace('_', ' ');
-
-      // Metadata Header
-      const metaHeader = [
-        `"AGRODATA - REPORTE OFICIAL DE GESTIÓN AGROPECUARIA"`,
-        `"Empresa / Organización:",${csvEscape(orgName)}`,
-        `"Tipo de Informe:",${csvEscape(reportType.toUpperCase())}`,
-        `"Fecha de Expedición:",${csvEscape(fechaGeneracion)}`,
-        `"Filtro Predio:",${csvEscape(fincaLabel)}`,
-        `"Período:",${csvEscape(periodoLabel)}`,
-        `""`,
-      ];
-
+      
+      const wb = XLSX.utils.book_new();
+      
       let headers: string[] = [];
-      let rows: string[][] = [];
+      let rows: any[][] = [];
 
       if (reportType === 'produccion') {
         headers = ['ID', 'Producción / Cultivo', 'Tipo Sector', 'Finca / Predio', 'Parcela / Lote', 'Estado', 'Fecha Inicio', 'Fecha Cosecha', 'Escala / Cantidad'];
         rows = filteredData.map((p) => [
-          csvEscape(p.id),
-          csvEscape(p.name || p.variedad || p.tipo),
-          csvEscape(p.tipo),
-          csvEscape(p.finca?.nombre || `Finca #${p.fincaId}`),
-          csvEscape(p.lote?.nombre || 'Lote Principal'),
-          csvEscape(p.estado || p.status),
-          csvEscape(p.startDate || p.fechaInicio ? format(new Date(p.startDate || p.fechaInicio), 'dd/MM/yyyy') : '-'),
-          csvEscape(p.endDate || p.fechaEstimadaCosecha ? format(new Date(p.endDate || p.fechaEstimadaCosecha), 'dd/MM/yyyy') : '-'),
-          csvEscape(`${p.expectedYield || p.cantidadSembrada || 0} ${p.unit || p.unidadMedida || ''}`),
+          safeStr(p.id),
+          safeStr(p.name || p.variedad || p.tipo),
+          safeStr(p.tipo),
+          safeStr(p.finca?.nombre || `Finca #${p.fincaId}`),
+          safeStr(p.lote?.nombre || 'Lote Principal'),
+          safeStr(p.estado || p.status),
+          safeStr(p.startDate || p.fechaInicio ? format(new Date(p.startDate || p.fechaInicio), 'dd/MM/yyyy') : '-'),
+          safeStr(p.endDate || p.fechaEstimadaCosecha ? format(new Date(p.endDate || p.fechaEstimadaCosecha), 'dd/MM/yyyy') : '-'),
+          safeStr(`${p.expectedYield || p.cantidadSembrada || 0} ${p.unit || p.unidadMedida || ''}`),
         ]);
       } else if (reportType === 'finanzas') {
         headers = ['ID', 'Tipo', 'Categoría', 'Monto (COP)', 'Finca', 'Fecha', 'Descripción'];
         rows = filteredData.map((t) => [
-          csvEscape(t.id),
-          csvEscape(t.tipo || t.type),
-          csvEscape(t.categoria || t.category),
-          csvEscape(t.monto || t.amount || 0),
-          csvEscape(t.finca?.nombre || `Finca #${t.fincaId}`),
-          csvEscape(t.fecha || t.date ? format(new Date(t.fecha || t.date), 'dd/MM/yyyy') : '-'),
-          csvEscape(t.descripcion || t.description || 'Sin descripción'),
+          safeStr(t.id),
+          safeStr(t.tipo || t.type),
+          safeStr(t.categoria || t.category),
+          Number(t.monto || t.amount || 0),
+          safeStr(t.finca?.nombre || `Finca #${t.fincaId}`),
+          safeStr(t.fecha || t.date ? format(new Date(t.fecha || t.date), 'dd/MM/yyyy') : '-'),
+          safeStr(t.descripcion || t.description || 'Sin descripción'),
         ]);
       } else if (reportType === 'inventario') {
         headers = ['ID', 'Producto / Insumo', 'Categoría', 'Finca / Bodega', 'Cantidad', 'Unidad', 'Stock Mínimo', 'Costo Unitario (COP)', 'Proveedor'];
         rows = filteredData.map((i) => [
-          csvEscape(i.id),
-          csvEscape(i.nombre || i.name),
-          csvEscape(i.categoria || i.category),
-          csvEscape(i.finca?.nombre || `Finca #${i.fincaId}`),
-          csvEscape(i.cantidad || i.quantity || 0),
-          csvEscape(i.unidad || i.unit || 'unidades'),
-          csvEscape(i.stockMinimo || i.minAlertQuantity || 0),
-          csvEscape(i.costo || 0),
-          csvEscape(i.proveedor || 'N/A'),
+          safeStr(i.id),
+          safeStr(i.nombre || i.name),
+          safeStr(i.categoria || i.category),
+          safeStr(i.finca?.nombre || `Finca #${i.fincaId}`),
+          Number(i.cantidad || i.quantity || 0),
+          safeStr(i.unidad || i.unit || 'unidades'),
+          Number(i.stockMinimo || i.minAlertQuantity || 0),
+          Number(i.costo || 0),
+          safeStr(i.proveedor || 'N/A'),
         ]);
       } else if (reportType === 'fincas') {
         headers = ['ID', 'Nombre del Predio', 'Ubicación Geográfica', 'Área Total (ha)', 'Tipo Suelo', 'Parcelas / Lotes'];
         rows = filteredData.map((f) => [
-          csvEscape(f.id),
-          csvEscape(f.nombre || f.name),
-          csvEscape(f.ubicacion || f.location),
-          csvEscape(f.hectareas || f.area || 0),
-          csvEscape(f.tipoSuelo || 'Franco'),
-          csvEscape(f.lotes?.length || 0),
+          safeStr(f.id),
+          safeStr(f.nombre || f.name),
+          safeStr(f.ubicacion || f.location),
+          Number(f.hectareas || f.area || 0),
+          safeStr(f.tipoSuelo || 'Franco'),
+          Number(f.lotes?.length || 0),
         ]);
       } else if (reportType === 'personal') {
         headers = ['ID', 'Nombre Colaborador', 'Cargo / Función', 'Finca Asignada', 'Salario Mensual (COP)', 'Modalidad Contrato', 'Teléfono'];
         rows = filteredData.map((p) => [
-          csvEscape(p.id),
-          csvEscape(p.nombre || p.name),
-          csvEscape(p.cargo || p.role),
-          csvEscape(p.finca?.nombre || `Finca #${p.fincaId}`),
-          csvEscape(p.salario || p.dailyRate || 0),
-          csvEscape(p.tipoContrato || p.status || 'TERMINO_FIJO'),
-          csvEscape(p.telefono || p.phone || 'N/A'),
+          safeStr(p.id),
+          safeStr(p.nombre || p.name),
+          safeStr(p.cargo || p.role),
+          safeStr(p.finca?.nombre || `Finca #${p.fincaId}`),
+          Number(p.salario || p.dailyRate || 0),
+          safeStr(p.tipoContrato || p.status || 'TERMINO_FIJO'),
+          safeStr(p.telefono || p.phone || 'N/A'),
         ]);
       }
 
-      const csvLines = [
-        ...metaHeader,
-        headers.join(','),
-        ...rows.map((r) => r.join(',')),
+      const wsData = [
+        ['AGRODATA - REPORTE OFICIAL DE GESTIÓN AGROPECUARIA'],
+        ['Empresa / Organización:', orgName],
+        ['Tipo de Informe:', reportType.toUpperCase()],
+        ['Fecha de Expedición:', fechaGeneracion],
+        [],
+        headers,
+        ...rows
       ];
+      
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Auto width
+      const wscols = headers.map(() => ({ wch: 20 }));
+      ws['!cols'] = wscols;
 
-      // UTF-8 BOM '\uFEFF' ensures Excel correctly recognizes UTF-8 accents
-      const csvContent = '\uFEFF' + csvLines.join('\r\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `AgroData_Reporte_${reportType}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      useToastStore.getState().success('Reporte exportado exitosamente a Excel (CSV).');
-    } catch {
+      XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+      XLSX.writeFile(wb, `AgroData_Reporte_${reportType}_${format(new Date(), 'yyyyMMdd')}.xlsx`);
+      
+      useToastStore.getState().success('Reporte exportado exitosamente a Excel.');
+    } catch (err) {
+      console.error(err);
       useToastStore.getState().error('Error al generar la exportación de archivo.');
+    }
+  };
+
+  const exportFullReport = async () => {
+    setLoading(true);
+    try {
+      const [fincasRes, prodsRes, invRes, finRes, persRes] = await Promise.allSettled([
+        fincasApi.getAll(),
+        produccionesApi.getAll(),
+        inventarioApi.getAll(),
+        finanzasApi.getAll(),
+        personalApi.getAll(),
+      ]);
+
+      const wb = XLSX.utils.book_new();
+      const orgName = user?.organizationName || 'AgroData';
+      const dateStr = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es });
+
+      // 1. Resumen
+      const wsResumen = XLSX.utils.aoa_to_sheet([
+        ['AGRODATA - REPORTE CONSOLIDADO'],
+        ['Empresa / Organización:', orgName],
+        ['Fecha de Expedición:', dateStr],
+        [],
+        ['Módulo', 'Total Registros'],
+        ['Fincas', fincasRes.status === 'fulfilled' ? fincasRes.value.data?.length || 0 : 0],
+        ['Producciones', prodsRes.status === 'fulfilled' ? prodsRes.value.data?.length || 0 : 0],
+        ['Inventario', invRes.status === 'fulfilled' ? invRes.value.data?.length || 0 : 0],
+        ['Finanzas', finRes.status === 'fulfilled' ? finRes.value.data?.length || 0 : 0],
+        ['Personal', persRes.status === 'fulfilled' ? persRes.value.data?.length || 0 : 0],
+      ]);
+      XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+
+      // 2. Fincas
+      if (fincasRes.status === 'fulfilled' && fincasRes.value.data) {
+        const headers = ['ID', 'Nombre', 'Ubicación', 'Hectáreas'];
+        const rows = fincasRes.value.data.map((f: any) => [f.id, f.nombre, f.ubicacion, f.hectareas]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Fincas');
+      }
+
+      // 3. Producciones
+      if (prodsRes.status === 'fulfilled' && prodsRes.value.data) {
+        const headers = ['ID', 'Producción', 'Tipo', 'Estado', 'Fecha Inicio', 'Cantidad'];
+        const rows = prodsRes.value.data.map((p: any) => [p.id, p.name || p.variedad || p.tipo, p.tipo, p.estado || p.status, p.startDate || p.fechaInicio, p.expectedYield || p.cantidadSembrada]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Producciones');
+      }
+
+      // 4. Inventario
+      if (invRes.status === 'fulfilled' && invRes.value.data) {
+        const headers = ['ID', 'Producto', 'Categoría', 'Cantidad', 'Unidad', 'Costo'];
+        const rows = invRes.value.data.map((i: any) => [i.id, i.nombre || i.name, i.categoria, i.cantidad || i.quantity, i.unidad || i.unit, i.costo]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+      }
+
+      // 5. Finanzas
+      if (finRes.status === 'fulfilled' && finRes.value.data) {
+        const headers = ['ID', 'Tipo', 'Categoría', 'Monto', 'Fecha'];
+        const rows = finRes.value.data.map((t: any) => [t.id, t.tipo || t.type, t.categoria, t.monto || t.amount, t.fecha || t.date]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Finanzas');
+      }
+
+      // 6. Personal
+      if (persRes.status === 'fulfilled' && persRes.value.data) {
+        const headers = ['ID', 'Nombre', 'Cargo', 'Salario'];
+        const rows = persRes.value.data.map((p: any) => [p.id, p.nombre || p.name, p.cargo || p.role, p.salario || p.dailyRate]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Personal');
+      }
+
+      XLSX.writeFile(wb, `AgroData_Consolidado_${format(new Date(), 'yyyyMMdd')}.xlsx`);
+      useToastStore.getState().success('Reporte completo exportado a Excel.');
+    } catch (err) {
+      console.error(err);
+      useToastStore.getState().error('Error al generar el reporte completo.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -329,6 +402,15 @@ interface KpiItem {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button
+            onClick={exportFullReport}
+            disabled={loading}
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--color-primary-dark)', color: 'white', borderColor: 'var(--color-primary-dark)' }}
+          >
+            <Layers size={16} />
+            <span>Reporte Completo</span>
+          </button>
+          <button
             onClick={handlePrint}
             disabled={loading || filteredData.length === 0}
             className="btn-secondary"
@@ -338,13 +420,13 @@ interface KpiItem {
             <span>Imprimir / PDF</span>
           </button>
           <button
-            onClick={exportToCSV}
+            onClick={exportToExcel}
             disabled={loading || filteredData.length === 0}
             className="btn-primary"
             style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px' }}
           >
             <Download size={16} />
-            <span>Exportar Excel (CSV)</span>
+            <span>Exportar Vista (XLSX)</span>
           </button>
         </div>
       </div>
