@@ -80,6 +80,7 @@ export const OrganizationScalarFieldEnum = {
   id: 'id',
   name: 'name',
   nit: 'nit',
+  orgType: 'orgType',
   subscription: 'subscription',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -174,6 +175,9 @@ export const InventarioScalarFieldEnum = {
   quantity: 'quantity',
   unit: 'unit',
   minAlertQuantity: 'minAlertQuantity',
+  proveedor: 'proveedor',
+  costo: 'costo',
+  fincaId: 'fincaId',
   organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

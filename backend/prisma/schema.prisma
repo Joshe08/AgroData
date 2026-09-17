@@ -22,6 +22,7 @@ model Organization {
   id           String       @id @default(uuid())
   name         String
   nit          String?
+  orgType      String?      @default("EMPRESA") // PERSONA_NATURAL, EMPRESA, COOPERATIVA, OTRO
   subscription String       @default("FREE") // FREE, PREMIUM, ENTERPRISE
   users        User[]
   fincas       Finca[]
@@ -55,6 +56,7 @@ model Finca {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
   lotes          Lote[]
+  inventarios    Inventario[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }
@@ -112,7 +114,11 @@ model Inventario {
   quantity        Float
   unit            String       // e.g. "kg", "bags", "liters", "units"
   minAlertQuantity Float        @default(10.0)
-  organizationId  String
+  proveedor        String?
+  costo            Float?
+  fincaId          String?
+  finca            Finca?       @relation(fields: [fincaId], references: [id])
+  organizationId   String
   organization    Organization @relation(fields: [organizationId], references: [id])
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt

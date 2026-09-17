@@ -8,6 +8,11 @@ export class InventarioService {
   async findAll(orgId: string) {
     return this.prisma.inventario.findMany({
       where: { organizationId: orgId },
+      include: {
+        finca: {
+          select: { id: true, name: true, location: true },
+        },
+      },
       orderBy: { name: 'asc' },
     });
   }
@@ -15,6 +20,11 @@ export class InventarioService {
   async findOne(id: string, orgId: string) {
     return this.prisma.inventario.findFirst({
       where: { id, organizationId: orgId },
+      include: {
+        finca: {
+          select: { id: true, name: true, location: true },
+        },
+      },
     });
   }
 
@@ -31,7 +41,15 @@ export class InventarioService {
         quantity: parseFloat(data.quantity),
         unit: data.unit,
         minAlertQuantity: data.minAlertQuantity ? parseFloat(data.minAlertQuantity) : 10.0,
+        proveedor: data.proveedor ? String(data.proveedor).trim() : null,
+        costo: data.costo !== undefined && data.costo !== null && data.costo !== '' ? parseFloat(data.costo) : null,
+        fincaId: data.fincaId && String(data.fincaId).trim() !== '' ? String(data.fincaId) : null,
         organizationId: orgId,
+      },
+      include: {
+        finca: {
+          select: { id: true, name: true, location: true },
+        },
       },
     });
   }
@@ -42,9 +60,12 @@ export class InventarioService {
       data: {
         name: data.name,
         category: data.category,
-        quantity: data.quantity !== undefined ? parseFloat(data.quantity) : undefined,
+        quantity: data.quantity !== undefined && data.quantity !== null && data.quantity !== '' ? parseFloat(data.quantity) : undefined,
         unit: data.unit,
-        minAlertQuantity: data.minAlertQuantity !== undefined ? parseFloat(data.minAlertQuantity) : undefined,
+        minAlertQuantity: data.minAlertQuantity !== undefined && data.minAlertQuantity !== null && data.minAlertQuantity !== '' ? parseFloat(data.minAlertQuantity) : undefined,
+        proveedor: data.proveedor !== undefined ? (data.proveedor ? String(data.proveedor).trim() : null) : undefined,
+        costo: data.costo !== undefined ? (data.costo !== null && data.costo !== '' ? parseFloat(data.costo) : null) : undefined,
+        fincaId: data.fincaId !== undefined ? (data.fincaId && String(data.fincaId).trim() !== '' ? String(data.fincaId) : null) : undefined,
       },
     });
   }

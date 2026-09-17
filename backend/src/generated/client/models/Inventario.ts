@@ -29,11 +29,13 @@ export type AggregateInventario = {
 export type InventarioAvgAggregateOutputType = {
   quantity: number | null
   minAlertQuantity: number | null
+  costo: number | null
 }
 
 export type InventarioSumAggregateOutputType = {
   quantity: number | null
   minAlertQuantity: number | null
+  costo: number | null
 }
 
 export type InventarioMinAggregateOutputType = {
@@ -43,6 +45,9 @@ export type InventarioMinAggregateOutputType = {
   quantity: number | null
   unit: string | null
   minAlertQuantity: number | null
+  proveedor: string | null
+  costo: number | null
+  fincaId: string | null
   organizationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -55,6 +60,9 @@ export type InventarioMaxAggregateOutputType = {
   quantity: number | null
   unit: string | null
   minAlertQuantity: number | null
+  proveedor: string | null
+  costo: number | null
+  fincaId: string | null
   organizationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -67,6 +75,9 @@ export type InventarioCountAggregateOutputType = {
   quantity: number
   unit: number
   minAlertQuantity: number
+  proveedor: number
+  costo: number
+  fincaId: number
   organizationId: number
   createdAt: number
   updatedAt: number
@@ -77,11 +88,13 @@ export type InventarioCountAggregateOutputType = {
 export type InventarioAvgAggregateInputType = {
   quantity?: true
   minAlertQuantity?: true
+  costo?: true
 }
 
 export type InventarioSumAggregateInputType = {
   quantity?: true
   minAlertQuantity?: true
+  costo?: true
 }
 
 export type InventarioMinAggregateInputType = {
@@ -91,6 +104,9 @@ export type InventarioMinAggregateInputType = {
   quantity?: true
   unit?: true
   minAlertQuantity?: true
+  proveedor?: true
+  costo?: true
+  fincaId?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -103,6 +119,9 @@ export type InventarioMaxAggregateInputType = {
   quantity?: true
   unit?: true
   minAlertQuantity?: true
+  proveedor?: true
+  costo?: true
+  fincaId?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -115,6 +134,9 @@ export type InventarioCountAggregateInputType = {
   quantity?: true
   unit?: true
   minAlertQuantity?: true
+  proveedor?: true
+  costo?: true
+  fincaId?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -214,6 +236,9 @@ export type InventarioGroupByOutputType = {
   quantity: number
   unit: string
   minAlertQuantity: number
+  proveedor: string | null
+  costo: number | null
+  fincaId: string | null
   organizationId: string
   createdAt: Date
   updatedAt: Date
@@ -249,9 +274,13 @@ export type InventarioWhereInput = {
   quantity?: Prisma.FloatFilter<"Inventario"> | number
   unit?: Prisma.StringFilter<"Inventario"> | string
   minAlertQuantity?: Prisma.FloatFilter<"Inventario"> | number
+  proveedor?: Prisma.StringNullableFilter<"Inventario"> | string | null
+  costo?: Prisma.FloatNullableFilter<"Inventario"> | number | null
+  fincaId?: Prisma.StringNullableFilter<"Inventario"> | string | null
   organizationId?: Prisma.StringFilter<"Inventario"> | string
   createdAt?: Prisma.DateTimeFilter<"Inventario"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Inventario"> | Date | string
+  finca?: Prisma.XOR<Prisma.FincaNullableScalarRelationFilter, Prisma.FincaWhereInput> | null
   organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>
 }
 
@@ -262,9 +291,13 @@ export type InventarioOrderByWithRelationInput = {
   quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   minAlertQuantity?: Prisma.SortOrder
+  proveedor?: Prisma.SortOrderInput | Prisma.SortOrder
+  costo?: Prisma.SortOrderInput | Prisma.SortOrder
+  fincaId?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  finca?: Prisma.FincaOrderByWithRelationInput
   organization?: Prisma.OrganizationOrderByWithRelationInput
 }
 
@@ -278,9 +311,13 @@ export type InventarioWhereUniqueInput = Prisma.AtLeast<{
   quantity?: Prisma.FloatFilter<"Inventario"> | number
   unit?: Prisma.StringFilter<"Inventario"> | string
   minAlertQuantity?: Prisma.FloatFilter<"Inventario"> | number
+  proveedor?: Prisma.StringNullableFilter<"Inventario"> | string | null
+  costo?: Prisma.FloatNullableFilter<"Inventario"> | number | null
+  fincaId?: Prisma.StringNullableFilter<"Inventario"> | string | null
   organizationId?: Prisma.StringFilter<"Inventario"> | string
   createdAt?: Prisma.DateTimeFilter<"Inventario"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Inventario"> | Date | string
+  finca?: Prisma.XOR<Prisma.FincaNullableScalarRelationFilter, Prisma.FincaWhereInput> | null
   organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>
 }, "id">
 
@@ -291,6 +328,9 @@ export type InventarioOrderByWithAggregationInput = {
   quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   minAlertQuantity?: Prisma.SortOrder
+  proveedor?: Prisma.SortOrderInput | Prisma.SortOrder
+  costo?: Prisma.SortOrderInput | Prisma.SortOrder
+  fincaId?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -311,6 +351,9 @@ export type InventarioScalarWhereWithAggregatesInput = {
   quantity?: Prisma.FloatWithAggregatesFilter<"Inventario"> | number
   unit?: Prisma.StringWithAggregatesFilter<"Inventario"> | string
   minAlertQuantity?: Prisma.FloatWithAggregatesFilter<"Inventario"> | number
+  proveedor?: Prisma.StringNullableWithAggregatesFilter<"Inventario"> | string | null
+  costo?: Prisma.FloatNullableWithAggregatesFilter<"Inventario"> | number | null
+  fincaId?: Prisma.StringNullableWithAggregatesFilter<"Inventario"> | string | null
   organizationId?: Prisma.StringWithAggregatesFilter<"Inventario"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Inventario"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Inventario"> | Date | string
@@ -323,8 +366,11 @@ export type InventarioCreateInput = {
   quantity: number
   unit: string
   minAlertQuantity?: number
+  proveedor?: string | null
+  costo?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  finca?: Prisma.FincaCreateNestedOneWithoutInventariosInput
   organization: Prisma.OrganizationCreateNestedOneWithoutInventariosInput
 }
 
@@ -335,6 +381,9 @@ export type InventarioUncheckedCreateInput = {
   quantity: number
   unit: string
   minAlertQuantity?: number
+  proveedor?: string | null
+  costo?: number | null
+  fincaId?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -347,8 +396,11 @@ export type InventarioUpdateInput = {
   quantity?: Prisma.FloatFieldUpdateOperationsInput | number
   unit?: Prisma.StringFieldUpdateOperationsInput | string
   minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finca?: Prisma.FincaUpdateOneWithoutInventariosNestedInput
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutInventariosNestedInput
 }
 
@@ -359,6 +411,9 @@ export type InventarioUncheckedUpdateInput = {
   quantity?: Prisma.FloatFieldUpdateOperationsInput | number
   unit?: Prisma.StringFieldUpdateOperationsInput | string
   minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -371,6 +426,9 @@ export type InventarioCreateManyInput = {
   quantity: number
   unit: string
   minAlertQuantity?: number
+  proveedor?: string | null
+  costo?: number | null
+  fincaId?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -383,6 +441,8 @@ export type InventarioUpdateManyMutationInput = {
   quantity?: Prisma.FloatFieldUpdateOperationsInput | number
   unit?: Prisma.StringFieldUpdateOperationsInput | string
   minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -394,6 +454,9 @@ export type InventarioUncheckedUpdateManyInput = {
   quantity?: Prisma.FloatFieldUpdateOperationsInput | number
   unit?: Prisma.StringFieldUpdateOperationsInput | string
   minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -416,6 +479,9 @@ export type InventarioCountOrderByAggregateInput = {
   quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   minAlertQuantity?: Prisma.SortOrder
+  proveedor?: Prisma.SortOrder
+  costo?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -424,6 +490,7 @@ export type InventarioCountOrderByAggregateInput = {
 export type InventarioAvgOrderByAggregateInput = {
   quantity?: Prisma.SortOrder
   minAlertQuantity?: Prisma.SortOrder
+  costo?: Prisma.SortOrder
 }
 
 export type InventarioMaxOrderByAggregateInput = {
@@ -433,6 +500,9 @@ export type InventarioMaxOrderByAggregateInput = {
   quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   minAlertQuantity?: Prisma.SortOrder
+  proveedor?: Prisma.SortOrder
+  costo?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -445,6 +515,9 @@ export type InventarioMinOrderByAggregateInput = {
   quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   minAlertQuantity?: Prisma.SortOrder
+  proveedor?: Prisma.SortOrder
+  costo?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -453,6 +526,7 @@ export type InventarioMinOrderByAggregateInput = {
 export type InventarioSumOrderByAggregateInput = {
   quantity?: Prisma.SortOrder
   minAlertQuantity?: Prisma.SortOrder
+  costo?: Prisma.SortOrder
 }
 
 export type InventarioCreateNestedManyWithoutOrganizationInput = {
@@ -497,6 +571,48 @@ export type InventarioUncheckedUpdateManyWithoutOrganizationNestedInput = {
   deleteMany?: Prisma.InventarioScalarWhereInput | Prisma.InventarioScalarWhereInput[]
 }
 
+export type InventarioCreateNestedManyWithoutFincaInput = {
+  create?: Prisma.XOR<Prisma.InventarioCreateWithoutFincaInput, Prisma.InventarioUncheckedCreateWithoutFincaInput> | Prisma.InventarioCreateWithoutFincaInput[] | Prisma.InventarioUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.InventarioCreateOrConnectWithoutFincaInput | Prisma.InventarioCreateOrConnectWithoutFincaInput[]
+  createMany?: Prisma.InventarioCreateManyFincaInputEnvelope
+  connect?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+}
+
+export type InventarioUncheckedCreateNestedManyWithoutFincaInput = {
+  create?: Prisma.XOR<Prisma.InventarioCreateWithoutFincaInput, Prisma.InventarioUncheckedCreateWithoutFincaInput> | Prisma.InventarioCreateWithoutFincaInput[] | Prisma.InventarioUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.InventarioCreateOrConnectWithoutFincaInput | Prisma.InventarioCreateOrConnectWithoutFincaInput[]
+  createMany?: Prisma.InventarioCreateManyFincaInputEnvelope
+  connect?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+}
+
+export type InventarioUpdateManyWithoutFincaNestedInput = {
+  create?: Prisma.XOR<Prisma.InventarioCreateWithoutFincaInput, Prisma.InventarioUncheckedCreateWithoutFincaInput> | Prisma.InventarioCreateWithoutFincaInput[] | Prisma.InventarioUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.InventarioCreateOrConnectWithoutFincaInput | Prisma.InventarioCreateOrConnectWithoutFincaInput[]
+  upsert?: Prisma.InventarioUpsertWithWhereUniqueWithoutFincaInput | Prisma.InventarioUpsertWithWhereUniqueWithoutFincaInput[]
+  createMany?: Prisma.InventarioCreateManyFincaInputEnvelope
+  set?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+  disconnect?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+  delete?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+  connect?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+  update?: Prisma.InventarioUpdateWithWhereUniqueWithoutFincaInput | Prisma.InventarioUpdateWithWhereUniqueWithoutFincaInput[]
+  updateMany?: Prisma.InventarioUpdateManyWithWhereWithoutFincaInput | Prisma.InventarioUpdateManyWithWhereWithoutFincaInput[]
+  deleteMany?: Prisma.InventarioScalarWhereInput | Prisma.InventarioScalarWhereInput[]
+}
+
+export type InventarioUncheckedUpdateManyWithoutFincaNestedInput = {
+  create?: Prisma.XOR<Prisma.InventarioCreateWithoutFincaInput, Prisma.InventarioUncheckedCreateWithoutFincaInput> | Prisma.InventarioCreateWithoutFincaInput[] | Prisma.InventarioUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.InventarioCreateOrConnectWithoutFincaInput | Prisma.InventarioCreateOrConnectWithoutFincaInput[]
+  upsert?: Prisma.InventarioUpsertWithWhereUniqueWithoutFincaInput | Prisma.InventarioUpsertWithWhereUniqueWithoutFincaInput[]
+  createMany?: Prisma.InventarioCreateManyFincaInputEnvelope
+  set?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+  disconnect?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+  delete?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+  connect?: Prisma.InventarioWhereUniqueInput | Prisma.InventarioWhereUniqueInput[]
+  update?: Prisma.InventarioUpdateWithWhereUniqueWithoutFincaInput | Prisma.InventarioUpdateWithWhereUniqueWithoutFincaInput[]
+  updateMany?: Prisma.InventarioUpdateManyWithWhereWithoutFincaInput | Prisma.InventarioUpdateManyWithWhereWithoutFincaInput[]
+  deleteMany?: Prisma.InventarioScalarWhereInput | Prisma.InventarioScalarWhereInput[]
+}
+
 export type InventarioCreateWithoutOrganizationInput = {
   id?: string
   name: string
@@ -504,8 +620,11 @@ export type InventarioCreateWithoutOrganizationInput = {
   quantity: number
   unit: string
   minAlertQuantity?: number
+  proveedor?: string | null
+  costo?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  finca?: Prisma.FincaCreateNestedOneWithoutInventariosInput
 }
 
 export type InventarioUncheckedCreateWithoutOrganizationInput = {
@@ -515,6 +634,9 @@ export type InventarioUncheckedCreateWithoutOrganizationInput = {
   quantity: number
   unit: string
   minAlertQuantity?: number
+  proveedor?: string | null
+  costo?: number | null
+  fincaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -554,9 +676,65 @@ export type InventarioScalarWhereInput = {
   quantity?: Prisma.FloatFilter<"Inventario"> | number
   unit?: Prisma.StringFilter<"Inventario"> | string
   minAlertQuantity?: Prisma.FloatFilter<"Inventario"> | number
+  proveedor?: Prisma.StringNullableFilter<"Inventario"> | string | null
+  costo?: Prisma.FloatNullableFilter<"Inventario"> | number | null
+  fincaId?: Prisma.StringNullableFilter<"Inventario"> | string | null
   organizationId?: Prisma.StringFilter<"Inventario"> | string
   createdAt?: Prisma.DateTimeFilter<"Inventario"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Inventario"> | Date | string
+}
+
+export type InventarioCreateWithoutFincaInput = {
+  id?: string
+  name: string
+  category: string
+  quantity: number
+  unit: string
+  minAlertQuantity?: number
+  proveedor?: string | null
+  costo?: number | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  organization: Prisma.OrganizationCreateNestedOneWithoutInventariosInput
+}
+
+export type InventarioUncheckedCreateWithoutFincaInput = {
+  id?: string
+  name: string
+  category: string
+  quantity: number
+  unit: string
+  minAlertQuantity?: number
+  proveedor?: string | null
+  costo?: number | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type InventarioCreateOrConnectWithoutFincaInput = {
+  where: Prisma.InventarioWhereUniqueInput
+  create: Prisma.XOR<Prisma.InventarioCreateWithoutFincaInput, Prisma.InventarioUncheckedCreateWithoutFincaInput>
+}
+
+export type InventarioCreateManyFincaInputEnvelope = {
+  data: Prisma.InventarioCreateManyFincaInput | Prisma.InventarioCreateManyFincaInput[]
+}
+
+export type InventarioUpsertWithWhereUniqueWithoutFincaInput = {
+  where: Prisma.InventarioWhereUniqueInput
+  update: Prisma.XOR<Prisma.InventarioUpdateWithoutFincaInput, Prisma.InventarioUncheckedUpdateWithoutFincaInput>
+  create: Prisma.XOR<Prisma.InventarioCreateWithoutFincaInput, Prisma.InventarioUncheckedCreateWithoutFincaInput>
+}
+
+export type InventarioUpdateWithWhereUniqueWithoutFincaInput = {
+  where: Prisma.InventarioWhereUniqueInput
+  data: Prisma.XOR<Prisma.InventarioUpdateWithoutFincaInput, Prisma.InventarioUncheckedUpdateWithoutFincaInput>
+}
+
+export type InventarioUpdateManyWithWhereWithoutFincaInput = {
+  where: Prisma.InventarioScalarWhereInput
+  data: Prisma.XOR<Prisma.InventarioUpdateManyMutationInput, Prisma.InventarioUncheckedUpdateManyWithoutFincaInput>
 }
 
 export type InventarioCreateManyOrganizationInput = {
@@ -566,6 +744,9 @@ export type InventarioCreateManyOrganizationInput = {
   quantity: number
   unit: string
   minAlertQuantity?: number
+  proveedor?: string | null
+  costo?: number | null
+  fincaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -577,8 +758,11 @@ export type InventarioUpdateWithoutOrganizationInput = {
   quantity?: Prisma.FloatFieldUpdateOperationsInput | number
   unit?: Prisma.StringFieldUpdateOperationsInput | string
   minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finca?: Prisma.FincaUpdateOneWithoutInventariosNestedInput
 }
 
 export type InventarioUncheckedUpdateWithoutOrganizationInput = {
@@ -588,6 +772,9 @@ export type InventarioUncheckedUpdateWithoutOrganizationInput = {
   quantity?: Prisma.FloatFieldUpdateOperationsInput | number
   unit?: Prisma.StringFieldUpdateOperationsInput | string
   minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -599,6 +786,65 @@ export type InventarioUncheckedUpdateManyWithoutOrganizationInput = {
   quantity?: Prisma.FloatFieldUpdateOperationsInput | number
   unit?: Prisma.StringFieldUpdateOperationsInput | string
   minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type InventarioCreateManyFincaInput = {
+  id?: string
+  name: string
+  category: string
+  quantity: number
+  unit: string
+  minAlertQuantity?: number
+  proveedor?: string | null
+  costo?: number | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type InventarioUpdateWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  unit?: Prisma.StringFieldUpdateOperationsInput | string
+  minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.OrganizationUpdateOneRequiredWithoutInventariosNestedInput
+}
+
+export type InventarioUncheckedUpdateWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  unit?: Prisma.StringFieldUpdateOperationsInput | string
+  minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type InventarioUncheckedUpdateManyWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  unit?: Prisma.StringFieldUpdateOperationsInput | string
+  minAlertQuantity?: Prisma.FloatFieldUpdateOperationsInput | number
+  proveedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  costo?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -612,9 +858,13 @@ export type InventarioSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   quantity?: boolean
   unit?: boolean
   minAlertQuantity?: boolean
+  proveedor?: boolean
+  costo?: boolean
+  fincaId?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Inventario$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["inventario"]>
 
@@ -625,9 +875,13 @@ export type InventarioSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   quantity?: boolean
   unit?: boolean
   minAlertQuantity?: boolean
+  proveedor?: boolean
+  costo?: boolean
+  fincaId?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Inventario$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["inventario"]>
 
@@ -638,9 +892,13 @@ export type InventarioSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   quantity?: boolean
   unit?: boolean
   minAlertQuantity?: boolean
+  proveedor?: boolean
+  costo?: boolean
+  fincaId?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Inventario$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["inventario"]>
 
@@ -651,25 +909,32 @@ export type InventarioSelectScalar = {
   quantity?: boolean
   unit?: boolean
   minAlertQuantity?: boolean
+  proveedor?: boolean
+  costo?: boolean
+  fincaId?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type InventarioOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "category" | "quantity" | "unit" | "minAlertQuantity" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["inventario"]>
+export type InventarioOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "category" | "quantity" | "unit" | "minAlertQuantity" | "proveedor" | "costo" | "fincaId" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["inventario"]>
 export type InventarioInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Inventario$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 export type InventarioIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Inventario$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 export type InventarioIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Inventario$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 
 export type $InventarioPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Inventario"
   objects: {
+    finca: Prisma.$FincaPayload<ExtArgs> | null
     organization: Prisma.$OrganizationPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -679,6 +944,9 @@ export type $InventarioPayload<ExtArgs extends runtime.Types.Extensions.Internal
     quantity: number
     unit: string
     minAlertQuantity: number
+    proveedor: string | null
+    costo: number | null
+    fincaId: string | null
     organizationId: string
     createdAt: Date
     updatedAt: Date
@@ -1076,6 +1344,7 @@ readonly fields: InventarioFieldRefs;
  */
 export interface Prisma__InventarioClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  finca<T extends Prisma.Inventario$fincaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Inventario$fincaArgs<ExtArgs>>): Prisma.Prisma__FincaClient<runtime.Types.Result.GetResult<Prisma.$FincaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   organization<T extends Prisma.OrganizationDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.OrganizationDefaultArgs<ExtArgs>>): Prisma.Prisma__OrganizationClient<runtime.Types.Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1112,6 +1381,9 @@ export interface InventarioFieldRefs {
   readonly quantity: Prisma.FieldRef<"Inventario", 'Float'>
   readonly unit: Prisma.FieldRef<"Inventario", 'String'>
   readonly minAlertQuantity: Prisma.FieldRef<"Inventario", 'Float'>
+  readonly proveedor: Prisma.FieldRef<"Inventario", 'String'>
+  readonly costo: Prisma.FieldRef<"Inventario", 'Float'>
+  readonly fincaId: Prisma.FieldRef<"Inventario", 'String'>
   readonly organizationId: Prisma.FieldRef<"Inventario", 'String'>
   readonly createdAt: Prisma.FieldRef<"Inventario", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Inventario", 'DateTime'>
@@ -1511,6 +1783,25 @@ export type InventarioDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Limit how many Inventarios to delete.
    */
   limit?: number
+}
+
+/**
+ * Inventario.finca
+ */
+export type Inventario$fincaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Finca
+   */
+  select?: Prisma.FincaSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Finca
+   */
+  omit?: Prisma.FincaOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FincaInclude<ExtArgs> | null
+  where?: Prisma.FincaWhereInput
 }
 
 /**

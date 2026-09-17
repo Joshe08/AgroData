@@ -18,6 +18,7 @@ import {
   Clock,
   BarChart2,
 } from 'lucide-react';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -818,6 +819,17 @@ export default function ProduccionesPage() {
   const [filtroFinca, setFiltroFinca] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editProd, setEditProd] = useState<Produccion | undefined>();
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    id: number | string | null;
+    name: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    id: null,
+    name: '',
+    loading: false,
+  });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -846,15 +858,27 @@ export default function ProduccionesPage() {
     loadData();
   }, [loadData]);
 
-  const handleDelete = async (id: number | string) => {
-    if (!confirm('¿Seguro que deseas eliminar este registro de producción?')) return;
+  const confirmDeleteProduccion = async () => {
+    if (!deleteModal.id) return;
+    setDeleteModal((prev) => ({ ...prev, loading: true }));
     try {
-      await produccionesApi.delete(id);
-      setProducciones((p) => p.filter((x) => x.id !== id));
+      await produccionesApi.delete(deleteModal.id);
+      setProducciones((p) => p.filter((x) => x.id !== deleteModal.id));
       useToastStore.getState().success('Producción eliminada exitosamente.');
+      setDeleteModal({ isOpen: false, id: null, name: '', loading: false });
     } catch {
       useToastStore.getState().error('Error al eliminar la producción.');
+      setDeleteModal((prev) => ({ ...prev, loading: false }));
     }
+  };
+
+  const handleDelete = (p: Produccion) => {
+    setDeleteModal({
+      isOpen: true,
+      id: p.id,
+      name: `${p.tipo} ${p.variedad ? `(${p.variedad})` : ''}`,
+      loading: false,
+    });
   };
 
   const filtered = producciones.filter((p) => {
@@ -1043,7 +1067,7 @@ export default function ProduccionesPage() {
                             <Edit3 size={14} />
                           </button>
                           <button
-                            onClick={() => handleDelete(p.id)}
+                            onClick={() => handleDelete(p)}
                             style={{
                               background: 'none',
                               border: 'none',
@@ -1075,6 +1099,17 @@ export default function ProduccionesPage() {
           onSave={loadData}
         />
       )}
+
+      {/* Modal Confirmación Eliminación Producción */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="¿Eliminar lote de producción?"
+        itemName={deleteModal.name}
+        description="Esta acción eliminará el ciclo productivo, rendimientos proyectados y registros de siembra asociados."
+        loading={deleteModal.loading}
+        onConfirm={confirmDeleteProduccion}
+        onCancel={() => setDeleteModal({ isOpen: false, id: null, name: '', loading: false })}
+      />
     </div>
   );
 }

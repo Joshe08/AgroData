@@ -57,11 +57,12 @@ function getCategoryIcon(cat: string) {
 }
 
 const PROMPT_SUGERIDOS = [
+  { label: '¿Cuántas fincas tengo?', prompt: '¿Cuántas fincas y hectáreas totales tengo registradas?', icon: <Sprout size={14} color="#4ade80" /> },
+  { label: 'Balance y Gastos', prompt: '¿Cuánto he gastado este mes y cuál es el balance financiero?', icon: <TrendingUp size={14} color="#34d399" /> },
+  { label: 'Alertas de Inventario', prompt: '¿Qué productos o insumos tienen bajo stock en bodega?', icon: <Layers size={14} color="#fbbf24" /> },
   { label: 'Riego óptimo', prompt: '¿Cuál es la frecuencia y volumen de riego óptimo para mis cultivos en el Cesar considerando las condiciones agrometeorológicas actuales?', icon: <Droplets size={14} color="#38bdf8" /> },
   { label: 'Control fitosanitario', prompt: '¿Qué plagas y enfermedades debo monitorear prioritariamente en esta época en el departamento del Cesar y cuáles son las medidas preventivas recomendadas?', icon: <Bug size={14} color="#f87171" /> },
   { label: 'Plan de fertilización', prompt: '¿Qué recomendaciones de fertilización y nutrición vegetal optimizan el rendimiento para los tipos de suelo predominantes en la región?', icon: <FlaskConical size={14} color="#a78bfa" /> },
-  { label: 'Optimización de costos', prompt: '¿Cómo optimizar los costos operativos y de insumos en el ciclo productivo sin sacrificar rendimiento ni calidad de cosecha?', icon: <TrendingUp size={14} color="#34d399" /> },
-  { label: 'Calendario de siembra', prompt: '¿Cuál es el calendario y ventana de siembra óptima en el Cesar teniendo en cuenta el régimen pluviométrico?', icon: <Sprout size={14} color="#4ade80" /> },
 ];
 
 export default function AIPage() {

@@ -70,14 +70,22 @@ const mapProduccion = (prod: AnyRecord) => {
   };
 };
 
-const mapInventario = (item: AnyRecord) => ({
-  ...item,
-  nombre: item.nombre ?? item.name ?? '',
-  categoria: item.categoria ?? item.category ?? 'OTRO',
-  cantidad: item.cantidad ?? item.quantity ?? 0,
-  unidad: item.unidad ?? item.unit ?? 'unidades',
-  stockMinimo: item.stockMinimo ?? item.minAlertQuantity,
-});
+const mapInventario = (item: AnyRecord) => {
+  if (!item) return null;
+  return {
+    ...item,
+    id: item.id,
+    nombre: item.nombre ?? item.name ?? '',
+    categoria: item.categoria ?? item.category ?? 'OTRO',
+    cantidad: item.cantidad ?? item.quantity ?? 0,
+    unidad: item.unidad ?? item.unit ?? 'unidades',
+    stockMinimo: item.stockMinimo ?? item.minAlertQuantity,
+    proveedor: item.proveedor ?? '',
+    costo: item.costo,
+    fincaId: item.fincaId ?? item.finca?.id,
+    finca: item.finca ? { id: item.finca.id, nombre: item.finca.name ?? item.finca.nombre, ubicacion: item.finca.location ?? item.finca.ubicacion } : undefined,
+  };
+};
 
 const mapFinanza = (tx: AnyRecord) => ({
   ...tx,
@@ -131,9 +139,12 @@ const fincaPayload = (data: AnyRecord) => ({
 const inventarioPayload = (data: AnyRecord) => ({
   name: data.name ?? data.nombre,
   category: data.category ?? data.categoria,
-  quantity: data.quantity ?? data.cantidad,
+  quantity: data.quantity !== undefined ? parseFloat(data.quantity) : (data.cantidad !== undefined ? parseFloat(data.cantidad) : 0),
   unit: data.unit ?? data.unidad,
-  minAlertQuantity: data.minAlertQuantity ?? data.stockMinimo,
+  minAlertQuantity: data.minAlertQuantity !== undefined ? parseFloat(data.minAlertQuantity) : (data.stockMinimo !== undefined ? parseFloat(data.stockMinimo) : 10),
+  proveedor: data.proveedor ? String(data.proveedor).trim() : null,
+  costo: data.costo !== undefined && data.costo !== null && data.costo !== '' ? parseFloat(data.costo) : null,
+  fincaId: data.fincaId && String(data.fincaId).trim() !== '' ? String(data.fincaId) : null,
 });
 
 const finanzaPayload = (data: AnyRecord) => ({
@@ -296,8 +307,24 @@ export const maquinariaApi = {
 
 // Clima
 export const climaApi = {
-  current: (ciudad: string) => api.get(`/clima/current?ciudad=${encodeURIComponent(ciudad)}`),
-  forecast: (ciudad: string) => api.get(`/clima/forecast?ciudad=${encodeURIComponent(ciudad)}`),
+  current: (ciudad?: string, lat?: number, lon?: number) => {
+    const params: Record<string, any> = {};
+    if (ciudad) params.ciudad = ciudad;
+    if (lat !== undefined && lon !== undefined) {
+      params.lat = lat;
+      params.lon = lon;
+    }
+    return api.get('/clima/current', { params });
+  },
+  forecast: (ciudad?: string, lat?: number, lon?: number) => {
+    const params: Record<string, any> = {};
+    if (ciudad) params.ciudad = ciudad;
+    if (lat !== undefined && lon !== undefined) {
+      params.lat = lat;
+      params.lon = lon;
+    }
+    return api.get('/clima/forecast', { params });
+  },
 };
 
 // Colaboradores (Multitenant User Management)

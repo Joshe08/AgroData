@@ -85,37 +85,55 @@ export class SaasController {
   async createOrganization(@Body() body: any, @Request() req: any) {
     this.assertSuperAdmin(req);
 
-    if (!body.name) {
-      throw new BadRequestException('El nombre de la empresa es obligatorio.');
+    if (!body.name || !String(body.name).trim()) {
+      throw new BadRequestException('El nombre de la empresa u organización es obligatorio.');
     }
 
-    const org = await this.prisma.organization.create({
-      data: {
-        name: body.name,
-        nit: body.nit || null,
-        subscription: body.subscription || 'FREE',
-      },
-    });
+    const orgType = body.orgType || 'EMPRESA';
+    const isEmpresa = orgType === 'EMPRESA' || orgType === 'COOPERATIVA';
+    
+    // Validate NIT for Empresa / Cooperativa if required
+    let nit = body.nit ? String(body.nit).trim() : null;
+    if (orgType === 'PERSONA_NATURAL') {
+      nit = null; // No NIT for persona natural
+    } else if (isEmpresa && !nit) {
+      throw new BadRequestException('El NIT es obligatorio para Empresas y Cooperativas.');
+    }
 
-    // If owner credentials provided, create the initial owner user
-    if (body.ownerEmail && body.ownerName) {
-      const existingUser = await this.prisma.user.findUnique({ where: { email: body.ownerEmail } });
+    // Check if owner email is already in use before starting transaction
+    if (body.ownerEmail) {
+      const existingUser = await this.prisma.user.findUnique({ where: { email: String(body.ownerEmail).trim().toLowerCase() } });
       if (existingUser) {
         throw new BadRequestException('El correo del propietario ya está registrado en otra cuenta.');
       }
-      const passwordHash = await bcrypt.hash(body.ownerPassword || '123456', 10);
-      await this.prisma.user.create({
-        data: {
-          email: body.ownerEmail,
-          name: body.ownerName,
-          passwordHash,
-          role: 'PROPIETARIO',
-          organizationId: org.id,
-        },
-      });
     }
 
-    return org;
+    // Run creation atomically
+    return this.prisma.$transaction(async (tx) => {
+      const org = await tx.organization.create({
+        data: {
+          name: String(body.name).trim(),
+          nit,
+          orgType,
+          subscription: body.subscription || 'FREE',
+        },
+      });
+
+      if (body.ownerEmail && body.ownerName) {
+        const passwordHash = await bcrypt.hash(body.ownerPassword || '123456', 10);
+        await tx.user.create({
+          data: {
+            email: String(body.ownerEmail).trim().toLowerCase(),
+            name: String(body.ownerName).trim(),
+            passwordHash,
+            role: 'PROPIETARIO',
+            organizationId: org.id,
+          },
+        });
+      }
+
+      return org;
+    });
   }
 
   @Put('organizations/:id')

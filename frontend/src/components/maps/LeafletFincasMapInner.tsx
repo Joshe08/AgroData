@@ -55,6 +55,8 @@ export default function LeafletFincasMapInner({
 
   const streetTiles = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   const satelliteTiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+  const satelliteLabels = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
 
   const fincasWithCoords = fincas.filter(
     (f) => f.latitude != null && f.longitude != null && !isNaN(Number(f.latitude)) && !isNaN(Number(f.longitude))
@@ -69,6 +71,7 @@ export default function LeafletFincasMapInner({
       center: [10.4631, -73.2532],
       zoom: 9,
       zoomControl: false,
+      scrollWheelZoom: false,
     });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -91,20 +94,25 @@ export default function LeafletFincasMapInner({
 
       const lotesCount = Array.isArray(finca.lotes) ? finca.lotes.length : 0;
       const popupContent = document.createElement('div');
-      popupContent.style.cssText = 'padding: 6px; font-family: Inter, sans-serif; min-width: 180px;';
+      popupContent.style.cssText = 'padding: 8px 6px; font-family: Inter, sans-serif; min-width: 210px;';
       popupContent.innerHTML = `
-        <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">${finca.nombre}</div>
-        <div style="font-size: 12px; color: #64748b; margin-bottom: 6px;">${finca.ubicacion || 'Sin ubicación específica'}</div>
-        <div style="display: flex; gap: 8px; margin-bottom: 8px; font-size: 11px; font-weight: 600;">
-          <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #334155;">${finca.hectareas} ha</span>
-          <span style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px; color: #0369a1;">${lotesCount} lotes</span>
+        <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">${finca.nombre}</div>
+        <div style="font-size: 12px; color: #475569; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+          📍 ${finca.ubicacion || 'Departamento del Cesar'}
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 8px; font-family: monospace;">
+          GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}
+        </div>
+        <div style="display: flex; gap: 8px; margin-bottom: 10px; font-size: 11px; font-weight: 600;">
+          <span style="background: #e2e8f0; padding: 3px 8px; border-radius: 6px; color: #334155;">${finca.hectareas} ha</span>
+          <span style="background: #e0f2fe; padding: 3px 8px; border-radius: 6px; color: #0369a1;">${lotesCount} parcelas</span>
         </div>
       `;
 
       if (onSelectFinca) {
         const btn = document.createElement('button');
         btn.textContent = 'Ver detalles de finca';
-        btn.style.cssText = 'width: 100%; background: #16a34a; color: #fff; border: none; border-radius: 6px; padding: 6px; font-size: 12px; font-weight: 600; cursor: pointer;';
+        btn.style.cssText = 'width: 100%; background: #16a34a; color: #fff; border: none; border-radius: 6px; padding: 7px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;';
         btn.onclick = () => onSelectFinca(finca);
         popupContent.appendChild(btn);
       }
@@ -134,6 +142,19 @@ export default function LeafletFincasMapInner({
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
     tileLayerRef.current.setUrl(mapType === 'satellite' ? satelliteTiles : streetTiles);
+
+    if (mapType === 'satellite') {
+      if (!labelsLayerRef.current) {
+        labelsLayerRef.current = L.tileLayer(satelliteLabels, { maxZoom: 19 });
+      }
+      if (!mapInstanceRef.current.hasLayer(labelsLayerRef.current)) {
+        labelsLayerRef.current.addTo(mapInstanceRef.current);
+      }
+    } else {
+      if (labelsLayerRef.current && mapInstanceRef.current.hasLayer(labelsLayerRef.current)) {
+        mapInstanceRef.current.removeLayer(labelsLayerRef.current);
+      }
+    }
   }, [mapType]);
 
   return (

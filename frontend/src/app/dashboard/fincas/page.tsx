@@ -20,9 +20,11 @@ import {
   ChevronDown,
   LayoutGrid,
   Map as MapIcon,
+  Eye,
 } from 'lucide-react';
 import MapPicker from '@/components/maps/MapPicker';
 import FincasMapOverview from '@/components/maps/FincasMapOverview';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 const TIPOS_EXPLOTACION = [
   { value: 'MIXTA', label: 'Mixta (Agrícola y Pecuaria)' },
@@ -738,14 +740,187 @@ function LoteModal({
   );
 }
 
+function FincaDetailModal({
+  finca,
+  onClose,
+  onEdit,
+}: {
+  finca: Finca;
+  onClose: () => void;
+  onEdit: () => void;
+}) {
+  const [lotes, setLotes] = useState<Lote[]>([]);
+  const [loadingLotes, setLoadingLotes] = useState(false);
+
+  useEffect(() => {
+    if (finca?.id) {
+      setLoadingLotes(true);
+      fincasApi.getLotes(finca.id)
+        .then((res) => setLotes(res.data || []))
+        .catch(() => setLotes(finca.lotes || []))
+        .finally(() => setLoadingLotes(false));
+    }
+  }, [finca]);
+
+  if (!finca) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9998 }}>
+      <div className="modal-content" style={{ maxWidth: 740, maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: 'rgba(16, 185, 129, 0.15)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#10b981',
+              }}
+            >
+              <MapPin size={22} />
+            </div>
+            <div>
+              <h2 className="font-display" style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
+                {finca.nombre}
+              </h2>
+              <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                {finca.ubicacion || 'Sin ubicación específica'}
+              </div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Resumen KPIs */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
+          <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
+            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Área Total</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)', marginTop: 4 }}>
+              {finca.hectareas} <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>ha</span>
+            </div>
+          </div>
+          <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
+            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Tipo Explotación</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginTop: 6 }}>
+              {finca.tipoExplotacion || 'Agropecuaria'}
+            </div>
+          </div>
+          <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
+            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Parcelas</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#38bdf8', marginTop: 4 }}>
+              {lotes.length} <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>lotes</span>
+            </div>
+          </div>
+          <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
+            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Estado Operativo</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#4ade80', marginTop: 6 }}>
+              {finca.estado || 'Activa'}
+            </div>
+          </div>
+        </div>
+
+        {/* Mapa de Ubicación */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <MapIcon size={15} color="#10b981" />
+            Ubicación Geográfica en Mapa
+          </div>
+          {finca.latitude && finca.longitude ? (
+            <MapPicker
+              latitude={finca.latitude}
+              longitude={finca.longitude}
+              readOnly={true}
+              height="260px"
+            />
+          ) : (
+            <div style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--color-border)', color: 'var(--color-text-subtle)', fontSize: 13 }}>
+              Este predio aún no cuenta con coordenadas GPS guardadas. Puedes editar la finca para ubicarlas en el mapa interactivo.
+            </div>
+          )}
+        </div>
+
+        {/* Parcelas / Lotes */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Layers size={15} color="#38bdf8" />
+            Parcelas y Lotes Registrados ({lotes.length})
+          </div>
+          {loadingLotes ? (
+            <div style={{ padding: 16, textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 13 }}>Cargando parcelas...</div>
+          ) : lotes.length === 0 ? (
+            <div style={{ padding: 16, background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--color-border)', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
+              Sin parcelas o lotes registrados en esta finca.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+              {lotes.map((lote) => (
+                <div key={lote.id} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 10, fontSize: 13 }}>
+                  <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{lote.nombre}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-muted)', fontSize: 12, marginTop: 4 }}>
+                    <span>{lote.hectareas} ha</span>
+                    {lote.tipoSuelo && <span>Suelo: {lote.tipoSuelo}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Acciones */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
+          <button type="button" onClick={onClose} className="btn-secondary">
+            Volver
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onEdit();
+            }}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            <Edit3 size={15} />
+            Editar Predio
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FincasPage() {
   const { fincas, setFincas, removeFinca } = useFincasStore();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editFinca, setEditFinca] = useState<Finca | undefined>();
-  const [deleting, setDeleting] = useState<string | number | null>(null);
+  const [viewFinca, setViewFinca] = useState<Finca | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+
+  // Modal de confirmación de eliminación profesional
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    type: 'finca' | 'lote';
+    id: string | number | null;
+    fincaId?: string | number | null;
+    name: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    type: 'finca',
+    id: null,
+    name: '',
+    loading: false,
+  });
 
   // Lotes management state
   const [selectedFincaForLotes, setSelectedFincaForLotes] = useState<string | number | null>(null);
@@ -769,17 +944,24 @@ export default function FincasPage() {
     loadFincas();
   }, [loadFincas]);
 
-  const handleDelete = async (id: string | number) => {
-    if (!confirm('¿Seguro que deseas eliminar esta finca? Esta acción eliminará también sus parcelas asociadas.')) return;
-    setDeleting(id);
+  const confirmDeleteAction = async () => {
+    if (!deleteModal.id) return;
+    setDeleteModal((prev) => ({ ...prev, loading: true }));
     try {
-      await fincasApi.delete(id);
-      removeFinca(id);
-      useToastStore.getState().success('Finca eliminada exitosamente.');
+      if (deleteModal.type === 'finca') {
+        await fincasApi.delete(deleteModal.id);
+        removeFinca(deleteModal.id);
+        useToastStore.getState().success(`Finca "${deleteModal.name}" eliminada exitosamente.`);
+      } else {
+        await fincasApi.deleteLote(deleteModal.id);
+        setFincaLotes((prev) => prev.filter((l) => l.id !== deleteModal.id));
+        useToastStore.getState().success(`Parcela "${deleteModal.name}" eliminada.`);
+        loadFincas();
+      }
+      setDeleteModal({ isOpen: false, type: 'finca', id: null, name: '', loading: false });
     } catch {
-      useToastStore.getState().error('Error al eliminar la finca.');
-    } finally {
-      setDeleting(null);
+      useToastStore.getState().error('Error al realizar la eliminación.');
+      setDeleteModal((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -801,16 +983,15 @@ export default function FincasPage() {
     }
   };
 
-  const handleDeleteLote = async (loteId: string | number, fincaId: string | number) => {
-    if (!confirm('¿Eliminar esta parcela/lote?')) return;
-    try {
-      await fincasApi.deleteLote(loteId);
-      setFincaLotes((prev) => prev.filter((l) => l.id !== loteId));
-      useToastStore.getState().success('Lote eliminado.');
-      loadFincas();
-    } catch {
-      useToastStore.getState().error('Error al eliminar el lote.');
-    }
+  const handleDeleteLote = (loteId: string | number, fincaId: string | number, loteNombre: string) => {
+    setDeleteModal({
+      isOpen: true,
+      type: 'lote',
+      id: loteId,
+      fincaId,
+      name: loteNombre,
+      loading: false,
+    });
   };
 
   const filtered = fincas.filter(
@@ -995,6 +1176,20 @@ export default function FincasPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button
+                      onClick={() => setViewFinca(finca)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--color-primary)',
+                        padding: 6,
+                        borderRadius: 8,
+                      }}
+                      title="Ver detalles de la finca"
+                    >
+                      <Eye size={15} />
+                    </button>
+                    <button
                       onClick={() => { setEditFinca(finca); setModalOpen(true); }}
                       style={{
                         background: 'none',
@@ -1009,13 +1204,18 @@ export default function FincasPage() {
                       <Edit3 size={15} />
                     </button>
                     <button
-                      onClick={() => handleDelete(finca.id)}
-                      disabled={deleting === finca.id}
+                      onClick={() => setDeleteModal({
+                        isOpen: true,
+                        type: 'finca',
+                        id: finca.id,
+                        name: finca.nombre,
+                        loading: false,
+                      })}
                       style={{
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
-                        color: deleting === finca.id ? 'var(--color-text-subtle)' : '#f87171',
+                        color: '#f87171',
                         padding: 6,
                         borderRadius: 8,
                       }}
@@ -1109,7 +1309,7 @@ export default function FincasPage() {
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteLote(lote.id, finca.id)}
+                                  onClick={() => handleDeleteLote(lote.id, finca.id, lote.nombre)}
                                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 2 }}
                                   title="Eliminar lote"
                                 >
@@ -1148,6 +1348,20 @@ export default function FincasPage() {
         />
       )}
 
+      {/* Modal Detalle Finca (Solo Lectura) */}
+      {viewFinca && (
+        <FincaDetailModal
+          finca={viewFinca}
+          onClose={() => setViewFinca(null)}
+          onEdit={() => {
+            const f = viewFinca;
+            setViewFinca(null);
+            setEditFinca(f);
+            setModalOpen(true);
+          }}
+        />
+      )}
+
       {/* Modal Lote */}
       {newLoteModalFincaId && (
         <LoteModal
@@ -1161,6 +1375,21 @@ export default function FincasPage() {
           }}
         />
       )}
+
+      {/* Modal Confirmación de Eliminación */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title={deleteModal.type === 'finca' ? '¿Eliminar predio?' : '¿Eliminar parcela?'}
+        itemName={deleteModal.name}
+        description={
+          deleteModal.type === 'finca'
+            ? 'Esta acción eliminará la finca y sus parcelas asociadas. Esta acción no se puede deshacer.'
+            : 'Esta acción eliminará la parcela seleccionada permanentemente.'
+        }
+        loading={deleteModal.loading}
+        onConfirm={confirmDeleteAction}
+        onCancel={() => setDeleteModal({ isOpen: false, type: 'finca', id: null, name: '', loading: false })}
+      />
     </div>
   );
 }

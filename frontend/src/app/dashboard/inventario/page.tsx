@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { inventarioApi, fincasApi } from '@/lib/api';
 import { useToastStore } from '@/store/toastStore';
 import { Package, Plus, Edit3, Trash2, Search, X, AlertTriangle, ShieldAlert } from 'lucide-react';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 interface Item {
   id: string | number;
@@ -261,6 +262,17 @@ export default function InventarioPage() {
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<Item | undefined>();
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    id: string | number | null;
+    name: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    id: null,
+    name: '',
+    loading: false,
+  });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -284,15 +296,27 @@ export default function InventarioPage() {
     loadData();
   }, [loadData]);
 
-  const handleDelete = async (id: string | number) => {
-    if (!confirm('¿Seguro que deseas eliminar este insumo del inventario?')) return;
+  const confirmDelete = async () => {
+    if (!deleteModal.id) return;
+    setDeleteModal((prev) => ({ ...prev, loading: true }));
     try {
-      await inventarioApi.delete(id);
-      setItems((i) => i.filter((x) => x.id !== id));
-      useToastStore.getState().success('Insumo eliminado.');
+      await inventarioApi.delete(deleteModal.id);
+      setItems((i) => i.filter((x) => x.id !== deleteModal.id));
+      useToastStore.getState().success('Insumo eliminado del inventario.');
+      setDeleteModal({ isOpen: false, id: null, name: '', loading: false });
     } catch {
       useToastStore.getState().error('Error al eliminar el insumo.');
+      setDeleteModal((prev) => ({ ...prev, loading: false }));
     }
+  };
+
+  const handleDelete = (item: Item) => {
+    setDeleteModal({
+      isOpen: true,
+      id: item.id,
+      name: item.nombre,
+      loading: false,
+    });
   };
 
   const filtered = items.filter((i) => {
@@ -430,7 +454,7 @@ export default function InventarioPage() {
                             <Edit3 size={14} />
                           </button>
                           <button
-                            onClick={() => handleDelete(item.id)}
+                            onClick={() => handleDelete(item)}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}
                             title="Eliminar"
                           >
@@ -455,6 +479,17 @@ export default function InventarioPage() {
           onSave={loadData}
         />
       )}
+
+      {/* Modal Confirmación Eliminación Insumo */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="¿Eliminar insumo del inventario?"
+        itemName={deleteModal.name}
+        description="Esta acción eliminará permanentemente el registro de este insumo de la bodega. Esta acción no se puede deshacer."
+        loading={deleteModal.loading}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteModal({ isOpen: false, id: null, name: '', loading: false })}
+      />
     </div>
   );
 }

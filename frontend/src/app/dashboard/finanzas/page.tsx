@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { finanzasApi, fincasApi } from '@/lib/api';
 import { useToastStore } from '@/store/toastStore';
 import { DollarSign, Plus, Trash2, Search, X, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -147,6 +148,17 @@ export default function FinanzasPage() {
   const [filtroTipo, setFiltroTipo] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [chartData, setChartData] = useState<unknown[]>([]);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    id: number | string | null;
+    name: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    id: null,
+    name: '',
+    loading: false,
+  });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -175,15 +187,27 @@ export default function FinanzasPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const handleDelete = async (id: number | string) => {
-    if (!confirm('¿Eliminar esta transacción?')) return;
+  const confirmDeleteTransaccion = async () => {
+    if (!deleteModal.id) return;
+    setDeleteModal((prev) => ({ ...prev, loading: true }));
     try {
-      await finanzasApi.delete(id);
-      setTransacciones((t) => t.filter((x) => x.id !== id));
+      await finanzasApi.delete(deleteModal.id);
+      setTransacciones((t) => t.filter((x) => x.id !== deleteModal.id));
       useToastStore.getState().success('Transacción eliminada.');
+      setDeleteModal({ isOpen: false, id: null, name: '', loading: false });
     } catch {
       useToastStore.getState().error('Error al eliminar la transacción.');
+      setDeleteModal((prev) => ({ ...prev, loading: false }));
     }
+  };
+
+  const handleDelete = (t: Transaccion) => {
+    setDeleteModal({
+      isOpen: true,
+      id: t.id,
+      name: `${t.tipo === 'INGRESO' ? 'Ingreso' : 'Gasto'} - ${t.categoria}`,
+      loading: false,
+    });
   };
 
   const formatCOP = (v: number) =>
@@ -313,7 +337,7 @@ export default function FinanzasPage() {
                       {formatCOP(t.monto)}
                     </td>
                     <td>
-                      <button onClick={() => handleDelete(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}>
+                      <button onClick={() => handleDelete(t)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}>
                         <Trash2 size={14} />
                       </button>
                     </td>
@@ -326,6 +350,17 @@ export default function FinanzasPage() {
       )}
 
       {modalOpen && <TransaccionModal fincas={fincas} onClose={() => setModalOpen(false)} onSave={loadData} />}
+
+      {/* Modal Confirmación Eliminación Transacción */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="¿Eliminar transacción contable?"
+        itemName={deleteModal.name}
+        description="Esta acción eliminará permanentemente este movimiento de los libros financieros de la organización."
+        loading={deleteModal.loading}
+        onConfirm={confirmDeleteTransaccion}
+        onCancel={() => setDeleteModal({ isOpen: false, id: null, name: '', loading: false })}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
   MapPin,
   CheckCircle,
 } from 'lucide-react';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 interface Maquina {
   id: string | number;
@@ -255,6 +256,17 @@ export default function MaquinariaPage() {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editMaquina, setEditMaquina] = useState<Maquina | undefined>();
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    id: string | number | null;
+    name: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    id: null,
+    name: '',
+    loading: false,
+  });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -273,15 +285,27 @@ export default function MaquinariaPage() {
     loadData();
   }, [loadData]);
 
-  const handleDelete = async (id: string | number) => {
-    if (!confirm('¿Seguro que deseas eliminar este equipo?')) return;
+  const confirmDeleteMaquina = async () => {
+    if (!deleteModal.id) return;
+    setDeleteModal((prev) => ({ ...prev, loading: true }));
     try {
-      await maquinariaApi.delete(id);
-      setMaquinaria((m) => m.filter((x) => x.id !== id));
+      await maquinariaApi.delete(deleteModal.id);
+      setMaquinaria((m) => m.filter((x) => x.id !== deleteModal.id));
       useToastStore.getState().success('Equipo eliminado.');
+      setDeleteModal({ isOpen: false, id: null, name: '', loading: false });
     } catch {
       useToastStore.getState().error('Error al eliminar equipo.');
+      setDeleteModal((prev) => ({ ...prev, loading: false }));
     }
+  };
+
+  const handleDelete = (m: Maquina) => {
+    setDeleteModal({
+      isOpen: true,
+      id: m.id,
+      name: `${m.nombre} (${m.tipo})`,
+      loading: false,
+    });
   };
 
   const filtered = maquinaria.filter(
@@ -386,7 +410,7 @@ export default function MaquinariaPage() {
                       <Edit3 size={14} />
                     </button>
                     <button
-                      onClick={() => handleDelete(m.id)}
+                      onClick={() => handleDelete(m)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}
                       title="Eliminar"
                     >
@@ -450,6 +474,17 @@ export default function MaquinariaPage() {
           onSave={loadData}
         />
       )}
+
+      {/* Modal Confirmación Eliminación Maquinaria */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="¿Eliminar maquinaria o equipo?"
+        itemName={deleteModal.name}
+        description="Esta acción eliminará el registro del equipo, su historial de mantenimiento y horas de uso de la base de datos."
+        loading={deleteModal.loading}
+        onConfirm={confirmDeleteMaquina}
+        onCancel={() => setDeleteModal({ isOpen: false, id: null, name: '', loading: false })}
+      />
     </div>
   );
 }

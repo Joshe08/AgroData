@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { personalApi, fincasApi } from '@/lib/api';
 import { useToastStore } from '@/store/toastStore';
 import { Users, Plus, Edit3, Trash2, Search, X, Phone, Briefcase, MapPin } from 'lucide-react';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 interface Personal {
   id: string | number;
@@ -224,6 +225,17 @@ export default function PersonalPage() {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editPersona, setEditPersona] = useState<Personal | undefined>();
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    id: string | number | null;
+    name: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    id: null,
+    name: '',
+    loading: false,
+  });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -242,15 +254,27 @@ export default function PersonalPage() {
     loadData();
   }, [loadData]);
 
-  const handleDelete = async (id: string | number) => {
-    if (!confirm('¿Seguro que deseas eliminar este colaborador?')) return;
+  const confirmDeletePersonal = async () => {
+    if (!deleteModal.id) return;
+    setDeleteModal((prev) => ({ ...prev, loading: true }));
     try {
-      await personalApi.delete(id);
-      setPersonal((p) => p.filter((x) => x.id !== id));
+      await personalApi.delete(deleteModal.id);
+      setPersonal((p) => p.filter((x) => x.id !== deleteModal.id));
       useToastStore.getState().success('Colaborador eliminado.');
+      setDeleteModal({ isOpen: false, id: null, name: '', loading: false });
     } catch {
       useToastStore.getState().error('Error al eliminar colaborador.');
+      setDeleteModal((prev) => ({ ...prev, loading: false }));
     }
+  };
+
+  const handleDelete = (p: Personal) => {
+    setDeleteModal({
+      isOpen: true,
+      id: p.id,
+      name: `${p.nombre} (${p.cargo})`,
+      loading: false,
+    });
   };
 
   const formatCOP = (v: number) =>
@@ -338,7 +362,7 @@ export default function PersonalPage() {
                     <Edit3 size={14} />
                   </button>
                   <button
-                    onClick={() => handleDelete(p.id)}
+                    onClick={() => handleDelete(p)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}
                     title="Eliminar"
                   >
@@ -393,6 +417,17 @@ export default function PersonalPage() {
           onSave={loadData}
         />
       )}
+
+      {/* Modal Confirmación Eliminación Personal */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="¿Eliminar colaborador del equipo?"
+        itemName={deleteModal.name}
+        description="Esta acción desvinculará y eliminará permanentemente la ficha de este trabajador de la organización."
+        loading={deleteModal.loading}
+        onConfirm={confirmDeletePersonal}
+        onCancel={() => setDeleteModal({ isOpen: false, id: null, name: '', loading: false })}
+      />
     </div>
   );
 }

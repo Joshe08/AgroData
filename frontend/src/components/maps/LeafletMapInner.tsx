@@ -54,6 +54,8 @@ export default function LeafletMapInner({
 
   const streetTiles = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   const satelliteTiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+  const satelliteLabels = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
 
   const updateLocation = useCallback((lat: number, lng: number, address?: string) => {
     setCurrentCoords({ lat, lng });
@@ -97,6 +99,7 @@ export default function LeafletMapInner({
       center: [initialLat, initialLng],
       zoom: initialZoom,
       zoomControl: false,
+      scrollWheelZoom: false,
     });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -164,6 +167,19 @@ export default function LeafletMapInner({
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
     tileLayerRef.current.setUrl(mapType === 'satellite' ? satelliteTiles : streetTiles);
+
+    if (mapType === 'satellite') {
+      if (!labelsLayerRef.current) {
+        labelsLayerRef.current = L.tileLayer(satelliteLabels, { maxZoom: 19 });
+      }
+      if (!mapInstanceRef.current.hasLayer(labelsLayerRef.current)) {
+        labelsLayerRef.current.addTo(mapInstanceRef.current);
+      }
+    } else {
+      if (labelsLayerRef.current && mapInstanceRef.current.hasLayer(labelsLayerRef.current)) {
+        mapInstanceRef.current.removeLayer(labelsLayerRef.current);
+      }
+    }
   }, [mapType]);
 
   useEffect(() => {
@@ -309,8 +325,7 @@ export default function LeafletMapInner({
             flexWrap: 'wrap',
           }}
         >
-          <form
-            onSubmit={handleSearch}
+          <div
             style={{
               flex: 1,
               minWidth: 200,
@@ -330,6 +345,13 @@ export default function LeafletMapInner({
               placeholder="Buscar municipio o predio (ej: Codazzi, La Paz)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSearch();
+                }
+              }}
               style={{
                 width: '100%',
                 background: 'transparent',
@@ -344,7 +366,12 @@ export default function LeafletMapInner({
               <Loader2 size={15} style={{ animation: 'spin 1s linear infinite', color: '#4ade80', flexShrink: 0 }} />
             ) : (
               <button
-                type="submit"
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSearch();
+                }}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -358,7 +385,7 @@ export default function LeafletMapInner({
                 Buscar
               </button>
             )}
-          </form>
+          </div>
 
           <button
             type="button"

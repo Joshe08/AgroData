@@ -28,6 +28,7 @@ export type OrganizationMinAggregateOutputType = {
   id: string | null
   name: string | null
   nit: string | null
+  orgType: string | null
   subscription: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -37,6 +38,7 @@ export type OrganizationMaxAggregateOutputType = {
   id: string | null
   name: string | null
   nit: string | null
+  orgType: string | null
   subscription: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -46,6 +48,7 @@ export type OrganizationCountAggregateOutputType = {
   id: number
   name: number
   nit: number
+  orgType: number
   subscription: number
   createdAt: number
   updatedAt: number
@@ -57,6 +60,7 @@ export type OrganizationMinAggregateInputType = {
   id?: true
   name?: true
   nit?: true
+  orgType?: true
   subscription?: true
   createdAt?: true
   updatedAt?: true
@@ -66,6 +70,7 @@ export type OrganizationMaxAggregateInputType = {
   id?: true
   name?: true
   nit?: true
+  orgType?: true
   subscription?: true
   createdAt?: true
   updatedAt?: true
@@ -75,6 +80,7 @@ export type OrganizationCountAggregateInputType = {
   id?: true
   name?: true
   nit?: true
+  orgType?: true
   subscription?: true
   createdAt?: true
   updatedAt?: true
@@ -157,6 +163,7 @@ export type OrganizationGroupByOutputType = {
   id: string
   name: string
   nit: string | null
+  orgType: string | null
   subscription: string
   createdAt: Date
   updatedAt: Date
@@ -187,6 +194,7 @@ export type OrganizationWhereInput = {
   id?: Prisma.StringFilter<"Organization"> | string
   name?: Prisma.StringFilter<"Organization"> | string
   nit?: Prisma.StringNullableFilter<"Organization"> | string | null
+  orgType?: Prisma.StringNullableFilter<"Organization"> | string | null
   subscription?: Prisma.StringFilter<"Organization"> | string
   createdAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
@@ -202,6 +210,7 @@ export type OrganizationOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   nit?: Prisma.SortOrderInput | Prisma.SortOrder
+  orgType?: Prisma.SortOrderInput | Prisma.SortOrder
   subscription?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -220,6 +229,7 @@ export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.OrganizationWhereInput | Prisma.OrganizationWhereInput[]
   name?: Prisma.StringFilter<"Organization"> | string
   nit?: Prisma.StringNullableFilter<"Organization"> | string | null
+  orgType?: Prisma.StringNullableFilter<"Organization"> | string | null
   subscription?: Prisma.StringFilter<"Organization"> | string
   createdAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
@@ -235,6 +245,7 @@ export type OrganizationOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   nit?: Prisma.SortOrderInput | Prisma.SortOrder
+  orgType?: Prisma.SortOrderInput | Prisma.SortOrder
   subscription?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -250,6 +261,7 @@ export type OrganizationScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Organization"> | string
   name?: Prisma.StringWithAggregatesFilter<"Organization"> | string
   nit?: Prisma.StringNullableWithAggregatesFilter<"Organization"> | string | null
+  orgType?: Prisma.StringNullableWithAggregatesFilter<"Organization"> | string | null
   subscription?: Prisma.StringWithAggregatesFilter<"Organization"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Organization"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Organization"> | Date | string
@@ -259,6 +271,7 @@ export type OrganizationCreateInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -274,6 +287,7 @@ export type OrganizationUncheckedCreateInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -289,6 +303,7 @@ export type OrganizationUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -304,6 +319,7 @@ export type OrganizationUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -319,6 +335,7 @@ export type OrganizationCreateManyInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -328,6 +345,7 @@ export type OrganizationUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -337,6 +355,7 @@ export type OrganizationUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -346,6 +365,7 @@ export type OrganizationCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   nit?: Prisma.SortOrder
+  orgType?: Prisma.SortOrder
   subscription?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -355,6 +375,7 @@ export type OrganizationMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   nit?: Prisma.SortOrder
+  orgType?: Prisma.SortOrder
   subscription?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -364,6 +385,7 @@ export type OrganizationMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   nit?: Prisma.SortOrder
+  orgType?: Prisma.SortOrder
   subscription?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -474,6 +496,7 @@ export type OrganizationCreateWithoutUsersInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -488,6 +511,7 @@ export type OrganizationUncheckedCreateWithoutUsersInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -518,6 +542,7 @@ export type OrganizationUpdateWithoutUsersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -532,6 +557,7 @@ export type OrganizationUncheckedUpdateWithoutUsersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -546,6 +572,7 @@ export type OrganizationCreateWithoutFincasInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -560,6 +587,7 @@ export type OrganizationUncheckedCreateWithoutFincasInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -590,6 +618,7 @@ export type OrganizationUpdateWithoutFincasInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -604,6 +633,7 @@ export type OrganizationUncheckedUpdateWithoutFincasInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -618,6 +648,7 @@ export type OrganizationCreateWithoutInventariosInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -632,6 +663,7 @@ export type OrganizationUncheckedCreateWithoutInventariosInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -662,6 +694,7 @@ export type OrganizationUpdateWithoutInventariosInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -676,6 +709,7 @@ export type OrganizationUncheckedUpdateWithoutInventariosInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -690,6 +724,7 @@ export type OrganizationCreateWithoutFinanzasInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -704,6 +739,7 @@ export type OrganizationUncheckedCreateWithoutFinanzasInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -734,6 +770,7 @@ export type OrganizationUpdateWithoutFinanzasInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -748,6 +785,7 @@ export type OrganizationUncheckedUpdateWithoutFinanzasInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -762,6 +800,7 @@ export type OrganizationCreateWithoutEmpleadosInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -776,6 +815,7 @@ export type OrganizationUncheckedCreateWithoutEmpleadosInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -806,6 +846,7 @@ export type OrganizationUpdateWithoutEmpleadosInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -820,6 +861,7 @@ export type OrganizationUncheckedUpdateWithoutEmpleadosInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -834,6 +876,7 @@ export type OrganizationCreateWithoutMaquinariasInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -848,6 +891,7 @@ export type OrganizationUncheckedCreateWithoutMaquinariasInput = {
   id?: string
   name: string
   nit?: string | null
+  orgType?: string | null
   subscription?: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -878,6 +922,7 @@ export type OrganizationUpdateWithoutMaquinariasInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -892,6 +937,7 @@ export type OrganizationUncheckedUpdateWithoutMaquinariasInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -982,6 +1028,7 @@ export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.Internal
   id?: boolean
   name?: boolean
   nit?: boolean
+  orgType?: boolean
   subscription?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -998,6 +1045,7 @@ export type OrganizationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   id?: boolean
   name?: boolean
   nit?: boolean
+  orgType?: boolean
   subscription?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1007,6 +1055,7 @@ export type OrganizationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   id?: boolean
   name?: boolean
   nit?: boolean
+  orgType?: boolean
   subscription?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1016,12 +1065,13 @@ export type OrganizationSelectScalar = {
   id?: boolean
   name?: boolean
   nit?: boolean
+  orgType?: boolean
   subscription?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type OrganizationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "nit" | "subscription" | "createdAt" | "updatedAt", ExtArgs["result"]["organization"]>
+export type OrganizationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "nit" | "orgType" | "subscription" | "createdAt" | "updatedAt", ExtArgs["result"]["organization"]>
 export type OrganizationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   users?: boolean | Prisma.Organization$usersArgs<ExtArgs>
   fincas?: boolean | Prisma.Organization$fincasArgs<ExtArgs>
@@ -1048,6 +1098,7 @@ export type $OrganizationPayload<ExtArgs extends runtime.Types.Extensions.Intern
     id: string
     name: string
     nit: string | null
+    orgType: string | null
     subscription: string
     createdAt: Date
     updatedAt: Date
@@ -1483,6 +1534,7 @@ export interface OrganizationFieldRefs {
   readonly id: Prisma.FieldRef<"Organization", 'String'>
   readonly name: Prisma.FieldRef<"Organization", 'String'>
   readonly nit: Prisma.FieldRef<"Organization", 'String'>
+  readonly orgType: Prisma.FieldRef<"Organization", 'String'>
   readonly subscription: Prisma.FieldRef<"Organization", 'String'>
   readonly createdAt: Prisma.FieldRef<"Organization", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Organization", 'DateTime'>

@@ -26,6 +26,7 @@ import {
   LogOut,
   Info,
 } from 'lucide-react';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 interface PlatformStats {
   totalOrganizaciones: number;
@@ -35,6 +36,7 @@ interface PlatformStats {
     id: string;
     nombre: string;
     nit: string | null;
+    orgType?: string | null;
     plan: string;
     usuarios: number;
     fincas: number;
@@ -88,9 +90,25 @@ export default function SaasAdminPage() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Delete modal state
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    type: 'org' | 'user';
+    id: string | null;
+    name: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    type: 'org',
+    id: null,
+    name: '',
+    loading: false,
+  });
+
   // Form states
   const [orgForm, setOrgForm] = useState({
     name: '',
+    orgType: 'EMPRESA',
     nit: '',
     subscription: 'FREE',
     ownerEmail: '',
@@ -144,9 +162,9 @@ export default function SaasAdminPage() {
     e.preventDefault();
     try {
       await saasApi.createOrganization(orgForm);
-      useToastStore.getState().success(`Empresa "${orgForm.name}" creada exitosamente.`);
+      useToastStore.getState().success(`Organización "${orgForm.name}" creada exitosamente.`);
       setShowOrgModal(false);
-      setOrgForm({ name: '', nit: '', subscription: 'FREE', ownerEmail: '', ownerName: '', ownerPassword: '' });
+      setOrgForm({ name: '', orgType: 'EMPRESA', nit: '', subscription: 'FREE', ownerEmail: '', ownerName: '', ownerPassword: '' });
       loadData();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Error al crear la empresa.';
@@ -167,17 +185,35 @@ export default function SaasAdminPage() {
     }
   };
 
-  const handleDeleteOrg = async (id: string, name: string) => {
-    if (!confirm(`¿Estás seguro de eliminar la empresa "${name}" y todos sus usuarios asociados?`)) return;
+  const confirmDeleteSaasAction = async () => {
+    if (!deleteModal.id) return;
+    setDeleteModal((prev) => ({ ...prev, loading: true }));
     try {
-      await saasApi.deleteOrganization(id);
-      useToastStore.getState().success(`Empresa "${name}" eliminada.`);
+      if (deleteModal.type === 'org') {
+        await saasApi.deleteOrganization(deleteModal.id);
+        useToastStore.getState().success(`Organización "${deleteModal.name}" eliminada.`);
+      } else {
+        await saasApi.deleteUser(deleteModal.id);
+        useToastStore.getState().success(`Usuario "${deleteModal.name}" eliminado.`);
+      }
       loadData();
+      setDeleteModal({ isOpen: false, type: 'org', id: null, name: '', loading: false });
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Error al eliminar la empresa.';
+      const msg = err.response?.data?.message || 'Error al procesar la eliminación.';
       useToastStore.getState().error(msg);
       setError(msg);
+      setDeleteModal((prev) => ({ ...prev, loading: false }));
     }
+  };
+
+  const handleDeleteOrg = (id: string, name: string) => {
+    setDeleteModal({
+      isOpen: true,
+      type: 'org',
+      id,
+      name,
+      loading: false,
+    });
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -195,17 +231,14 @@ export default function SaasAdminPage() {
     }
   };
 
-  const handleDeleteUser = async (id: string, name: string) => {
-    if (!confirm(`¿Estás seguro de eliminar el usuario "${name}"?`)) return;
-    try {
-      await saasApi.deleteUser(id);
-      useToastStore.getState().success(`Usuario "${name}" eliminado.`);
-      loadData();
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Error al eliminar el usuario.';
-      useToastStore.getState().error(msg);
-      setError(msg);
-    }
+  const handleDeleteUser = (id: string, name: string) => {
+    setDeleteModal({
+      isOpen: true,
+      type: 'user',
+      id,
+      name,
+      loading: false,
+    });
   };
 
   if (!user || user.rol !== 'SUPERADMIN') return null;
@@ -840,11 +873,25 @@ export default function SaasAdminPage() {
 
             <form onSubmit={handleCreateOrg} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Nombre de la Empresa / Organización *</label>
+                <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Tipo de Organización *</label>
+                <select
+                  className="input-field"
+                  style={{ marginTop: 6 }}
+                  value={orgForm.orgType}
+                  onChange={(e) => setOrgForm({ ...orgForm, orgType: e.target.value })}
+                >
+                  <option value="EMPRESA">Empresa / Sociedad Comercial (Requiere NIT)</option>
+                  <option value="PERSONA_NATURAL">Persona Natural / Productor Individual (Sin NIT obligatorio)</option>
+                  <option value="COOPERATIVA">Cooperativa / Asociación Agropecuaria (Requiere NIT)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Nombre de la Empresa u Organización *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ej: Hacienda Los Mangos S.A.S"
+                  placeholder={orgForm.orgType === 'PERSONA_NATURAL' ? 'Ej: Finca El Paraíso - Carlos Mendoza' : 'Ej: Hacienda Los Mangos S.A.S'}
                   className="input-field"
                   style={{ marginTop: 6 }}
                   value={orgForm.name}
@@ -854,10 +901,13 @@ export default function SaasAdminPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>NIT (Opcional)</label>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                    {orgForm.orgType === 'PERSONA_NATURAL' ? 'Cédula / Documento (Opcional)' : 'NIT *'}
+                  </label>
                   <input
                     type="text"
-                    placeholder="900.123.456-7"
+                    required={orgForm.orgType !== 'PERSONA_NATURAL'}
+                    placeholder={orgForm.orgType === 'PERSONA_NATURAL' ? 'Ej: 1098765432' : '900.123.456-7'}
                     className="input-field"
                     style={{ marginTop: 6 }}
                     value={orgForm.nit}
@@ -1036,6 +1086,21 @@ export default function SaasAdminPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title={deleteModal.type === 'org' ? '¿Eliminar Organización / Empresa?' : '¿Eliminar Usuario de la Plataforma?'}
+        itemName={deleteModal.name}
+        description={
+          deleteModal.type === 'org'
+            ? 'Esta acción eliminará la organización completa, sus usuarios vinculados, predios, finanzas y registros en cascada. Esta acción es irreversible.'
+            : 'Esta acción revocará el acceso y eliminará permanentemente la cuenta de este usuario.'
+        }
+        loading={deleteModal.loading}
+        onConfirm={confirmDeleteSaasAction}
+        onCancel={() => setDeleteModal({ isOpen: false, type: 'org', id: null, name: '', loading: false })}
+      />
     </div>
   );
 }
