@@ -148,7 +148,7 @@ function ProduccionModal({
   });
 
   const [otra, setOtra] = useState({
-    nombreActividad: prod?.name || '',
+    nombreActividad: prod?.variedad || '',
     cantidad: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
     unidad: prod?.unidadMedida || 'Unidades',
     fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],

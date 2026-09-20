@@ -1,9 +1,17 @@
 import axios from 'axios';
 
-const DEFAULT_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+let API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// If running in browser and accessed via local network IP, point to the same IP on port 3001
+if (typeof window !== 'undefined') {
+  const hostname = window.location.hostname;
+  if (hostname !== 'localhost') {
+    API_BASE = `http://${hostname}:3001`;
+  }
+}
 
 export const api = axios.create({
-  baseURL: DEFAULT_API_BASE,
+  baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
 });
