@@ -1,228 +1,121 @@
-import { PrismaClient } from '../src/generated/client/client';
-import { UserRole } from '../src/generated/client/enums';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import * as bcrypt from 'bcrypt';
+﻿import { PrismaClient } from "../src/generated/client/client";
 
-const adapter = new PrismaBetterSqlite3({
-  url: 'file:./dev.db',
-});
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
-  // Clear existing database
-  console.log('Cleaning up existing data...');
-  try {
-    await prisma.diarioProduccion.deleteMany({});
-    await prisma.produccion.deleteMany({});
-    await prisma.lote.deleteMany({});
-    await prisma.finca.deleteMany({});
-    await prisma.user.deleteMany({});
-    await prisma.inventario.deleteMany({});
-    await prisma.finanza.deleteMany({});
-    await prisma.empleado.deleteMany({});
-    await prisma.maquinaria.deleteMany({});
-    await prisma.organization.deleteMany({});
-  } catch (error) {
-    console.log('Clear error (expected if running first time):', error);
-  }
+  console.log("Seeding database...");
 
-  console.log('Seeding database...');
-
-  // Create default organization
-  const org = await prisma.organization.create({
-    data: {
-      name: 'Asociación Agro Cesar',
-      nit: '900.123.456-7',
-      subscription: 'PREMIUM',
+  // ── Organizaciones ──
+  const org1 = await prisma.organization.upsert({
+    where: { id: "19918424-c9bb-49d2-bf5e-3878edd08cc9" },
+    update: {},
+    create: {
+      id: "19918424-c9bb-49d2-bf5e-3878edd08cc9",
+      name: "Asociación Agro Cesar",
+      nit: "900.123.456-7",
+      subscription: "PREMIUM",
     },
   });
 
-  // Create hashed password for admin
-  const passwordHash = await bcrypt.hash('melioda123', 10);
-
-  // Create default users
-  const admin = await prisma.user.create({
-    data: {
-      email: 'zuletajoseangel4@gmail.com',
-      name: 'José Ángel Zuleta',
-      passwordHash,
-      role: 'SUPERADMIN', // Maps to the UserRole enum
-      organizationId: org.id,
+  const org2 = await prisma.organization.upsert({
+    where: { id: "daba1ba2-1646-4f63-a929-ff6ed1ef9997" },
+    update: {},
+    create: {
+      id: "daba1ba2-1646-4f63-a929-ff6ed1ef9997",
+      name: "Hacienda Napoles",
+      nit: "1233332244",
+      subscription: "FREE",
     },
   });
 
-  const worker = await prisma.user.create({
-    data: {
-      email: 'trabajador@agrodata.com',
-      name: 'Carlos Gómez',
-      passwordHash,
-      role: 'TRABAJADOR',
-      organizationId: org.id,
+  const org3 = await prisma.organization.upsert({
+    where: { id: "2704e718-68e0-47fb-9f71-d2ccc8cf7051" },
+    update: {},
+    create: {
+      id: "2704e718-68e0-47fb-9f71-d2ccc8cf7051",
+      name: "IntregaCore Agro",
+      nit: "23347777443",
+      subscription: "FREE",
     },
   });
 
-  const agronomist = await prisma.user.create({
-    data: {
-      email: 'agronomo@agrodata.com',
-      name: 'Laura Restrepo',
-      passwordHash,
-      role: 'AGRONOMO',
-      organizationId: org.id,
+  const org4 = await prisma.organization.upsert({
+    where: { id: "383201c7-3b92-4661-8496-115139fecf31" },
+    update: {},
+    create: {
+      id: "383201c7-3b92-4661-8496-115139fecf31",
+      name: "El prado",
+      subscription: "FREE",
     },
   });
 
-  // Create some fincas
-  const finca1 = await prisma.finca.create({
-    data: {
-      name: 'Hacienda El Oasis',
-      location: 'Kilómetro 12 Vía la Paz, Valledupar',
-      area: 45.5,
-      latitude: 10.4283,
-      longitude: -73.2038,
-      organizationId: org.id,
+  // ── Usuarios (passwordHash ya hasheadas con bcrypt) ──
+  await prisma.user.upsert({
+    where: { email: "zuletajoseangel4@gmail.com" },
+    update: {},
+    create: {
+      id: "b157e892-1171-4b80-87b4-4b00f3e6a123",
+      email: "zuletajoseangel4@gmail.com",
+      passwordHash: "$2b$10$u2WJkNRmqlrrHzvHT6.2ouoJAjjPO1N5wZqXQmPhxBo6ksTLqQ4wK",
+      name: "José Ángel Zuleta",
+      role: "SUPERADMIN",
+      organizationId: org1.id,
     },
   });
 
-  // Create some lotes
-  const lote1 = await prisma.lote.create({
-    data: {
-      name: 'Lote Norte - Café',
-      area: 12.0,
-      soilType: 'Franco Arcilloso',
-      fincaId: finca1.id,
+  await prisma.user.upsert({
+    where: { email: "alejandramogollonvargas@gmail.com" },
+    update: {},
+    create: {
+      id: "ff332b3d-7733-45f3-81ea-8a6034ae2e1e",
+      email: "alejandramogollonvargas@gmail.com",
+      passwordHash: "$2b$10$EFY.ZcKpQnU8ZQ6OWEXvue6Lso9gety9OPs3WjVhv1k9w1lXIfSES",
+      name: "Alejandra Mogollón Vargas",
+      role: "PROPIETARIO",
+      organizationId: org2.id,
     },
   });
 
-  const lote2 = await prisma.lote.create({
-    data: {
-      name: 'Lote Sur - Cacao',
-      area: 8.5,
-      soilType: 'Franco Arenoso',
-      fincaId: finca1.id,
+  await prisma.user.upsert({
+    where: { email: "luigivsqz4@gmail.com" },
+    update: {},
+    create: {
+      id: "8bf819ea-e14f-4840-9de7-2af56495c929",
+      email: "luigivsqz4@gmail.com",
+      passwordHash: "$2b$10$9Wp16Wzk.D2Wl2f1LiEL5Oscwz7fe.fSkjKQQPmmXQSwtgQNyYfjG",
+      name: "Luigi Vasquez",
+      role: "PROPIETARIO",
+      organizationId: org3.id,
     },
   });
 
-  // Create some active productions
-  const prod1 = await prisma.produccion.create({
-    data: {
-      name: 'Cultivo Café Castillo',
-      type: 'AGRICOLA_CAFE',
-      status: 'ACTIVE',
-      startDate: new Date('2025-10-01'),
-      expectedYield: 15000.0,
-      unit: 'kg',
-      loteId: lote1.id,
-      metadata: JSON.stringify({
-        variety: 'Castillo',
-        density: 5000,
-        lastSoilAnalysis: '2025-09-15',
-      }),
+  await prisma.user.upsert({
+    where: { email: "santiagoroca@gmail.com" },
+    update: {},
+    create: {
+      id: "c948cc63-1c6d-45d6-968b-16c3c6e10337",
+      email: "santiagoroca@gmail.com",
+      passwordHash: "$2b$10$e33D6K46U.0KbyXa0/TPh.MWyBRGgioq/0A6O4B6N39nGiX6bkMmW",
+      name: "Santigap",
+      role: "AGRONOMO",
+      organizationId: org3.id,
     },
   });
 
-  // Add some inventory items
-  await prisma.inventario.createMany({
-    data: [
-      {
-        name: 'Fertilizante NPK 15-15-15',
-        category: 'FERTILIZANTE',
-        quantity: 12.0, // only 12 bags left!
-        unit: 'bultos',
-        minAlertQuantity: 15.0, // triggers warning
-        organizationId: org.id,
-      },
-      {
-        name: 'Semilla Café Castillo',
-        category: 'SEMILLA',
-        quantity: 50.0,
-        unit: 'kg',
-        minAlertQuantity: 10.0,
-        organizationId: org.id,
-      },
-      {
-        name: 'Machete Corona 22"',
-        category: 'HERRAMIENTA',
-        quantity: 8.0,
-        unit: 'unidades',
-        minAlertQuantity: 5.0,
-        organizationId: org.id,
-      },
-    ],
+  await prisma.user.upsert({
+    where: { email: "eduinsns@gmail.com" },
+    update: {},
+    create: {
+      id: "4a14c7ea-7cf0-47c1-8375-74c1f318442f",
+      email: "eduinsns@gmail.com",
+      passwordHash: "$2b$10$JrxYav.f0qAZnXuaqLQUqOevl1shVOfm8nfHrkkr.7NrwnBt0AbTi",
+      name: "Eduin Sanchez",
+      role: "ADMIN",
+      organizationId: org4.id,
+    },
   });
 
-  // Add some financial records
-  await prisma.finanza.createMany({
-    data: [
-      {
-        type: 'GASTO',
-        category: 'FERTILIZANTE',
-        amount: 1500000.0,
-        description: 'Compra de 10 bultos de NPK 15-15-15',
-        date: new Date('2026-06-15'),
-        organizationId: org.id,
-      },
-      {
-        type: 'GASTO',
-        category: 'MANO_DE_OBRA',
-        amount: 800000.0,
-        description: 'Jornales de limpia lote norte',
-        date: new Date('2026-07-02'),
-        organizationId: org.id,
-      },
-      {
-        type: 'INGRESO',
-        category: 'VENTA',
-        amount: 6800000.0,
-        description: 'Venta de excedente cosecha anterior',
-        date: new Date('2026-07-10'),
-        organizationId: org.id,
-      },
-    ],
-  });
-
-  // Add some staff
-  await prisma.empleado.createMany({
-    data: [
-      {
-        name: 'Mateo Orozco',
-        role: 'Recolector / Operario',
-        status: 'ACTIVE',
-        dailyRate: 45000.0,
-        phone: '3157894561',
-        organizationId: org.id,
-      },
-      {
-        name: 'Sofia Martinez',
-        role: 'Contabilidad / Administración',
-        status: 'ACTIVE',
-        dailyRate: 65000.0,
-        phone: '3006549872',
-        organizationId: org.id,
-      },
-    ],
-  });
-
-  // Add machinery
-  await prisma.maquinaria.createMany({
-    data: [
-      {
-        name: 'Guadañadora Husqvarna 541RS',
-        status: 'OPERATIVE',
-        lastMaintenance: new Date('2026-05-10'),
-        maintenanceCost: 120000.0,
-        organizationId: org.id,
-      },
-      {
-        name: 'Bomba de Espalda Royal Condor 20L',
-        status: 'OPERATIVE',
-        lastMaintenance: new Date('2026-06-22'),
-        maintenanceCost: 25000.0,
-        organizationId: org.id,
-      },
-    ],
-  });
-
-  console.log('Database seeded successfully!');
+  console.log("✅ Seed completado — organizaciones y usuarios creados.");
 }
 
 main()
@@ -230,6 +123,4 @@ main()
     console.error(e);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .finally(() => prisma.$disconnect());
