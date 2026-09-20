@@ -327,7 +327,7 @@ export default function LeafletMapInner({
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', borderRadius: 14, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+    <div style={{ position: 'relative', width: '100%', borderRadius: 14, overflow: 'hidden', border: '1px solid var(--color-border)', isolation: 'isolate', zIndex: 1 }}>
       {!readOnly && (
         <div
           style={{
@@ -335,7 +335,7 @@ export default function LeafletMapInner({
             top: 12,
             left: 12,
             right: 12,
-            zIndex: 1000,
+            zIndex: 10,
             display: 'flex',
             gap: 8,
             flexWrap: 'wrap',
@@ -465,7 +465,7 @@ export default function LeafletMapInner({
           style={{
             position: 'absolute',
             inset: 0,
-            zIndex: 995,
+            zIndex: 11,
             background: 'rgba(15, 23, 42, 0.25)',
             display: 'flex',
             alignItems: 'center',
@@ -504,7 +504,7 @@ export default function LeafletMapInner({
             position: 'absolute',
             top: 56,
             right: 12,
-            zIndex: 996,
+            zIndex: 12,
             padding: '6px 12px',
             background: 'rgba(15, 23, 42, 0.9)',
             backdropFilter: 'blur(8px)',
@@ -526,7 +526,7 @@ export default function LeafletMapInner({
           position: 'absolute',
           bottom: 12,
           left: 12,
-          zIndex: 1000,
+          zIndex: 12,
           background: 'rgba(15, 23, 42, 0.9)',
           backdropFilter: 'blur(8px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -558,7 +558,7 @@ export default function LeafletMapInner({
             top: 56,
             left: 12,
             right: 12,
-            zIndex: 1000,
+            zIndex: 15,
             background: 'rgba(239, 68, 68, 0.95)',
             color: '#ffffff',
             padding: '8px 12px',

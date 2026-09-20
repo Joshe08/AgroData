@@ -62,10 +62,22 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         if (typeof window !== 'undefined') {
+          // Import useToastStore dynamically to avoid circular dependencies if any
+          import('@/store/toastStore').then(({ useToastStore }) => {
+            useToastStore.getState().success('Cerrando sesión...');
+          });
+          
           localStorage.removeItem('agrodata_token');
           localStorage.removeItem('agrodata-auth');
+          
+          set({ user: null, token: null });
+          
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 300);
+        } else {
+          set({ user: null, token: null });
         }
-        set({ user: null, token: null });
       },
 
       clearError: () => set({ error: null }),

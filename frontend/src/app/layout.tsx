@@ -19,28 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" data-theme="dark">
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                var stored = localStorage.getItem('agrodata_theme');
-                if (stored) {
-                  var parsed = JSON.parse(stored);
-                  var theme = parsed && parsed.state && parsed.state.theme;
-                  var resolved = theme === 'light' ? 'light' : 'dark';
-                  document.documentElement.setAttribute('data-theme', resolved);
-                } else {
-                  document.documentElement.setAttribute('data-theme', 'dark');
-                }
-              } catch (e) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-              }
-            `,
-          }}
-        />
-      </head>
+    <html lang="es">
       <body>{children}</body>
     </html>
   );

@@ -1,9 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { personalApi, fincasApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { useToastStore } from '@/store/toastStore';
-import { Users, Plus, Edit3, Trash2, Search, X, Phone, Briefcase, MapPin } from 'lucide-react';
+import { Users, Plus, Edit3, Trash2, Search, X, Phone, Briefcase, MapPin, Eye, Calendar, DollarSign, FileText } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 interface Personal {
@@ -34,14 +35,101 @@ const CARGOS_SUGERIDOS = [
   'Veterinario de planta',
 ];
 
+const CONTRATO_LABELS: Record<string, string> = {
+  TERMINO_FIJO: 'Término Fijo',
+  INDEFINIDO: 'Término Indefinido',
+  OBRA_LABOR: 'Por Obra o Labor',
+  TEMPORAL: 'Jornal Diario / Temporal',
+};
+
+// ─── Modal Detalle / Ficha del Colaborador ────────────────────────────────────
+
+function DetallModal({
+  persona,
+  canSeeSalary,
+  onClose,
+  onEdit,
+}: {
+  persona: Personal;
+  canSeeSalary: boolean;
+  onClose: () => void;
+  onEdit: () => void;
+}) {
+  const formatCOP = (v: number) =>
+    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
+
+  const formatDate = (d?: string) => {
+    if (!d) return 'No registrada';
+    try { return new Date(d).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }); } catch { return d; }
+  };
+
+  const Row = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}>
+      <span style={{ color: 'var(--color-primary)', marginTop: 2, flexShrink: 0 }}>{icon}</span>
+      <div>
+        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{value}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 className="font-display" style={{ fontSize: 18, fontWeight: 700 }}>Ficha del Colaborador</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Avatar + nombre */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: '16px', background: 'rgba(16,185,129,0.06)', borderRadius: 12, border: '1px solid rgba(16,185,129,0.15)' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: 'white', flexShrink: 0 }}>
+            {persona.nombre.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>{persona.nombre}</div>
+            <div style={{ fontSize: 13, color: 'var(--color-primary)', fontWeight: 600 }}>{persona.cargo}</div>
+            <span className={`badge ${persona.tipoContrato === 'INDEFINIDO' ? 'badge-success' : 'badge-info'}`} style={{ fontSize: 11, marginTop: 4 }}>
+              {CONTRATO_LABELS[persona.tipoContrato || ''] || persona.tipoContrato}
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Row icon={<MapPin size={15} />} label="Finca / Predio asignado" value={persona.finca?.nombre || `Finca #${persona.fincaId}`} />
+          <Row icon={<Phone size={15} />} label="Teléfono de contacto" value={persona.telefono || 'No registrado'} />
+          <Row icon={<Calendar size={15} />} label="Fecha de ingreso" value={formatDate(persona.fechaIngreso)} />
+          <Row icon={<FileText size={15} />} label="Modalidad de contrato" value={CONTRATO_LABELS[persona.tipoContrato || ''] || persona.tipoContrato || 'No especificado'} />
+          {canSeeSalary && (
+            <Row icon={<DollarSign size={15} />} label="Salario mensual (COP)" value={persona.salario ? formatCOP(persona.salario) : 'No especificado'} />
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+          <button onClick={onClose} className="btn-secondary">Cerrar</button>
+          <button onClick={onEdit} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Edit3 size={14} /> Editar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal Formulario ─────────────────────────────────────────────────────────
+
 function PersonalModal({
   persona,
   fincas,
+  canSeeSalary,
   onClose,
   onSave,
 }: {
   persona?: Personal;
   fincas: Finca[];
+  canSeeSalary: boolean;
   onClose: () => void;
   onSave: () => void;
 }) {
@@ -60,6 +148,10 @@ function PersonalModal({
     e.preventDefault();
     if (!form.nombre.trim()) {
       useToastStore.getState().warning('El nombre del colaborador es obligatorio.');
+      return;
+    }
+    if (!form.fincaId) {
+      useToastStore.getState().warning('Debe asignar una finca o predio.');
       return;
     }
 
@@ -142,26 +234,29 @@ function PersonalModal({
                 onChange={(e) => setForm((f) => ({ ...f, fincaId: e.target.value }))}
                 required
               >
+                <option value="">— Seleccionar predio —</option>
                 {fincas.map((fi) => (
                   <option key={fi.id} value={fi.id}>{fi.nombre}</option>
                 ))}
               </select>
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Salario mensual (COP)
-              </label>
-              <input
-                className="input-field"
-                type="number"
-                min="0"
-                step="10000"
-                value={form.salario}
-                onChange={(e) => setForm((f) => ({ ...f, salario: e.target.value }))}
-                placeholder="0"
-              />
-            </div>
+            {canSeeSalary && (
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                  Salario mensual (COP)
+                </label>
+                <input
+                  className="input-field"
+                  type="number"
+                  min="0"
+                  step="10000"
+                  value={form.salario}
+                  onChange={(e) => setForm((f) => ({ ...f, salario: e.target.value }))}
+                  placeholder="0"
+                />
+              </div>
+            )}
 
             <div>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
@@ -191,7 +286,7 @@ function PersonalModal({
               </select>
             </div>
 
-            <div>
+            <div style={{ gridColumn: canSeeSalary ? 'span 1' : 'span 2' }}>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
                 Fecha de ingreso
               </label>
@@ -218,13 +313,19 @@ function PersonalModal({
   );
 }
 
+// ─── Página Principal ─────────────────────────────────────────────────────────
+
 export default function PersonalPage() {
+  const { user } = useAuthStore();
   const [personal, setPersonal] = useState<Personal[]>([]);
   const [fincas, setFincas] = useState<Finca[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterFinca, setFilterFinca] = useState('ALL');
+  const [filterCargo, setFilterCargo] = useState('ALL');
   const [modalOpen, setModalOpen] = useState(false);
   const [editPersona, setEditPersona] = useState<Personal | undefined>();
+  const [detallePersona, setDetallePersona] = useState<Personal | undefined>();
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     id: string | number | null;
@@ -236,6 +337,9 @@ export default function PersonalPage() {
     name: '',
     loading: false,
   });
+
+  // RBAC: solo PROPIETARIO, ADMIN, SUPERADMIN, CONTADOR pueden ver salario
+  const canSeeSalary = ['PROPIETARIO', 'ADMIN', 'SUPERADMIN', 'CONTADOR'].includes(user?.rol ?? '');
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -280,23 +384,31 @@ export default function PersonalPage() {
   const formatCOP = (v: number) =>
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 
-  const filtered = personal.filter(
-    (p) =>
+  // Cargos únicos para el filtro
+  const cargosUnicos = Array.from(new Set(personal.map((p) => p.cargo).filter(Boolean)));
+
+  const filtered = personal.filter((p) => {
+    const matchSearch =
       p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      p.cargo.toLowerCase().includes(search.toLowerCase())
-  );
+      p.cargo.toLowerCase().includes(search.toLowerCase());
+    const matchFinca = filterFinca === 'ALL' || String(p.fincaId) === filterFinca || String(p.finca?.id) === filterFinca;
+    const matchCargo = filterCargo === 'ALL' || p.cargo === filterCargo;
+    return matchSearch && matchFinca && matchCargo;
+  });
 
   const totalNomina = personal.reduce((sum, p) => sum + (p.salario || 0), 0);
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
+      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 className="font-display" style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
             Personal y Mano de Obra
           </h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>
-            {personal.length} colaboradores · Total nómina mensual estimada: {formatCOP(totalNomina)}
+            {personal.length} colaboradores
+            {canSeeSalary && ` · Nómina mensual estimada: ${formatCOP(totalNomina)}`}
           </p>
         </div>
         <button
@@ -308,34 +420,87 @@ export default function PersonalPage() {
         </button>
       </div>
 
-      <div style={{ position: 'relative', marginBottom: 20, maxWidth: 380 }}>
-        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
-        <input
+      {/* Barra de Filtros */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Búsqueda */}
+        <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
+          <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
+          <input
+            className="input-field"
+            style={{ paddingLeft: 36 }}
+            placeholder="Buscar por nombre o cargo..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Filtro Finca */}
+        <select
           className="input-field"
-          style={{ paddingLeft: 38 }}
-          placeholder="Buscar por nombre o cargo..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+          style={{ flex: '1 1 160px', maxWidth: 220 }}
+          value={filterFinca}
+          onChange={(e) => setFilterFinca(e.target.value)}
+        >
+          <option value="ALL">Todas las fincas</option>
+          {fincas.map((f) => (
+            <option key={f.id} value={String(f.id)}>{f.nombre}</option>
+          ))}
+        </select>
+
+        {/* Filtro Cargo */}
+        <select
+          className="input-field"
+          style={{ flex: '1 1 160px', maxWidth: 220 }}
+          value={filterCargo}
+          onChange={(e) => setFilterCargo(e.target.value)}
+        >
+          <option value="ALL">Todos los cargos</option>
+          {cargosUnicos.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+
+        {/* Reset filtros */}
+        {(filterFinca !== 'ALL' || filterCargo !== 'ALL' || search) && (
+          <button
+            onClick={() => { setFilterFinca('ALL'); setFilterCargo('ALL'); setSearch(''); }}
+            style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 8, padding: '7px 12px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+          >
+            <X size={13} /> Limpiar
+          </button>
+        )}
+
+        <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' }}>
+          {filtered.length} / {personal.length} colaboradores
+        </div>
       </div>
 
+      {/* Grid de Tarjetas */}
       {loading ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="skeleton" style={{ height: 170, borderRadius: 14 }} />
+            <div key={i} className="skeleton" style={{ height: 200, borderRadius: 14 }} />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px', color: 'var(--color-text-subtle)' }}>
           <Users size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
           <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-muted)' }}>
-            No hay colaboradores registrados
+            {personal.length === 0 ? 'No hay colaboradores registrados' : 'Sin resultados para los filtros aplicados'}
           </p>
+          {personal.length > 0 && (
+            <button
+              onClick={() => { setFilterFinca('ALL'); setFilterCargo('ALL'); setSearch(''); }}
+              style={{ marginTop: 12, background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}
+            >
+              Limpiar filtros
+            </button>
+          )}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
           {filtered.map((p) => (
-            <div key={p.id} className="card glass-hover" style={{ padding: '20px' }}>
+            <div key={p.id} className="card glass-hover" style={{ padding: '20px', cursor: 'pointer' }} onClick={() => setDetallePersona(p)}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                 <div
                   style={{
@@ -349,20 +514,28 @@ export default function PersonalPage() {
                     fontSize: 16,
                     fontWeight: 700,
                     color: 'white',
+                    flexShrink: 0,
                   }}
                 >
                   {p.nombre.charAt(0).toUpperCase()}
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
                   <button
-                    onClick={() => { setEditPersona(p); setModalOpen(true); }}
+                    onClick={(e) => { e.stopPropagation(); setDetallePersona(p); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
+                    title="Ver ficha"
+                  >
+                    <Eye size={14} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setEditPersona(p); setModalOpen(true); }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
                     title="Editar"
                   >
                     <Edit3 size={14} />
                   </button>
                   <button
-                    onClick={() => handleDelete(p)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(p); }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}
                     title="Eliminar"
                   >
@@ -396,29 +569,45 @@ export default function PersonalPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--color-border)' }}>
                 <span className={`badge ${p.tipoContrato === 'INDEFINIDO' ? 'badge-success' : 'badge-info'}`} style={{ fontSize: 11 }}>
-                  {p.tipoContrato?.replace('_', ' ')}
+                  {CONTRATO_LABELS[p.tipoContrato || ''] || p.tipoContrato?.replace('_', ' ')}
                 </span>
-                {p.salario && (
+                {canSeeSalary && p.salario ? (
                   <span style={{ fontSize: 14, fontWeight: 700, color: '#4ade80' }}>
                     {formatCOP(p.salario)}
                   </span>
-                )}
+                ) : null}
               </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* Modal Formulario */}
       {modalOpen && (
         <PersonalModal
           persona={editPersona}
           fincas={fincas}
+          canSeeSalary={canSeeSalary}
           onClose={() => setModalOpen(false)}
           onSave={loadData}
         />
       )}
 
-      {/* Modal Confirmación Eliminación Personal */}
+      {/* Modal Detalle Ficha */}
+      {detallePersona && (
+        <DetallModal
+          persona={detallePersona}
+          canSeeSalary={canSeeSalary}
+          onClose={() => setDetallePersona(undefined)}
+          onEdit={() => {
+            setEditPersona(detallePersona);
+            setDetallePersona(undefined);
+            setModalOpen(true);
+          }}
+        />
+      )}
+
+      {/* Modal Confirmación Eliminación */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
         title="¿Eliminar colaborador del equipo?"

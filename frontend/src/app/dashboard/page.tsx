@@ -98,6 +98,15 @@ const COLORS = ['#16a34a', '#0ea5e9', '#f59e0b', '#8b5cf6', '#ef4444'];
 
 // ─── Role-Based Dashboard Views ──────────────────────────────────────────────
 
+interface MovimientoReciente {
+  id: string | number;
+  tipo: 'INGRESO' | 'GASTO';
+  titulo: string;
+  detalle: string;
+  monto: number;
+  fecha: string;
+}
+
 interface DashboardData {
   fincas: number;
   producciones: number;
@@ -108,6 +117,7 @@ interface DashboardData {
   empleados: number;
   resumenFinanciero: unknown[];
   distribProds: unknown[];
+  movimientosRecientes: MovimientoReciente[];
   loading: boolean;
 }
 
@@ -381,52 +391,69 @@ function ContadorDashboard({ data }: { data: DashboardData }) {
 
 /** Dashboard ejecutivo para PROPIETARIO / ADMIN / SUPERADMIN */
 function EjecutivoDashboard({ data }: { data: DashboardData }) {
-  const { loading, fincas, producciones, ingresos, gastos, alertasInventario, resumenFinanciero, distribProds } = data;
+  const { loading, fincas, producciones, ingresos, gastos, alertasInventario, resumenFinanciero, distribProds, movimientosRecientes } = data;
 
   return (
     <>
+      {/* 1. RESUMEN: 4 INDICADORES ESENCIALES */}
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 140, borderRadius: 16 }} />)}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 130, borderRadius: 16 }} />)}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
-          <StatCard label="Fincas registradas" value={fincas} icon={<MapPin size={20} />} color="green" trend={{ value: 12, positive: true }} />
-          <StatCard label="Producciones activas" value={producciones} icon={<Sprout size={20} />} color="blue" />
-          <StatCard label="Ingresos totales" value={formatCOP(ingresos)} icon={<DollarSign size={20} />} color="amber" trend={{ value: 8.2, positive: true }} />
-          <StatCard
-            label="Alertas de inventario"
-            value={alertasInventario}
-            subtitle={alertasInventario > 0 ? 'Requieren atencion' : 'Todo en orden'}
-            icon={<Package size={20} />}
-            color={alertasInventario > 0 ? 'red' : 'green'}
-          />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+          <StatCard label="Fincas Registradas" value={fincas} icon={<MapPin size={20} />} color="green" />
+          <StatCard label="Producciones Activas" value={producciones} icon={<Sprout size={20} />} color="blue" />
+          <StatCard label="Ingresos Totales" value={formatCOP(ingresos)} icon={<TrendingUp size={20} />} color="green" />
+          <StatCard label="Gastos Totales" value={formatCOP(gastos)} icon={<TrendingDown size={20} />} color="red" />
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, marginBottom: 28 }}>
-        {/* Financial Area Chart */}
+      {/* 2. GRÁFICAS: INGRESOS VS GASTOS & ACTIVIDAD PRODUCTIVA */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginBottom: 28 }}>
+        
+        {/* Ingresos vs Gastos (Gráfica Principal Comparativa) */}
         <div className="card" style={{ padding: '24px', gridColumn: 'span 2' }}>
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Resumen Financiero</h3>
-            <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Ultimos 6 meses</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Ingresos vs Gastos</h3>
+              <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Histórico financiero de los últimos 6 meses</p>
+            </div>
+            <div style={{ display: 'flex', gap: 14, fontSize: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#16a34a' }} />
+                <span style={{ color: 'var(--color-text-muted)' }}>Ingresos</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
+                <span style={{ color: 'var(--color-text-muted)' }}>Gastos</span>
+              </div>
+            </div>
           </div>
+
           {loading ? (
-            <div className="skeleton" style={{ height: 200, borderRadius: 12 }} />
+            <div className="skeleton" style={{ height: 220, borderRadius: 12 }} />
+          ) : !resumenFinanciero || (resumenFinanciero as any[]).every(m => m.ingresos === 0 && m.gastos === 0) ? (
+            <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
+              <div>
+                <BarChart3 size={36} style={{ margin: '0 auto 8px', opacity: 0.3 }} />
+                <p>Sin datos financieros registrados</p>
+              </div>
+            </div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={resumenFinanciero as Array<{ mes: string; ingresos: number; gastos: number }>}>
                 <defs>
                   <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.35} />
                     <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorGastos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.35} />
                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(42,61,42,0.5)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(42,61,42,0.4)" />
                 <XAxis dataKey="mes" tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1e6).toFixed(1)}M`} />
                 <Tooltip
@@ -439,36 +466,36 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
                   }}
                   formatter={(value) => [formatCOP(Number(value || 0))]}
                 />
-                <Area type="monotone" dataKey="ingresos" name="Ingresos" stroke="#16a34a" strokeWidth={2} fill="url(#colorIngresos)" />
-                <Area type="monotone" dataKey="gastos" name="Gastos" stroke="#ef4444" strokeWidth={2} fill="url(#colorGastos)" />
+                <Area type="monotone" dataKey="ingresos" name="Ingresos" stroke="#16a34a" strokeWidth={2.5} fill="url(#colorIngresos)" />
+                <Area type="monotone" dataKey="gastos" name="Gastos" stroke="#ef4444" strokeWidth={2.5} fill="url(#colorGastos)" />
               </AreaChart>
             </ResponsiveContainer>
           )}
         </div>
 
-        {/* Pie chart */}
+        {/* Actividad Productiva (Distribución de Cultivos y Rubros) */}
         <div className="card" style={{ padding: '24px' }}>
-          <div style={{ marginBottom: 20 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Tipos de Produccion</h3>
-            <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Distribucion actual</p>
+          <div style={{ marginBottom: 18 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Actividad Productiva</h3>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Distribución por tipo de actividad</p>
           </div>
           {loading ? (
-            <div className="skeleton" style={{ height: 200, borderRadius: 12 }} />
+            <div className="skeleton" style={{ height: 220, borderRadius: 12 }} />
           ) : (distribProds as Array<{ name: string; value: number }>).length === 0 ? (
-            <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
+            <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
               <div>
-                <Sprout size={32} style={{ margin: '0 auto 8px', opacity: 0.3 }} />
-                <p>Sin producciones registradas</p>
+                <Sprout size={36} style={{ margin: '0 auto 8px', opacity: 0.3 }} />
+                <p>Sin ciclos productivos activos</p>
               </div>
             </div>
           ) : (
             <div>
-              <ResponsiveContainer width="100%" height={160}>
+              <ResponsiveContainer width="100%" height={150}>
                 <PieChart>
                   <Pie
                     data={distribProds as Array<{ name: string; value: number }>}
-                    innerRadius={50}
-                    outerRadius={70}
+                    innerRadius={45}
+                    outerRadius={65}
                     paddingAngle={4}
                     dataKey="value"
                   >
@@ -486,9 +513,9 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
                 {(distribProds as Array<{ name: string; value: number }>).map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
                     <span style={{ color: 'var(--color-text-muted)', flex: 1 }}>{item.name}</span>
                     <span style={{ color: 'var(--color-text)', fontWeight: 600 }}>{item.value}</span>
@@ -500,30 +527,115 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
         </div>
       </div>
 
-      {/* Alerts panel */}
-      {alertasInventario > 0 && (
-        <div
-          style={{
-            padding: '16px 20px',
-            background: 'rgba(245, 158, 11, 0.08)',
-            border: '1px solid rgba(245, 158, 11, 0.25)',
-            borderRadius: 14,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 14,
-          }}
-        >
-          <AlertTriangle size={20} color="#fbbf24" style={{ flexShrink: 0 }} />
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#fbbf24', marginBottom: 2 }}>
-              {alertasInventario} item(s) con stock bajo
+      {/* 3. ALERTAS Y ANÁLISIS OPERATIVO (Compacto) */}
+      <div style={{ marginBottom: 28 }}>
+        {alertasInventario > 0 ? (
+          <div
+            style={{
+              padding: '14px 18px',
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.25)',
+              borderRadius: 12,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <AlertTriangle size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
+              <div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#fbbf24', marginRight: 8 }}>
+                  Atención Operativa:
+                </span>
+                <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+                  {alertasInventario} insumo(s) alcanzaron stock mínimo crítico.
+                </span>
+              </div>
             </div>
-            <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-              Revisa el modulo de inventario para reponer productos criticos.
-            </div>
+            <a
+              href="/dashboard/inventario"
+              style={{ fontSize: 12, fontWeight: 600, color: '#fbbf24', textDecoration: 'underline' }}
+            >
+              Ver insumos &rarr;
+            </a>
           </div>
+        ) : (
+          <div
+            style={{
+              padding: '12px 18px',
+              background: 'rgba(16, 185, 129, 0.06)',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+              borderRadius: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
+            <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+              Operaciones al día · Insumos y predios en condiciones normales.
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* 4. ACTIVIDAD RECIENTE */}
+      <div className="card" style={{ padding: '22px 24px', marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Actividad Reciente</h3>
+          <a href="/dashboard/finanzas" style={{ fontSize: 12, color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>
+            Ver todos los movimientos &rarr;
+          </a>
         </div>
-      )}
+
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[...Array(3)].map((_, i) => <div key={i} className="skeleton" style={{ height: 44, borderRadius: 8 }} />)}
+          </div>
+        ) : !movimientosRecientes || movimientosRecientes.length === 0 ? (
+          <div style={{ padding: '28px', textAlign: 'center', color: 'var(--color-text-subtle)', fontSize: 13 }}>
+            Sin movimientos contables recientes registrados
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {movimientosRecientes.map((m) => (
+              <div
+                key={m.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid var(--color-border)',
+                  fontSize: 13,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span className={`badge ${m.tipo === 'INGRESO' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 11 }}>
+                    {m.tipo === 'INGRESO' ? '↑ Ingreso' : '↓ Gasto'}
+                  </span>
+                  <div>
+                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{m.titulo}</span>
+                    <span style={{ color: 'var(--color-text-muted)', marginLeft: 8, fontSize: 12 }}>{m.detalle}</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
+                    {m.fecha?.split('T')[0]}
+                  </span>
+                  <span style={{ fontWeight: 700, color: m.tipo === 'INGRESO' ? '#4ade80' : '#f87171' }}>
+                    {formatCOP(m.monto)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -541,46 +653,50 @@ export default function DashboardPage() {
     empleados: 0,
     resumenFinanciero: [],
     distribProds: [],
+    movimientosRecientes: [],
     loading: true,
   });
 
   const loadData = useCallback(async () => {
     setData((prev) => ({ ...prev, loading: true }));
     try {
-      const [fincasRes, prodsRes, alertasRes] = await Promise.allSettled([
+      const [fincasRes, prodsRes, alertasRes, finanzasRes, resumenRes] = await Promise.allSettled([
         fincasApi.getAll(),
         produccionesApi.getAll(),
         inventarioApi.alertas(),
+        finanzasApi.getAll(),
+        finanzasApi.resumen(),
       ]);
 
       const fincas = fincasRes.status === 'fulfilled' ? fincasRes.value.data : [];
       const prods = prodsRes.status === 'fulfilled' ? prodsRes.value.data : [];
       const alertas = alertasRes.status === 'fulfilled' ? alertasRes.value.data : [];
+      const transacciones = finanzasRes.status === 'fulfilled' ? (finanzasRes.value.data || []) : [];
+      const resumen = resumenRes.status === 'fulfilled' ? resumenRes.value.data : null;
 
-      let totalIngresos = 0;
-      let totalGastos = 0;
-      if (fincas.length > 0) {
-        try {
-          const finRes = await finanzasApi.resumen();
-          const r = finRes.data;
-          totalIngresos = r.totalIngresos || 0;
-          totalGastos = r.totalGastos || 0;
-        } catch {
-          // fallback
-        }
+      let totalIngresos = resumen?.totalIngresos || 0;
+      let totalGastos = resumen?.totalGastos || 0;
+      let meses: any[] = resumen?.resumenMensual || [];
+
+      // Si resumenMensual no vino de la API, calcular de transacciones
+      if (meses.length === 0 && transacciones.length > 0) {
+        totalIngresos = transacciones.filter((t: any) => t.tipo === 'INGRESO').reduce((s: number, t: any) => s + (t.monto || 0), 0);
+        totalGastos = transacciones.filter((t: any) => t.tipo === 'GASTO').reduce((s: number, t: any) => s + (t.monto || 0), 0);
       }
 
-      // Build mock chart data for last 6 months
-      const meses = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        meses.push({
-          mes: format(d, 'MMM', { locale: es }),
-          ingresos: Math.round((totalIngresos / 6) * (0.7 + Math.random() * 0.6)),
-          gastos: Math.round((totalGastos / 6) * (0.7 + Math.random() * 0.6)),
-        });
-      }
+      // 5 transacciones más recientes
+      const recientes: MovimientoReciente[] = transacciones
+        .slice()
+        .sort((a: any, b: any) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+        .slice(0, 5)
+        .map((t: any) => ({
+          id: t.id,
+          tipo: t.tipo,
+          titulo: t.concepto || t.categoria || 'Movimiento',
+          detalle: t.finca?.nombre || t.categoria || '',
+          monto: t.monto || 0,
+          fecha: t.fecha,
+        }));
 
       // Production type distribution
       const tiposMap: Record<string, number> = {};
@@ -597,6 +713,7 @@ export default function DashboardPage() {
         empleados: 0,
         resumenFinanciero: meses,
         distribProds: Object.entries(tiposMap).map(([name, value]) => ({ name, value })),
+        movimientosRecientes: recientes,
         loading: false,
       });
     } catch (err) {

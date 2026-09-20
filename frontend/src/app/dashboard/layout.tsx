@@ -24,7 +24,6 @@ import {
   UserCircle,
   X,
 } from 'lucide-react';
-import ThemeToggle from '@/components/common/ThemeToggle';
 
 const baseNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -82,7 +81,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = () => {
     logout();
-    router.replace('/login');
   };
 
   const userRole = user.rol || 'TRABAJADOR';
@@ -189,10 +187,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <UserCircle size={14} style={{ flexShrink: 0, color: 'var(--color-text-subtle)' }} />
           </div>
         </Link>
-        <div style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-          <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 500 }}>Modo Visual</span>
-          <ThemeToggle />
-        </div>
         <button
           onClick={handleLogout}
           className="nav-item"
@@ -289,7 +283,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }} className="desktop-header-org">
               {user.organizationName || 'AgroData'}
             </span>
-            <ThemeToggle />
           </div>
         </header>
 

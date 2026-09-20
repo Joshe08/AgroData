@@ -1307,6 +1307,8 @@ export const FinanzaScalarFieldEnum = {
   amount: 'amount',
   description: 'description',
   date: 'date',
+  fincaId: 'fincaId',
+  produccionId: 'produccionId',
   organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

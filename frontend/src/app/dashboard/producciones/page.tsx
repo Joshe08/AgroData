@@ -125,12 +125,35 @@ function ProduccionModal({
     kilosEstimados: prod?.metadata?.kilosEstimados || '',
   });
 
-  const [avesCerdos, setAvesCerdos] = useState({
-    tipoAnimal: tipo === 'AVICULTURA' ? 'Aves (Pollo de engorde)' : 'Porcino (Ceba)',
+  const [aves, setAves] = useState({
+    galpon: prod?.metadata?.galpon || '',
+    tipoAve: prod?.metadata?.tipoAve || 'Pollo de engorde',
+    lineaRaza: prod?.metadata?.lineaRaza || 'Ross 308',
     cantidad: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
-    lineaRaza: prod?.metadata?.lineaRaza || '',
     fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
     fechaSalida: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
+    produccionEsperada: prod?.metadata?.produccionEsperada || '',
+    unidadEsperada: prod?.metadata?.unidadEsperada || 'Kilos de carne',
+  });
+
+  const [porcinos, setPorcinos] = useState({
+    corral: prod?.metadata?.corral || '',
+    tipoExplotacion: prod?.metadata?.tipoExplotacion || 'Ceba / Engorde',
+    lineaRaza: prod?.metadata?.lineaRaza || 'Pietrain / Landrace',
+    cantidad: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
+    pesoInicialKg: prod?.metadata?.pesoInicialKg || '25',
+    pesoObjetivoKg: prod?.metadata?.pesoObjetivoKg || '105',
+    fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
+    fechaSalida: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
+  });
+
+  const [otra, setOtra] = useState({
+    nombreActividad: prod?.name || '',
+    cantidad: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
+    unidad: prod?.unidadMedida || 'Unidades',
+    fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
+    fechaFin: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
+    descripcion: prod?.metadata?.descripcion || '',
   });
 
   const [apic, setApic] = useState({
@@ -231,13 +254,27 @@ function ProduccionModal({
         expectedYield = apic.numColmenas ? parseFloat(apic.numColmenas) : undefined;
         unit = 'Colmenas';
         metadata = { ...apic, tipoProduccion: 'APICULTURA' };
+      } else if (tipo === 'AVICULTURA') {
+        name = `Avicultura - ${aves.tipoAve} (${aves.lineaRaza || 'Lote'})`;
+        startDate = aves.fechaInicio;
+        endDate = aves.fechaSalida || undefined;
+        expectedYield = aves.cantidad ? parseFloat(aves.cantidad) : undefined;
+        unit = 'Aves';
+        metadata = { ...aves, tipoProduccion: 'AVICULTURA' };
+      } else if (tipo === 'PORCICULTURA') {
+        name = `Porcicultura - ${porcinos.tipoExplotacion} (${porcinos.lineaRaza || 'Cerdos'})`;
+        startDate = porcinos.fechaInicio;
+        endDate = porcinos.fechaSalida || undefined;
+        expectedYield = porcinos.cantidad ? parseFloat(porcinos.cantidad) : undefined;
+        unit = 'Cerdos';
+        metadata = { ...porcinos, tipoProduccion: 'PORCICULTURA' };
       } else {
-        name = `${tipo} - Lote Producción`;
-        startDate = avesCerdos.fechaInicio;
-        endDate = avesCerdos.fechaSalida || undefined;
-        expectedYield = avesCerdos.cantidad ? parseFloat(avesCerdos.cantidad) : undefined;
-        unit = 'Animales';
-        metadata = { ...avesCerdos, tipoProduccion: tipo };
+        name = otra.nombreActividad || 'Actividad Agropecuaria';
+        startDate = otra.fechaInicio;
+        endDate = otra.fechaFin || undefined;
+        expectedYield = otra.cantidad ? parseFloat(otra.cantidad) : undefined;
+        unit = otra.unidad || 'Unidades';
+        metadata = { ...otra, tipoProduccion: 'OTRA' };
       }
 
       const payload = {
@@ -327,6 +364,7 @@ function ProduccionModal({
                 <option value="AVICULTURA">Avicultura (Aves / Galpón)</option>
                 <option value="PORCICULTURA">Porcicultura (Cerdos / Corral)</option>
                 <option value="APICULTURA">Apicultura (Abejas / Miel / Apiario)</option>
+                <option value="OTRA">Otra Actividad Productiva</option>
               </select>
             </div>
           </div>
@@ -335,7 +373,7 @@ function ProduccionModal({
           <div style={{ padding: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <label style={{ fontSize: 13, color: 'var(--color-text)', fontWeight: 600 }}>
-                Parcela, Lote o Potrero asignado *
+                Parcela, Lote o Potrero en {fincas.find(f => String(f.id) === String(fincaId))?.nombre || 'la finca'} *
               </label>
               <span style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>
                 {loadingLotes ? 'Cargando parcelas...' : `${lotes.length} parcelas encontradas`}
@@ -738,22 +776,24 @@ function ProduccionModal({
             </div>
           )}
 
-          {/* DYNAMIC FORM 5: AVICULTURA / PORCICULTURA */}
-          {(tipo === 'AVICULTURA' || tipo === 'PORCICULTURA') && (
+          {/* DYNAMIC FORM 5: AVICULTURA */}
+          {tipo === 'AVICULTURA' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Cantidad de animales *
+                    Tipo de ave *
                   </label>
-                  <input
+                  <select
                     className="input-field"
-                    type="number"
-                    placeholder="Ej: 500"
-                    value={avesCerdos.cantidad}
-                    onChange={(e) => setAvesCerdos((ac) => ({ ...ac, cantidad: e.target.value }))}
-                    required
-                  />
+                    value={aves.tipoAve}
+                    onChange={(e) => setAves((a) => ({ ...a, tipoAve: e.target.value }))}
+                  >
+                    <option value="Pollo de engorde">Pollo de engorde</option>
+                    <option value="Gallina ponedora">Gallina ponedora (Huevos)</option>
+                    <option value="Codorniz">Codorniz</option>
+                    <option value="Pavo">Pavo / Gallipavo</option>
+                  </select>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
@@ -761,9 +801,9 @@ function ProduccionModal({
                   </label>
                   <input
                     className="input-field"
-                    placeholder="Ej: Ross 308, Cobb 500, Pietrain"
-                    value={avesCerdos.lineaRaza}
-                    onChange={(e) => setAvesCerdos((ac) => ({ ...ac, lineaRaza: e.target.value }))}
+                    placeholder="Ej: Ross 308, Cobb 500, Hy-Line Brown"
+                    value={aves.lineaRaza}
+                    onChange={(e) => setAves((a) => ({ ...a, lineaRaza: e.target.value }))}
                   />
                 </div>
               </div>
@@ -771,25 +811,167 @@ function ProduccionModal({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Fecha de ingreso / encasetamiento *
+                    Cantidad de aves (animales) *
                   </label>
                   <input
                     className="input-field"
-                    type="date"
-                    value={avesCerdos.fechaInicio}
-                    onChange={(e) => setAvesCerdos((ac) => ({ ...ac, fechaInicio: e.target.value }))}
+                    type="number"
+                    placeholder="Ej: 1000"
+                    value={aves.cantidad}
+                    onChange={(e) => setAves((a) => ({ ...a, cantidad: e.target.value }))}
                     required
                   />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Fecha estimada de salida
+                    Identificador de Galpón
+                  </label>
+                  <input
+                    className="input-field"
+                    placeholder="Ej: Galpón 1 - Climatizado"
+                    value={aves.galpon}
+                    onChange={(e) => setAves((a) => ({ ...a, galpon: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Fecha de encasetamiento / ingreso *
                   </label>
                   <input
                     className="input-field"
                     type="date"
-                    value={avesCerdos.fechaSalida}
-                    onChange={(e) => setAvesCerdos((ac) => ({ ...ac, fechaSalida: e.target.value }))}
+                    value={aves.fechaInicio}
+                    onChange={(e) => setAves((a) => ({ ...a, fechaInicio: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Fecha estimada de salida / beneficio
+                  </label>
+                  <input
+                    className="input-field"
+                    type="date"
+                    value={aves.fechaSalida}
+                    onChange={(e) => setAves((a) => ({ ...a, fechaSalida: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* DYNAMIC FORM 6: PORCICULTURA */}
+          {tipo === 'PORCICULTURA' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Orientación productiva *
+                  </label>
+                  <select
+                    className="input-field"
+                    value={porcinos.tipoExplotacion}
+                    onChange={(e) => setPorcinos((p) => ({ ...p, tipoExplotacion: e.target.value }))}
+                  >
+                    <option value="Ceba / Engorde">Ceba / Engorde</option>
+                    <option value="Cría y Lechones">Cría y Venta de Lechones</option>
+                    <option value="Ciclo Completo">Ciclo Completo</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Raza / Cruzamiento
+                  </label>
+                  <input
+                    className="input-field"
+                    placeholder="Ej: Pietrain x Duroc, Landrace"
+                    value={porcinos.lineaRaza}
+                    onChange={(e) => setPorcinos((p) => ({ ...p, lineaRaza: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Cantidad de cerdos *
+                  </label>
+                  <input
+                    className="input-field"
+                    type="number"
+                    placeholder="Ej: 60"
+                    value={porcinos.cantidad}
+                    onChange={(e) => setPorcinos((p) => ({ ...p, cantidad: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Identificador de Corral / Cochera
+                  </label>
+                  <input
+                    className="input-field"
+                    placeholder="Ej: Corral B-2"
+                    value={porcinos.corral}
+                    onChange={(e) => setPorcinos((p) => ({ ...p, corral: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Peso inicial prom. (kg)
+                  </label>
+                  <input
+                    className="input-field"
+                    type="number"
+                    step="0.5"
+                    placeholder="Ej: 25"
+                    value={porcinos.pesoInicialKg}
+                    onChange={(e) => setPorcinos((p) => ({ ...p, pesoInicialKg: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Peso objetivo (kg)
+                  </label>
+                  <input
+                    className="input-field"
+                    type="number"
+                    step="0.5"
+                    placeholder="Ej: 105"
+                    value={porcinos.pesoObjetivoKg}
+                    onChange={(e) => setPorcinos((p) => ({ ...p, pesoObjetivoKg: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Fecha de ingreso / inicio ceba *
+                  </label>
+                  <input
+                    className="input-field"
+                    type="date"
+                    value={porcinos.fechaInicio}
+                    onChange={(e) => setPorcinos((p) => ({ ...p, fechaInicio: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Fecha estimada de beneficio / salida
+                  </label>
+                  <input
+                    className="input-field"
+                    type="date"
+                    value={porcinos.fechaSalida}
+                    onChange={(e) => setPorcinos((p) => ({ ...p, fechaSalida: e.target.value }))}
                   />
                 </div>
               </div>
@@ -898,6 +1080,89 @@ function ProduccionModal({
                   placeholder="Ej: 350"
                   value={apic.kilosEstimados}
                   onChange={(e) => setApic((a) => ({ ...a, kilosEstimados: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* DYNAMIC FORM 8: OTRA ACTIVIDAD */}
+          {tipo === 'OTRA' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                  Nombre de la actividad o rubro *
+                </label>
+                <input
+                  className="input-field"
+                  placeholder="Ej: Silvopastoreo maderable, Lombricultura, Forraje hidropónico"
+                  value={otra.nombreActividad}
+                  onChange={(e) => setOtra((o) => ({ ...o, nombreActividad: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Cantidad estimada
+                  </label>
+                  <input
+                    className="input-field"
+                    type="number"
+                    placeholder="Ej: 100"
+                    value={otra.cantidad}
+                    onChange={(e) => setOtra((o) => ({ ...o, cantidad: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Unidad de medida
+                  </label>
+                  <input
+                    className="input-field"
+                    placeholder="Ej: Toneladas, Litros, Kilos, Árboles"
+                    value={otra.unidad}
+                    onChange={(e) => setOtra((o) => ({ ...o, unidad: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Fecha de inicio *
+                  </label>
+                  <input
+                    className="input-field"
+                    type="date"
+                    value={otra.fechaInicio}
+                    onChange={(e) => setOtra((o) => ({ ...o, fechaInicio: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Fecha estimada de cierre
+                  </label>
+                  <input
+                    className="input-field"
+                    type="date"
+                    value={otra.fechaFin}
+                    onChange={(e) => setOtra((o) => ({ ...o, fechaFin: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                  Descripción u observaciones
+                </label>
+                <textarea
+                  className="input-field"
+                  placeholder="Detalles sobre el manejo técnico de esta actividad..."
+                  rows={2}
+                  value={otra.descripcion}
+                  onChange={(e) => setOtra((o) => ({ ...o, descripcion: e.target.value }))}
                 />
               </div>
             </div>

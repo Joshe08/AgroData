@@ -286,6 +286,7 @@ export type ProduccionWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Produccion"> | Date | string
   lote?: Prisma.XOR<Prisma.LoteScalarRelationFilter, Prisma.LoteWhereInput>
   diarios?: Prisma.DiarioProduccionListRelationFilter
+  finanzas?: Prisma.FinanzaListRelationFilter
 }
 
 export type ProduccionOrderByWithRelationInput = {
@@ -304,6 +305,7 @@ export type ProduccionOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   lote?: Prisma.LoteOrderByWithRelationInput
   diarios?: Prisma.DiarioProduccionOrderByRelationAggregateInput
+  finanzas?: Prisma.FinanzaOrderByRelationAggregateInput
 }
 
 export type ProduccionWhereUniqueInput = Prisma.AtLeast<{
@@ -325,6 +327,7 @@ export type ProduccionWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Produccion"> | Date | string
   lote?: Prisma.XOR<Prisma.LoteScalarRelationFilter, Prisma.LoteWhereInput>
   diarios?: Prisma.DiarioProduccionListRelationFilter
+  finanzas?: Prisma.FinanzaListRelationFilter
 }, "id">
 
 export type ProduccionOrderByWithAggregationInput = {
@@ -382,6 +385,7 @@ export type ProduccionCreateInput = {
   updatedAt?: Date | string
   lote: Prisma.LoteCreateNestedOneWithoutProduccionesInput
   diarios?: Prisma.DiarioProduccionCreateNestedManyWithoutProduccionInput
+  finanzas?: Prisma.FinanzaCreateNestedManyWithoutProduccionInput
 }
 
 export type ProduccionUncheckedCreateInput = {
@@ -399,6 +403,7 @@ export type ProduccionUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   diarios?: Prisma.DiarioProduccionUncheckedCreateNestedManyWithoutProduccionInput
+  finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutProduccionInput
 }
 
 export type ProduccionUpdateInput = {
@@ -416,6 +421,7 @@ export type ProduccionUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lote?: Prisma.LoteUpdateOneRequiredWithoutProduccionesNestedInput
   diarios?: Prisma.DiarioProduccionUpdateManyWithoutProduccionNestedInput
+  finanzas?: Prisma.FinanzaUpdateManyWithoutProduccionNestedInput
 }
 
 export type ProduccionUncheckedUpdateInput = {
@@ -433,6 +439,7 @@ export type ProduccionUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   diarios?: Prisma.DiarioProduccionUncheckedUpdateManyWithoutProduccionNestedInput
+  finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutProduccionNestedInput
 }
 
 export type ProduccionCreateManyInput = {
@@ -555,6 +562,11 @@ export type ProduccionScalarRelationFilter = {
   isNot?: Prisma.ProduccionWhereInput
 }
 
+export type ProduccionNullableScalarRelationFilter = {
+  is?: Prisma.ProduccionWhereInput | null
+  isNot?: Prisma.ProduccionWhereInput | null
+}
+
 export type ProduccionCreateNestedManyWithoutLoteInput = {
   create?: Prisma.XOR<Prisma.ProduccionCreateWithoutLoteInput, Prisma.ProduccionUncheckedCreateWithoutLoteInput> | Prisma.ProduccionCreateWithoutLoteInput[] | Prisma.ProduccionUncheckedCreateWithoutLoteInput[]
   connectOrCreate?: Prisma.ProduccionCreateOrConnectWithoutLoteInput | Prisma.ProduccionCreateOrConnectWithoutLoteInput[]
@@ -615,6 +627,22 @@ export type ProduccionUpdateOneRequiredWithoutDiariosNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ProduccionUpdateToOneWithWhereWithoutDiariosInput, Prisma.ProduccionUpdateWithoutDiariosInput>, Prisma.ProduccionUncheckedUpdateWithoutDiariosInput>
 }
 
+export type ProduccionCreateNestedOneWithoutFinanzasInput = {
+  create?: Prisma.XOR<Prisma.ProduccionCreateWithoutFinanzasInput, Prisma.ProduccionUncheckedCreateWithoutFinanzasInput>
+  connectOrCreate?: Prisma.ProduccionCreateOrConnectWithoutFinanzasInput
+  connect?: Prisma.ProduccionWhereUniqueInput
+}
+
+export type ProduccionUpdateOneWithoutFinanzasNestedInput = {
+  create?: Prisma.XOR<Prisma.ProduccionCreateWithoutFinanzasInput, Prisma.ProduccionUncheckedCreateWithoutFinanzasInput>
+  connectOrCreate?: Prisma.ProduccionCreateOrConnectWithoutFinanzasInput
+  upsert?: Prisma.ProduccionUpsertWithoutFinanzasInput
+  disconnect?: Prisma.ProduccionWhereInput | boolean
+  delete?: Prisma.ProduccionWhereInput | boolean
+  connect?: Prisma.ProduccionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProduccionUpdateToOneWithWhereWithoutFinanzasInput, Prisma.ProduccionUpdateWithoutFinanzasInput>, Prisma.ProduccionUncheckedUpdateWithoutFinanzasInput>
+}
+
 export type ProduccionCreateWithoutLoteInput = {
   id?: string
   name: string
@@ -629,6 +657,7 @@ export type ProduccionCreateWithoutLoteInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   diarios?: Prisma.DiarioProduccionCreateNestedManyWithoutProduccionInput
+  finanzas?: Prisma.FinanzaCreateNestedManyWithoutProduccionInput
 }
 
 export type ProduccionUncheckedCreateWithoutLoteInput = {
@@ -645,6 +674,7 @@ export type ProduccionUncheckedCreateWithoutLoteInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   diarios?: Prisma.DiarioProduccionUncheckedCreateNestedManyWithoutProduccionInput
+  finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutProduccionInput
 }
 
 export type ProduccionCreateOrConnectWithoutLoteInput = {
@@ -705,6 +735,7 @@ export type ProduccionCreateWithoutDiariosInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   lote: Prisma.LoteCreateNestedOneWithoutProduccionesInput
+  finanzas?: Prisma.FinanzaCreateNestedManyWithoutProduccionInput
 }
 
 export type ProduccionUncheckedCreateWithoutDiariosInput = {
@@ -721,6 +752,7 @@ export type ProduccionUncheckedCreateWithoutDiariosInput = {
   metadata?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutProduccionInput
 }
 
 export type ProduccionCreateOrConnectWithoutDiariosInput = {
@@ -753,6 +785,7 @@ export type ProduccionUpdateWithoutDiariosInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lote?: Prisma.LoteUpdateOneRequiredWithoutProduccionesNestedInput
+  finanzas?: Prisma.FinanzaUpdateManyWithoutProduccionNestedInput
 }
 
 export type ProduccionUncheckedUpdateWithoutDiariosInput = {
@@ -769,6 +802,91 @@ export type ProduccionUncheckedUpdateWithoutDiariosInput = {
   metadata?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutProduccionNestedInput
+}
+
+export type ProduccionCreateWithoutFinanzasInput = {
+  id?: string
+  name: string
+  type: string
+  status?: string
+  startDate: Date | string
+  endDate?: Date | string | null
+  expectedYield?: number | null
+  actualYield?: number | null
+  unit?: string | null
+  metadata?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lote: Prisma.LoteCreateNestedOneWithoutProduccionesInput
+  diarios?: Prisma.DiarioProduccionCreateNestedManyWithoutProduccionInput
+}
+
+export type ProduccionUncheckedCreateWithoutFinanzasInput = {
+  id?: string
+  name: string
+  type: string
+  status?: string
+  startDate: Date | string
+  endDate?: Date | string | null
+  expectedYield?: number | null
+  actualYield?: number | null
+  unit?: string | null
+  loteId: string
+  metadata?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  diarios?: Prisma.DiarioProduccionUncheckedCreateNestedManyWithoutProduccionInput
+}
+
+export type ProduccionCreateOrConnectWithoutFinanzasInput = {
+  where: Prisma.ProduccionWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProduccionCreateWithoutFinanzasInput, Prisma.ProduccionUncheckedCreateWithoutFinanzasInput>
+}
+
+export type ProduccionUpsertWithoutFinanzasInput = {
+  update: Prisma.XOR<Prisma.ProduccionUpdateWithoutFinanzasInput, Prisma.ProduccionUncheckedUpdateWithoutFinanzasInput>
+  create: Prisma.XOR<Prisma.ProduccionCreateWithoutFinanzasInput, Prisma.ProduccionUncheckedCreateWithoutFinanzasInput>
+  where?: Prisma.ProduccionWhereInput
+}
+
+export type ProduccionUpdateToOneWithWhereWithoutFinanzasInput = {
+  where?: Prisma.ProduccionWhereInput
+  data: Prisma.XOR<Prisma.ProduccionUpdateWithoutFinanzasInput, Prisma.ProduccionUncheckedUpdateWithoutFinanzasInput>
+}
+
+export type ProduccionUpdateWithoutFinanzasInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  expectedYield?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  actualYield?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  metadata?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lote?: Prisma.LoteUpdateOneRequiredWithoutProduccionesNestedInput
+  diarios?: Prisma.DiarioProduccionUpdateManyWithoutProduccionNestedInput
+}
+
+export type ProduccionUncheckedUpdateWithoutFinanzasInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  expectedYield?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  actualYield?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  loteId?: Prisma.StringFieldUpdateOperationsInput | string
+  metadata?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  diarios?: Prisma.DiarioProduccionUncheckedUpdateManyWithoutProduccionNestedInput
 }
 
 export type ProduccionCreateManyLoteInput = {
@@ -800,6 +918,7 @@ export type ProduccionUpdateWithoutLoteInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   diarios?: Prisma.DiarioProduccionUpdateManyWithoutProduccionNestedInput
+  finanzas?: Prisma.FinanzaUpdateManyWithoutProduccionNestedInput
 }
 
 export type ProduccionUncheckedUpdateWithoutLoteInput = {
@@ -816,6 +935,7 @@ export type ProduccionUncheckedUpdateWithoutLoteInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   diarios?: Prisma.DiarioProduccionUncheckedUpdateManyWithoutProduccionNestedInput
+  finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutProduccionNestedInput
 }
 
 export type ProduccionUncheckedUpdateManyWithoutLoteInput = {
@@ -840,10 +960,12 @@ export type ProduccionUncheckedUpdateManyWithoutLoteInput = {
 
 export type ProduccionCountOutputType = {
   diarios: number
+  finanzas: number
 }
 
 export type ProduccionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   diarios?: boolean | ProduccionCountOutputTypeCountDiariosArgs
+  finanzas?: boolean | ProduccionCountOutputTypeCountFinanzasArgs
 }
 
 /**
@@ -863,6 +985,13 @@ export type ProduccionCountOutputTypeCountDiariosArgs<ExtArgs extends runtime.Ty
   where?: Prisma.DiarioProduccionWhereInput
 }
 
+/**
+ * ProduccionCountOutputType without action
+ */
+export type ProduccionCountOutputTypeCountFinanzasArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FinanzaWhereInput
+}
+
 
 export type ProduccionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -880,6 +1009,7 @@ export type ProduccionSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   updatedAt?: boolean
   lote?: boolean | Prisma.LoteDefaultArgs<ExtArgs>
   diarios?: boolean | Prisma.Produccion$diariosArgs<ExtArgs>
+  finanzas?: boolean | Prisma.Produccion$finanzasArgs<ExtArgs>
   _count?: boolean | Prisma.ProduccionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["produccion"]>
 
@@ -937,6 +1067,7 @@ export type ProduccionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs
 export type ProduccionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   lote?: boolean | Prisma.LoteDefaultArgs<ExtArgs>
   diarios?: boolean | Prisma.Produccion$diariosArgs<ExtArgs>
+  finanzas?: boolean | Prisma.Produccion$finanzasArgs<ExtArgs>
   _count?: boolean | Prisma.ProduccionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ProduccionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -951,6 +1082,7 @@ export type $ProduccionPayload<ExtArgs extends runtime.Types.Extensions.Internal
   objects: {
     lote: Prisma.$LotePayload<ExtArgs>
     diarios: Prisma.$DiarioProduccionPayload<ExtArgs>[]
+    finanzas: Prisma.$FinanzaPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1362,6 +1494,7 @@ export interface Prisma__ProduccionClient<T, Null = never, ExtArgs extends runti
   readonly [Symbol.toStringTag]: "PrismaPromise"
   lote<T extends Prisma.LoteDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LoteDefaultArgs<ExtArgs>>): Prisma.Prisma__LoteClient<runtime.Types.Result.GetResult<Prisma.$LotePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   diarios<T extends Prisma.Produccion$diariosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Produccion$diariosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DiarioProduccionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  finanzas<T extends Prisma.Produccion$finanzasArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Produccion$finanzasArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FinanzaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1824,6 +1957,30 @@ export type Produccion$diariosArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.DiarioProduccionScalarFieldEnum | Prisma.DiarioProduccionScalarFieldEnum[]
+}
+
+/**
+ * Produccion.finanzas
+ */
+export type Produccion$finanzasArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Finanza
+   */
+  select?: Prisma.FinanzaSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Finanza
+   */
+  omit?: Prisma.FinanzaOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FinanzaInclude<ExtArgs> | null
+  where?: Prisma.FinanzaWhereInput
+  orderBy?: Prisma.FinanzaOrderByWithRelationInput | Prisma.FinanzaOrderByWithRelationInput[]
+  cursor?: Prisma.FinanzaWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FinanzaScalarFieldEnum | Prisma.FinanzaScalarFieldEnum[]
 }
 
 /**

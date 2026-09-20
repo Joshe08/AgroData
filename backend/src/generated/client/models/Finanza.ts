@@ -41,6 +41,8 @@ export type FinanzaMinAggregateOutputType = {
   amount: number | null
   description: string | null
   date: Date | null
+  fincaId: string | null
+  produccionId: string | null
   organizationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -53,6 +55,8 @@ export type FinanzaMaxAggregateOutputType = {
   amount: number | null
   description: string | null
   date: Date | null
+  fincaId: string | null
+  produccionId: string | null
   organizationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -65,6 +69,8 @@ export type FinanzaCountAggregateOutputType = {
   amount: number
   description: number
   date: number
+  fincaId: number
+  produccionId: number
   organizationId: number
   createdAt: number
   updatedAt: number
@@ -87,6 +93,8 @@ export type FinanzaMinAggregateInputType = {
   amount?: true
   description?: true
   date?: true
+  fincaId?: true
+  produccionId?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -99,6 +107,8 @@ export type FinanzaMaxAggregateInputType = {
   amount?: true
   description?: true
   date?: true
+  fincaId?: true
+  produccionId?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -111,6 +121,8 @@ export type FinanzaCountAggregateInputType = {
   amount?: true
   description?: true
   date?: true
+  fincaId?: true
+  produccionId?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -210,6 +222,8 @@ export type FinanzaGroupByOutputType = {
   amount: number
   description: string | null
   date: Date
+  fincaId: string | null
+  produccionId: string | null
   organizationId: string
   createdAt: Date
   updatedAt: Date
@@ -245,9 +259,13 @@ export type FinanzaWhereInput = {
   amount?: Prisma.FloatFilter<"Finanza"> | number
   description?: Prisma.StringNullableFilter<"Finanza"> | string | null
   date?: Prisma.DateTimeFilter<"Finanza"> | Date | string
+  fincaId?: Prisma.StringNullableFilter<"Finanza"> | string | null
+  produccionId?: Prisma.StringNullableFilter<"Finanza"> | string | null
   organizationId?: Prisma.StringFilter<"Finanza"> | string
   createdAt?: Prisma.DateTimeFilter<"Finanza"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Finanza"> | Date | string
+  finca?: Prisma.XOR<Prisma.FincaNullableScalarRelationFilter, Prisma.FincaWhereInput> | null
+  produccion?: Prisma.XOR<Prisma.ProduccionNullableScalarRelationFilter, Prisma.ProduccionWhereInput> | null
   organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>
 }
 
@@ -258,9 +276,13 @@ export type FinanzaOrderByWithRelationInput = {
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   date?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  produccionId?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  finca?: Prisma.FincaOrderByWithRelationInput
+  produccion?: Prisma.ProduccionOrderByWithRelationInput
   organization?: Prisma.OrganizationOrderByWithRelationInput
 }
 
@@ -274,9 +296,13 @@ export type FinanzaWhereUniqueInput = Prisma.AtLeast<{
   amount?: Prisma.FloatFilter<"Finanza"> | number
   description?: Prisma.StringNullableFilter<"Finanza"> | string | null
   date?: Prisma.DateTimeFilter<"Finanza"> | Date | string
+  fincaId?: Prisma.StringNullableFilter<"Finanza"> | string | null
+  produccionId?: Prisma.StringNullableFilter<"Finanza"> | string | null
   organizationId?: Prisma.StringFilter<"Finanza"> | string
   createdAt?: Prisma.DateTimeFilter<"Finanza"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Finanza"> | Date | string
+  finca?: Prisma.XOR<Prisma.FincaNullableScalarRelationFilter, Prisma.FincaWhereInput> | null
+  produccion?: Prisma.XOR<Prisma.ProduccionNullableScalarRelationFilter, Prisma.ProduccionWhereInput> | null
   organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>
 }, "id">
 
@@ -287,6 +313,8 @@ export type FinanzaOrderByWithAggregationInput = {
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   date?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  produccionId?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -307,6 +335,8 @@ export type FinanzaScalarWhereWithAggregatesInput = {
   amount?: Prisma.FloatWithAggregatesFilter<"Finanza"> | number
   description?: Prisma.StringNullableWithAggregatesFilter<"Finanza"> | string | null
   date?: Prisma.DateTimeWithAggregatesFilter<"Finanza"> | Date | string
+  fincaId?: Prisma.StringNullableWithAggregatesFilter<"Finanza"> | string | null
+  produccionId?: Prisma.StringNullableWithAggregatesFilter<"Finanza"> | string | null
   organizationId?: Prisma.StringWithAggregatesFilter<"Finanza"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Finanza"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Finanza"> | Date | string
@@ -321,6 +351,8 @@ export type FinanzaCreateInput = {
   date?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  finca?: Prisma.FincaCreateNestedOneWithoutFinanzasInput
+  produccion?: Prisma.ProduccionCreateNestedOneWithoutFinanzasInput
   organization: Prisma.OrganizationCreateNestedOneWithoutFinanzasInput
 }
 
@@ -331,6 +363,8 @@ export type FinanzaUncheckedCreateInput = {
   amount: number
   description?: string | null
   date?: Date | string
+  fincaId?: string | null
+  produccionId?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -345,6 +379,8 @@ export type FinanzaUpdateInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finca?: Prisma.FincaUpdateOneWithoutFinanzasNestedInput
+  produccion?: Prisma.ProduccionUpdateOneWithoutFinanzasNestedInput
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutFinanzasNestedInput
 }
 
@@ -355,6 +391,8 @@ export type FinanzaUncheckedUpdateInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  produccionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -367,6 +405,8 @@ export type FinanzaCreateManyInput = {
   amount: number
   description?: string | null
   date?: Date | string
+  fincaId?: string | null
+  produccionId?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -390,6 +430,8 @@ export type FinanzaUncheckedUpdateManyInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  produccionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -412,6 +454,8 @@ export type FinanzaCountOrderByAggregateInput = {
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrder
   date?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
+  produccionId?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -428,6 +472,8 @@ export type FinanzaMaxOrderByAggregateInput = {
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrder
   date?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
+  produccionId?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -440,6 +486,8 @@ export type FinanzaMinOrderByAggregateInput = {
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrder
   date?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
+  produccionId?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -491,6 +539,90 @@ export type FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput = {
   deleteMany?: Prisma.FinanzaScalarWhereInput | Prisma.FinanzaScalarWhereInput[]
 }
 
+export type FinanzaCreateNestedManyWithoutFincaInput = {
+  create?: Prisma.XOR<Prisma.FinanzaCreateWithoutFincaInput, Prisma.FinanzaUncheckedCreateWithoutFincaInput> | Prisma.FinanzaCreateWithoutFincaInput[] | Prisma.FinanzaUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.FinanzaCreateOrConnectWithoutFincaInput | Prisma.FinanzaCreateOrConnectWithoutFincaInput[]
+  createMany?: Prisma.FinanzaCreateManyFincaInputEnvelope
+  connect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+}
+
+export type FinanzaUncheckedCreateNestedManyWithoutFincaInput = {
+  create?: Prisma.XOR<Prisma.FinanzaCreateWithoutFincaInput, Prisma.FinanzaUncheckedCreateWithoutFincaInput> | Prisma.FinanzaCreateWithoutFincaInput[] | Prisma.FinanzaUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.FinanzaCreateOrConnectWithoutFincaInput | Prisma.FinanzaCreateOrConnectWithoutFincaInput[]
+  createMany?: Prisma.FinanzaCreateManyFincaInputEnvelope
+  connect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+}
+
+export type FinanzaUpdateManyWithoutFincaNestedInput = {
+  create?: Prisma.XOR<Prisma.FinanzaCreateWithoutFincaInput, Prisma.FinanzaUncheckedCreateWithoutFincaInput> | Prisma.FinanzaCreateWithoutFincaInput[] | Prisma.FinanzaUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.FinanzaCreateOrConnectWithoutFincaInput | Prisma.FinanzaCreateOrConnectWithoutFincaInput[]
+  upsert?: Prisma.FinanzaUpsertWithWhereUniqueWithoutFincaInput | Prisma.FinanzaUpsertWithWhereUniqueWithoutFincaInput[]
+  createMany?: Prisma.FinanzaCreateManyFincaInputEnvelope
+  set?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  disconnect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  delete?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  connect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  update?: Prisma.FinanzaUpdateWithWhereUniqueWithoutFincaInput | Prisma.FinanzaUpdateWithWhereUniqueWithoutFincaInput[]
+  updateMany?: Prisma.FinanzaUpdateManyWithWhereWithoutFincaInput | Prisma.FinanzaUpdateManyWithWhereWithoutFincaInput[]
+  deleteMany?: Prisma.FinanzaScalarWhereInput | Prisma.FinanzaScalarWhereInput[]
+}
+
+export type FinanzaUncheckedUpdateManyWithoutFincaNestedInput = {
+  create?: Prisma.XOR<Prisma.FinanzaCreateWithoutFincaInput, Prisma.FinanzaUncheckedCreateWithoutFincaInput> | Prisma.FinanzaCreateWithoutFincaInput[] | Prisma.FinanzaUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.FinanzaCreateOrConnectWithoutFincaInput | Prisma.FinanzaCreateOrConnectWithoutFincaInput[]
+  upsert?: Prisma.FinanzaUpsertWithWhereUniqueWithoutFincaInput | Prisma.FinanzaUpsertWithWhereUniqueWithoutFincaInput[]
+  createMany?: Prisma.FinanzaCreateManyFincaInputEnvelope
+  set?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  disconnect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  delete?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  connect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  update?: Prisma.FinanzaUpdateWithWhereUniqueWithoutFincaInput | Prisma.FinanzaUpdateWithWhereUniqueWithoutFincaInput[]
+  updateMany?: Prisma.FinanzaUpdateManyWithWhereWithoutFincaInput | Prisma.FinanzaUpdateManyWithWhereWithoutFincaInput[]
+  deleteMany?: Prisma.FinanzaScalarWhereInput | Prisma.FinanzaScalarWhereInput[]
+}
+
+export type FinanzaCreateNestedManyWithoutProduccionInput = {
+  create?: Prisma.XOR<Prisma.FinanzaCreateWithoutProduccionInput, Prisma.FinanzaUncheckedCreateWithoutProduccionInput> | Prisma.FinanzaCreateWithoutProduccionInput[] | Prisma.FinanzaUncheckedCreateWithoutProduccionInput[]
+  connectOrCreate?: Prisma.FinanzaCreateOrConnectWithoutProduccionInput | Prisma.FinanzaCreateOrConnectWithoutProduccionInput[]
+  createMany?: Prisma.FinanzaCreateManyProduccionInputEnvelope
+  connect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+}
+
+export type FinanzaUncheckedCreateNestedManyWithoutProduccionInput = {
+  create?: Prisma.XOR<Prisma.FinanzaCreateWithoutProduccionInput, Prisma.FinanzaUncheckedCreateWithoutProduccionInput> | Prisma.FinanzaCreateWithoutProduccionInput[] | Prisma.FinanzaUncheckedCreateWithoutProduccionInput[]
+  connectOrCreate?: Prisma.FinanzaCreateOrConnectWithoutProduccionInput | Prisma.FinanzaCreateOrConnectWithoutProduccionInput[]
+  createMany?: Prisma.FinanzaCreateManyProduccionInputEnvelope
+  connect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+}
+
+export type FinanzaUpdateManyWithoutProduccionNestedInput = {
+  create?: Prisma.XOR<Prisma.FinanzaCreateWithoutProduccionInput, Prisma.FinanzaUncheckedCreateWithoutProduccionInput> | Prisma.FinanzaCreateWithoutProduccionInput[] | Prisma.FinanzaUncheckedCreateWithoutProduccionInput[]
+  connectOrCreate?: Prisma.FinanzaCreateOrConnectWithoutProduccionInput | Prisma.FinanzaCreateOrConnectWithoutProduccionInput[]
+  upsert?: Prisma.FinanzaUpsertWithWhereUniqueWithoutProduccionInput | Prisma.FinanzaUpsertWithWhereUniqueWithoutProduccionInput[]
+  createMany?: Prisma.FinanzaCreateManyProduccionInputEnvelope
+  set?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  disconnect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  delete?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  connect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  update?: Prisma.FinanzaUpdateWithWhereUniqueWithoutProduccionInput | Prisma.FinanzaUpdateWithWhereUniqueWithoutProduccionInput[]
+  updateMany?: Prisma.FinanzaUpdateManyWithWhereWithoutProduccionInput | Prisma.FinanzaUpdateManyWithWhereWithoutProduccionInput[]
+  deleteMany?: Prisma.FinanzaScalarWhereInput | Prisma.FinanzaScalarWhereInput[]
+}
+
+export type FinanzaUncheckedUpdateManyWithoutProduccionNestedInput = {
+  create?: Prisma.XOR<Prisma.FinanzaCreateWithoutProduccionInput, Prisma.FinanzaUncheckedCreateWithoutProduccionInput> | Prisma.FinanzaCreateWithoutProduccionInput[] | Prisma.FinanzaUncheckedCreateWithoutProduccionInput[]
+  connectOrCreate?: Prisma.FinanzaCreateOrConnectWithoutProduccionInput | Prisma.FinanzaCreateOrConnectWithoutProduccionInput[]
+  upsert?: Prisma.FinanzaUpsertWithWhereUniqueWithoutProduccionInput | Prisma.FinanzaUpsertWithWhereUniqueWithoutProduccionInput[]
+  createMany?: Prisma.FinanzaCreateManyProduccionInputEnvelope
+  set?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  disconnect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  delete?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  connect?: Prisma.FinanzaWhereUniqueInput | Prisma.FinanzaWhereUniqueInput[]
+  update?: Prisma.FinanzaUpdateWithWhereUniqueWithoutProduccionInput | Prisma.FinanzaUpdateWithWhereUniqueWithoutProduccionInput[]
+  updateMany?: Prisma.FinanzaUpdateManyWithWhereWithoutProduccionInput | Prisma.FinanzaUpdateManyWithWhereWithoutProduccionInput[]
+  deleteMany?: Prisma.FinanzaScalarWhereInput | Prisma.FinanzaScalarWhereInput[]
+}
+
 export type FinanzaCreateWithoutOrganizationInput = {
   id?: string
   type: string
@@ -500,6 +632,8 @@ export type FinanzaCreateWithoutOrganizationInput = {
   date?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  finca?: Prisma.FincaCreateNestedOneWithoutFinanzasInput
+  produccion?: Prisma.ProduccionCreateNestedOneWithoutFinanzasInput
 }
 
 export type FinanzaUncheckedCreateWithoutOrganizationInput = {
@@ -509,6 +643,8 @@ export type FinanzaUncheckedCreateWithoutOrganizationInput = {
   amount: number
   description?: string | null
   date?: Date | string
+  fincaId?: string | null
+  produccionId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -548,9 +684,113 @@ export type FinanzaScalarWhereInput = {
   amount?: Prisma.FloatFilter<"Finanza"> | number
   description?: Prisma.StringNullableFilter<"Finanza"> | string | null
   date?: Prisma.DateTimeFilter<"Finanza"> | Date | string
+  fincaId?: Prisma.StringNullableFilter<"Finanza"> | string | null
+  produccionId?: Prisma.StringNullableFilter<"Finanza"> | string | null
   organizationId?: Prisma.StringFilter<"Finanza"> | string
   createdAt?: Prisma.DateTimeFilter<"Finanza"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Finanza"> | Date | string
+}
+
+export type FinanzaCreateWithoutFincaInput = {
+  id?: string
+  type: string
+  category: string
+  amount: number
+  description?: string | null
+  date?: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  produccion?: Prisma.ProduccionCreateNestedOneWithoutFinanzasInput
+  organization: Prisma.OrganizationCreateNestedOneWithoutFinanzasInput
+}
+
+export type FinanzaUncheckedCreateWithoutFincaInput = {
+  id?: string
+  type: string
+  category: string
+  amount: number
+  description?: string | null
+  date?: Date | string
+  produccionId?: string | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type FinanzaCreateOrConnectWithoutFincaInput = {
+  where: Prisma.FinanzaWhereUniqueInput
+  create: Prisma.XOR<Prisma.FinanzaCreateWithoutFincaInput, Prisma.FinanzaUncheckedCreateWithoutFincaInput>
+}
+
+export type FinanzaCreateManyFincaInputEnvelope = {
+  data: Prisma.FinanzaCreateManyFincaInput | Prisma.FinanzaCreateManyFincaInput[]
+}
+
+export type FinanzaUpsertWithWhereUniqueWithoutFincaInput = {
+  where: Prisma.FinanzaWhereUniqueInput
+  update: Prisma.XOR<Prisma.FinanzaUpdateWithoutFincaInput, Prisma.FinanzaUncheckedUpdateWithoutFincaInput>
+  create: Prisma.XOR<Prisma.FinanzaCreateWithoutFincaInput, Prisma.FinanzaUncheckedCreateWithoutFincaInput>
+}
+
+export type FinanzaUpdateWithWhereUniqueWithoutFincaInput = {
+  where: Prisma.FinanzaWhereUniqueInput
+  data: Prisma.XOR<Prisma.FinanzaUpdateWithoutFincaInput, Prisma.FinanzaUncheckedUpdateWithoutFincaInput>
+}
+
+export type FinanzaUpdateManyWithWhereWithoutFincaInput = {
+  where: Prisma.FinanzaScalarWhereInput
+  data: Prisma.XOR<Prisma.FinanzaUpdateManyMutationInput, Prisma.FinanzaUncheckedUpdateManyWithoutFincaInput>
+}
+
+export type FinanzaCreateWithoutProduccionInput = {
+  id?: string
+  type: string
+  category: string
+  amount: number
+  description?: string | null
+  date?: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  finca?: Prisma.FincaCreateNestedOneWithoutFinanzasInput
+  organization: Prisma.OrganizationCreateNestedOneWithoutFinanzasInput
+}
+
+export type FinanzaUncheckedCreateWithoutProduccionInput = {
+  id?: string
+  type: string
+  category: string
+  amount: number
+  description?: string | null
+  date?: Date | string
+  fincaId?: string | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type FinanzaCreateOrConnectWithoutProduccionInput = {
+  where: Prisma.FinanzaWhereUniqueInput
+  create: Prisma.XOR<Prisma.FinanzaCreateWithoutProduccionInput, Prisma.FinanzaUncheckedCreateWithoutProduccionInput>
+}
+
+export type FinanzaCreateManyProduccionInputEnvelope = {
+  data: Prisma.FinanzaCreateManyProduccionInput | Prisma.FinanzaCreateManyProduccionInput[]
+}
+
+export type FinanzaUpsertWithWhereUniqueWithoutProduccionInput = {
+  where: Prisma.FinanzaWhereUniqueInput
+  update: Prisma.XOR<Prisma.FinanzaUpdateWithoutProduccionInput, Prisma.FinanzaUncheckedUpdateWithoutProduccionInput>
+  create: Prisma.XOR<Prisma.FinanzaCreateWithoutProduccionInput, Prisma.FinanzaUncheckedCreateWithoutProduccionInput>
+}
+
+export type FinanzaUpdateWithWhereUniqueWithoutProduccionInput = {
+  where: Prisma.FinanzaWhereUniqueInput
+  data: Prisma.XOR<Prisma.FinanzaUpdateWithoutProduccionInput, Prisma.FinanzaUncheckedUpdateWithoutProduccionInput>
+}
+
+export type FinanzaUpdateManyWithWhereWithoutProduccionInput = {
+  where: Prisma.FinanzaScalarWhereInput
+  data: Prisma.XOR<Prisma.FinanzaUpdateManyMutationInput, Prisma.FinanzaUncheckedUpdateManyWithoutProduccionInput>
 }
 
 export type FinanzaCreateManyOrganizationInput = {
@@ -560,6 +800,8 @@ export type FinanzaCreateManyOrganizationInput = {
   amount: number
   description?: string | null
   date?: Date | string
+  fincaId?: string | null
+  produccionId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -573,6 +815,8 @@ export type FinanzaUpdateWithoutOrganizationInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finca?: Prisma.FincaUpdateOneWithoutFinanzasNestedInput
+  produccion?: Prisma.ProduccionUpdateOneWithoutFinanzasNestedInput
 }
 
 export type FinanzaUncheckedUpdateWithoutOrganizationInput = {
@@ -582,6 +826,8 @@ export type FinanzaUncheckedUpdateWithoutOrganizationInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  produccionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -593,6 +839,112 @@ export type FinanzaUncheckedUpdateManyWithoutOrganizationInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  produccionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FinanzaCreateManyFincaInput = {
+  id?: string
+  type: string
+  category: string
+  amount: number
+  description?: string | null
+  date?: Date | string
+  produccionId?: string | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type FinanzaUpdateWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  produccion?: Prisma.ProduccionUpdateOneWithoutFinanzasNestedInput
+  organization?: Prisma.OrganizationUpdateOneRequiredWithoutFinanzasNestedInput
+}
+
+export type FinanzaUncheckedUpdateWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  produccionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FinanzaUncheckedUpdateManyWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  produccionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FinanzaCreateManyProduccionInput = {
+  id?: string
+  type: string
+  category: string
+  amount: number
+  description?: string | null
+  date?: Date | string
+  fincaId?: string | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type FinanzaUpdateWithoutProduccionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finca?: Prisma.FincaUpdateOneWithoutFinanzasNestedInput
+  organization?: Prisma.OrganizationUpdateOneRequiredWithoutFinanzasNestedInput
+}
+
+export type FinanzaUncheckedUpdateWithoutProduccionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FinanzaUncheckedUpdateManyWithoutProduccionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -606,9 +958,13 @@ export type FinanzaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   amount?: boolean
   description?: boolean
   date?: boolean
+  fincaId?: boolean
+  produccionId?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Finanza$fincaArgs<ExtArgs>
+  produccion?: boolean | Prisma.Finanza$produccionArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["finanza"]>
 
@@ -619,9 +975,13 @@ export type FinanzaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   amount?: boolean
   description?: boolean
   date?: boolean
+  fincaId?: boolean
+  produccionId?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Finanza$fincaArgs<ExtArgs>
+  produccion?: boolean | Prisma.Finanza$produccionArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["finanza"]>
 
@@ -632,9 +992,13 @@ export type FinanzaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   amount?: boolean
   description?: boolean
   date?: boolean
+  fincaId?: boolean
+  produccionId?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Finanza$fincaArgs<ExtArgs>
+  produccion?: boolean | Prisma.Finanza$produccionArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["finanza"]>
 
@@ -645,25 +1009,35 @@ export type FinanzaSelectScalar = {
   amount?: boolean
   description?: boolean
   date?: boolean
+  fincaId?: boolean
+  produccionId?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type FinanzaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "type" | "category" | "amount" | "description" | "date" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["finanza"]>
+export type FinanzaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "type" | "category" | "amount" | "description" | "date" | "fincaId" | "produccionId" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["finanza"]>
 export type FinanzaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Finanza$fincaArgs<ExtArgs>
+  produccion?: boolean | Prisma.Finanza$produccionArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 export type FinanzaIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Finanza$fincaArgs<ExtArgs>
+  produccion?: boolean | Prisma.Finanza$produccionArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 export type FinanzaIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Finanza$fincaArgs<ExtArgs>
+  produccion?: boolean | Prisma.Finanza$produccionArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 
 export type $FinanzaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Finanza"
   objects: {
+    finca: Prisma.$FincaPayload<ExtArgs> | null
+    produccion: Prisma.$ProduccionPayload<ExtArgs> | null
     organization: Prisma.$OrganizationPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -673,6 +1047,8 @@ export type $FinanzaPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     amount: number
     description: string | null
     date: Date
+    fincaId: string | null
+    produccionId: string | null
     organizationId: string
     createdAt: Date
     updatedAt: Date
@@ -1070,6 +1446,8 @@ readonly fields: FinanzaFieldRefs;
  */
 export interface Prisma__FinanzaClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  finca<T extends Prisma.Finanza$fincaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Finanza$fincaArgs<ExtArgs>>): Prisma.Prisma__FincaClient<runtime.Types.Result.GetResult<Prisma.$FincaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  produccion<T extends Prisma.Finanza$produccionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Finanza$produccionArgs<ExtArgs>>): Prisma.Prisma__ProduccionClient<runtime.Types.Result.GetResult<Prisma.$ProduccionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   organization<T extends Prisma.OrganizationDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.OrganizationDefaultArgs<ExtArgs>>): Prisma.Prisma__OrganizationClient<runtime.Types.Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1106,6 +1484,8 @@ export interface FinanzaFieldRefs {
   readonly amount: Prisma.FieldRef<"Finanza", 'Float'>
   readonly description: Prisma.FieldRef<"Finanza", 'String'>
   readonly date: Prisma.FieldRef<"Finanza", 'DateTime'>
+  readonly fincaId: Prisma.FieldRef<"Finanza", 'String'>
+  readonly produccionId: Prisma.FieldRef<"Finanza", 'String'>
   readonly organizationId: Prisma.FieldRef<"Finanza", 'String'>
   readonly createdAt: Prisma.FieldRef<"Finanza", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Finanza", 'DateTime'>
@@ -1505,6 +1885,44 @@ export type FinanzaDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Limit how many Finanzas to delete.
    */
   limit?: number
+}
+
+/**
+ * Finanza.finca
+ */
+export type Finanza$fincaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Finca
+   */
+  select?: Prisma.FincaSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Finca
+   */
+  omit?: Prisma.FincaOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FincaInclude<ExtArgs> | null
+  where?: Prisma.FincaWhereInput
+}
+
+/**
+ * Finanza.produccion
+ */
+export type Finanza$produccionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Produccion
+   */
+  select?: Prisma.ProduccionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Produccion
+   */
+  omit?: Prisma.ProduccionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProduccionInclude<ExtArgs> | null
+  where?: Prisma.ProduccionWhereInput
 }
 
 /**

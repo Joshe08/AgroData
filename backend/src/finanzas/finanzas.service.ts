@@ -9,12 +9,20 @@ export class FinanzasService {
     return this.prisma.finanza.findMany({
       where: { organizationId: orgId },
       orderBy: { date: 'desc' },
+      include: {
+        finca: { select: { id: true, name: true } },
+        produccion: { select: { id: true, name: true } }
+      }
     });
   }
 
   async findOne(id: string, orgId: string) {
     return this.prisma.finanza.findFirst({
       where: { id, organizationId: orgId },
+      include: {
+        finca: { select: { id: true, name: true } },
+        produccion: { select: { id: true, name: true } }
+      }
     });
   }
 
@@ -26,6 +34,8 @@ export class FinanzasService {
         amount: parseFloat(data.amount),
         description: data.description || null,
         date: data.date ? new Date(data.date) : new Date(),
+        fincaId: data.fincaId || null,
+        produccionId: data.produccionId || null,
         organizationId: orgId,
       },
     });
@@ -40,6 +50,8 @@ export class FinanzasService {
         amount: data.amount !== undefined ? parseFloat(data.amount) : undefined,
         description: data.description || null,
         date: data.date ? new Date(data.date) : undefined,
+        fincaId: data.fincaId || null,
+        produccionId: data.produccionId || null,
       },
     });
   }
@@ -71,6 +83,16 @@ export class FinanzasService {
 
     const expensesByCategory: Record<string, number> = {};
     const incomeByCategory: Record<string, number> = {};
+    const monthlyData: Record<string, { mes: string; ingresos: number; gastos: number }> = {};
+
+    // Inicializar los últimos 6 meses en 0 para mantener la estructura visual
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const formatter = new Intl.DateTimeFormat('es', { month: 'short' });
+      monthlyData[key] = { mes: formatter.format(d).replace('.', ''), ingresos: 0, gastos: 0 };
+    }
 
     for (const t of transactions) {
       const cat = t.category || 'OTRO';
@@ -78,6 +100,17 @@ export class FinanzasService {
         incomeByCategory[cat] = (incomeByCategory[cat] || 0) + t.amount;
       } else {
         expensesByCategory[cat] = (expensesByCategory[cat] || 0) + t.amount;
+      }
+
+      // Procesar por mes real
+      const date = new Date(t.date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (monthlyData[key]) {
+        if (t.type === 'INGRESO') {
+          monthlyData[key].ingresos += t.amount;
+        } else {
+          monthlyData[key].gastos += t.amount;
+        }
       }
     }
 
@@ -91,6 +124,7 @@ export class FinanzasService {
       incomeByCategory,
       expensesByCategory,
       transactionCount: transactions.length,
+      resumenMensual: Object.values(monthlyData)
     };
   }
 }

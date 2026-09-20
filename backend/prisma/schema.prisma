@@ -58,6 +58,7 @@ model Finca {
   organization   Organization @relation(fields: [organizationId], references: [id])
   lotes          Lote[]
   inventarios    Inventario[]
+  finanzas       Finanza[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }
@@ -87,6 +88,7 @@ model Produccion {
   loteId        String
   lote          Lote               @relation(fields: [loteId], references: [id])
   diarios       DiarioProduccion[]
+  finanzas      Finanza[]
   metadata      String?            // JSON string for custom attributes (variety, breed, pond size, etc.)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
@@ -132,6 +134,10 @@ model Finanza {
   amount         Float
   description    String?
   date           DateTime     @default(now())
+  fincaId        String?
+  finca          Finca?       @relation(fields: [fincaId], references: [id])
+  produccionId   String?
+  produccion     Produccion?  @relation(fields: [produccionId], references: [id])
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
   createdAt      DateTime     @default(now())

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { fincasApi, produccionesApi, inventarioApi, finanzasApi, personalApi, maquinariaApi } from '@/lib/api';
+import { fincasApi, produccionesApi, inventarioApi, finanzasApi, personalApi } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useToastStore } from '@/store/toastStore';
 import {
@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import * as XLSX from 'xlsx';
 
 type ReportCategory = 'produccion' | 'finanzas' | 'inventario' | 'fincas' | 'personal';
 type PeriodOption = 'TODO' | 'MES_ACTUAL' | 'ULTIMOS_30_DIAS' | 'ANIO_ACTUAL';
@@ -190,317 +189,148 @@ interface KpiItem {
     return [];
   }, [reportType, filteredData]);
 
-  // Safe string formatting for Excel
-  const safeStr = (text: any) => {
-    if (text === null || text === undefined) return '';
-    return String(text);
+  // Build common headers and rows for both CSV and PDF
+  const getTableData = () => {
+    let headers: string[] = [];
+    let rows: any[][] = [];
+
+    if (reportType === 'produccion') {
+      headers = ['ID', 'Producción / Cultivo', 'Tipo Sector', 'Finca / Predio', 'Parcela / Lote', 'Estado', 'Fecha Inicio', 'Fecha Cosecha', 'Escala / Cantidad'];
+      rows = filteredData.map((p) => [
+        p.id,
+        p.name || p.variedad || p.tipo,
+        p.tipo,
+        p.finca?.nombre || `Finca #${p.fincaId}`,
+        p.lote?.nombre || 'Lote Principal',
+        p.estado || p.status,
+        p.startDate || p.fechaInicio ? format(new Date(p.startDate || p.fechaInicio), 'dd/MM/yyyy') : '-',
+        p.endDate || p.fechaEstimadaCosecha ? format(new Date(p.endDate || p.fechaEstimadaCosecha), 'dd/MM/yyyy') : '-',
+        `${p.expectedYield || p.cantidadSembrada || 0} ${p.unit || p.unidadMedida || ''}`.trim(),
+      ]);
+    } else if (reportType === 'finanzas') {
+      headers = ['ID', 'Tipo', 'Categoría', 'Monto (COP)', 'Finca', 'Fecha', 'Descripción'];
+      rows = filteredData.map((t) => [
+        t.id,
+        t.tipo || t.type,
+        t.categoria || t.category,
+        t.monto || t.amount || 0,
+        t.finca?.nombre || `Finca #${t.fincaId}`,
+        t.fecha || t.date ? format(new Date(t.fecha || t.date), 'dd/MM/yyyy') : '-',
+        t.descripcion || t.description || 'Sin descripción',
+      ]);
+    } else if (reportType === 'inventario') {
+      headers = ['ID', 'Producto / Insumo', 'Categoría', 'Finca / Bodega', 'Cantidad', 'Unidad', 'Stock Mínimo', 'Costo Unitario (COP)', 'Proveedor'];
+      rows = filteredData.map((i) => [
+        i.id,
+        i.nombre || i.name,
+        i.categoria || i.category,
+        i.finca?.nombre || `Finca #${i.fincaId}`,
+        i.cantidad || i.quantity || 0,
+        i.unidad || i.unit || 'unidades',
+        i.stockMinimo || i.minAlertQuantity || 0,
+        i.costo || 0,
+        i.proveedor || 'N/A',
+      ]);
+    } else if (reportType === 'fincas') {
+      headers = ['ID', 'Nombre del Predio', 'Ubicación Geográfica', 'Área Total (ha)', 'Tipo Suelo', 'Parcelas / Lotes'];
+      rows = filteredData.map((f) => [
+        f.id,
+        f.nombre || f.name,
+        f.ubicacion || f.location,
+        f.hectareas || f.area || 0,
+        f.tipoSuelo || 'Franco',
+        f.lotes?.length || 0,
+      ]);
+    } else if (reportType === 'personal') {
+      headers = ['ID', 'Nombre Colaborador', 'Cargo / Función', 'Finca Asignada', 'Salario Mensual (COP)', 'Modalidad Contrato', 'Teléfono'];
+      rows = filteredData.map((p) => [
+        p.id,
+        p.nombre || p.name,
+        p.cargo || p.role,
+        p.finca?.nombre || `Finca #${p.fincaId}`,
+        p.salario || p.dailyRate || 0,
+        p.tipoContrato || p.status || 'TERMINO_FIJO',
+        p.telefono || p.phone || 'N/A',
+      ]);
+    }
+
+    return { headers, rows };
   };
 
-  // Export current view to Excel
-  const exportToExcel = () => {
+  // Export to professional multi-sheet Excel (.xlsx)
+  const exportToExcel = async () => {
     if (filteredData.length === 0) {
       useToastStore.getState().warning('No hay datos disponibles para exportar con los filtros seleccionados.');
       return;
     }
 
     try {
+      const {
+        generateExcelReport,
+        buildFincasModulo,
+        buildProduccionesModulo,
+        buildInventarioModulo,
+        buildFinanzasModulo,
+        buildPersonalModulo,
+      } = await import('@/lib/excelGenerator');
+
       const orgName = user?.organizationName || 'AgroData';
-      const fechaGeneracion = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es });
-      
-      const wb = XLSX.utils.book_new();
-      
-      let headers: string[] = [];
-      let rows: any[][] = [];
+      const fincaLabel = selectedFinca === 'ALL'
+        ? 'Todas las fincas'
+        : fincas.find((f) => String(f.id) === selectedFinca)?.nombre || selectedFinca;
+      const periodoLabel = period.replace(/_/g, ' ');
 
-      if (reportType === 'produccion') {
-        headers = ['ID', 'Producción / Cultivo', 'Tipo Sector', 'Finca / Predio', 'Parcela / Lote', 'Estado', 'Fecha Inicio', 'Fecha Cosecha', 'Escala / Cantidad'];
-        rows = filteredData.map((p) => [
-          safeStr(p.id),
-          safeStr(p.name || p.variedad || p.tipo),
-          safeStr(p.tipo),
-          safeStr(p.finca?.nombre || `Finca #${p.fincaId}`),
-          safeStr(p.lote?.nombre || 'Lote Principal'),
-          safeStr(p.estado || p.status),
-          safeStr(p.startDate || p.fechaInicio ? format(new Date(p.startDate || p.fechaInicio), 'dd/MM/yyyy') : '-'),
-          safeStr(p.endDate || p.fechaEstimadaCosecha ? format(new Date(p.endDate || p.fechaEstimadaCosecha), 'dd/MM/yyyy') : '-'),
-          safeStr(`${p.expectedYield || p.cantidadSembrada || 0} ${p.unit || p.unidadMedida || ''}`),
-        ]);
-      } else if (reportType === 'finanzas') {
-        headers = ['ID', 'Tipo', 'Categoría', 'Monto (COP)', 'Finca', 'Fecha', 'Descripción'];
-        rows = filteredData.map((t) => [
-          safeStr(t.id),
-          safeStr(t.tipo || t.type),
-          safeStr(t.categoria || t.category),
-          Number(t.monto || t.amount || 0),
-          safeStr(t.finca?.nombre || `Finca #${t.fincaId}`),
-          safeStr(t.fecha || t.date ? format(new Date(t.fecha || t.date), 'dd/MM/yyyy') : '-'),
-          safeStr(t.descripcion || t.description || 'Sin descripción'),
-        ]);
-      } else if (reportType === 'inventario') {
-        headers = ['ID', 'Producto / Insumo', 'Categoría', 'Finca / Bodega', 'Cantidad', 'Unidad', 'Stock Mínimo', 'Costo Unitario (COP)', 'Proveedor'];
-        rows = filteredData.map((i) => [
-          safeStr(i.id),
-          safeStr(i.nombre || i.name),
-          safeStr(i.categoria || i.category),
-          safeStr(i.finca?.nombre || `Finca #${i.fincaId}`),
-          Number(i.cantidad || i.quantity || 0),
-          safeStr(i.unidad || i.unit || 'unidades'),
-          Number(i.stockMinimo || i.minAlertQuantity || 0),
-          Number(i.costo || 0),
-          safeStr(i.proveedor || 'N/A'),
-        ]);
-      } else if (reportType === 'fincas') {
-        headers = ['ID', 'Nombre del Predio', 'Ubicación Geográfica', 'Área Total (ha)', 'Tipo Suelo', 'Parcelas / Lotes'];
-        rows = filteredData.map((f) => [
-          safeStr(f.id),
-          safeStr(f.nombre || f.name),
-          safeStr(f.ubicacion || f.location),
-          Number(f.hectareas || f.area || 0),
-          safeStr(f.tipoSuelo || 'Franco'),
-          Number(f.lotes?.length || 0),
-        ]);
-      } else if (reportType === 'personal') {
-        headers = ['ID', 'Nombre Colaborador', 'Cargo / Función', 'Finca Asignada', 'Salario Mensual (COP)', 'Modalidad Contrato', 'Teléfono'];
-        rows = filteredData.map((p) => [
-          safeStr(p.id),
-          safeStr(p.nombre || p.name),
-          safeStr(p.cargo || p.role),
-          safeStr(p.finca?.nombre || `Finca #${p.fincaId}`),
-          Number(p.salario || p.dailyRate || 0),
-          safeStr(p.tipoContrato || p.status || 'TERMINO_FIJO'),
-          safeStr(p.telefono || p.phone || 'N/A'),
-        ]);
-      }
+      // Construir el módulo correcto según el tipo de reporte activo
+      let modulo;
+      if (reportType === 'fincas') modulo = buildFincasModulo(filteredData);
+      else if (reportType === 'produccion') modulo = buildProduccionesModulo(filteredData);
+      else if (reportType === 'inventario') modulo = buildInventarioModulo(filteredData);
+      else if (reportType === 'finanzas') modulo = buildFinanzasModulo(filteredData);
+      else modulo = buildPersonalModulo(filteredData);
 
-      const wsData = [
-        ['AGRODATA - REPORTE OFICIAL DE GESTIÓN AGROPECUARIA'],
-        ['Empresa / Organización:', orgName],
-        ['Tipo de Informe:', reportType.toUpperCase()],
-        ['Fecha de Expedición:', fechaGeneracion],
-        [],
-        headers,
-        ...rows
-      ];
-      
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      
-      // Auto width
-      const wscols = headers.map(() => ({ wch: 20 }));
-      ws['!cols'] = wscols;
+      generateExcelReport({
+        organizationName: orgName,
+        periodo: periodoLabel,
+        fincaLabel,
+        kpis,
+        modulos: [modulo],
+      });
 
-      XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
-      XLSX.writeFile(wb, `AgroData_Reporte_${reportType}_${format(new Date(), 'yyyyMMdd')}.xlsx`);
-      
-      useToastStore.getState().success('Reporte exportado exitosamente a Excel.');
-    } catch (err) {
-      console.error(err);
-      useToastStore.getState().error('Error al generar la exportación de archivo.');
-    }
-  };
-
-  const exportFullReport = async () => {
-    setLoading(true);
-    try {
-      const [fincasRes, prodsRes, invRes, finRes, persRes, maqRes] = await Promise.allSettled([
-        fincasApi.getAll(),
-        produccionesApi.getAll(),
-        inventarioApi.getAll(),
-        finanzasApi.getAll(),
-        personalApi.getAll(),
-        maquinariaApi.getAll(),
-      ]);
-
-      const wb = XLSX.utils.book_new();
-      const orgName = user?.organizationName || 'AgroData';
-      const dateStr = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es });
-
-      const fincas = fincasRes.status === 'fulfilled' && Array.isArray(fincasRes.value.data) ? fincasRes.value.data : [];
-      const prods = prodsRes.status === 'fulfilled' && Array.isArray(prodsRes.value.data) ? prodsRes.value.data : [];
-      const inv = invRes.status === 'fulfilled' && Array.isArray(invRes.value.data) ? invRes.value.data : [];
-      const fin = finRes.status === 'fulfilled' && Array.isArray(finRes.value.data) ? finRes.value.data : [];
-      const pers = persRes.status === 'fulfilled' && Array.isArray(persRes.value.data) ? persRes.value.data : [];
-      const maq = maqRes.status === 'fulfilled' && Array.isArray(maqRes.value.data) ? maqRes.value.data : [];
-
-      const totalHectareas = fincas.reduce((acc: number, f: any) => acc + Number(f.hectareas || f.area || 0), 0);
-      const totalIngresos = fin.filter((t: any) => (t.tipo || t.type) === 'INGRESO').reduce((acc: number, t: any) => acc + Number(t.monto || t.amount || 0), 0);
-      const totalGastos = fin.filter((t: any) => (t.tipo || t.type) === 'GASTO').reduce((acc: number, t: any) => acc + Number(t.monto || t.amount || 0), 0);
-      const totalValorInv = inv.reduce((acc: number, i: any) => acc + (Number(i.cantidad || i.quantity || 0) * Number(i.costo || 0)), 0);
-      const inventarioCritico = inv.filter((i: any) => Number(i.cantidad || i.quantity || 0) <= Number(i.stockMinimo || i.minAlertQuantity || 10));
-
-      // 1. Resumen Consolidado
-      const wsResumen = XLSX.utils.aoa_to_sheet([
-        ['AGRODATA - REPORTE GERENCIAL INTEGRAL MULTIMÓDULO'],
-        ['Organización / Empresa:', orgName],
-        ['Fecha y Hora de Emisión:', dateStr],
-        [],
-        ['INDICADOR CLAVE (KPI)', 'VALOR CONSOLIDADO'],
-        ['Predios / Fincas Registradas', fincas.length],
-        ['Área Total Administrada (ha)', Number(totalHectareas.toFixed(2))],
-        ['Ciclos Productivos Totales', prods.length],
-        ['Producciones Activas en Campo', prods.filter((p: any) => (p.estado || p.status) === 'ACTIVE').length],
-        ['Total Referencias en Bodega', inv.length],
-        ['Valoración Estimada de Inventario (COP)', totalValorInv],
-        ['Insumos en Nivel de Alerta / Crítico', inventarioCritico.length],
-        ['Ingresos / Ventas Acumuladas (COP)', totalIngresos],
-        ['Gastos / Compras Operativas (COP)', totalGastos],
-        ['Balance Financiero Neto (COP)', totalIngresos - totalGastos],
-        ['Colaboradores / Empleados', pers.length],
-        ['Maquinaria y Equipos', maq.length],
-      ]);
-      wsResumen['!cols'] = [{ wch: 38 }, { wch: 28 }];
-      XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen Gerencial');
-
-      // 2. Fincas
-      if (fincas.length > 0) {
-        const headers = ['ID', 'Nombre del Predio', 'Ubicación Geográfica', 'Área (ha)', 'Parcelas / Lotes'];
-        const rows = fincas.map((f: any) => [
-          f.id,
-          f.nombre || f.name,
-          f.ubicacion || f.location || 'N/A',
-          Number(f.hectareas || f.area || 0),
-          f.lotes?.length || 0,
-        ]);
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 30 }, { wch: 12 }, { wch: 16 }];
-        XLSX.utils.book_append_sheet(wb, ws, 'Fincas');
-      }
-
-      // 3. Producciones
-      if (prods.length > 0) {
-        const headers = ['ID', 'Producción / Variedad', 'Sector Agropecuario', 'Estado', 'Predio', 'Fecha Inicio', 'Fecha Cosecha', 'Rendimiento Esperado', 'Unidad'];
-        const rows = prods.map((p: any) => [
-          p.id,
-          p.name || p.variedad || p.tipo,
-          p.tipo || p.type,
-          p.estado || p.status,
-          p.finca?.nombre || 'N/A',
-          p.startDate || p.fechaInicio || 'N/A',
-          p.endDate || p.fechaEstimadaCosecha || 'N/A',
-          Number(p.expectedYield || p.cantidadSembrada || 0),
-          p.unit || p.unidadMedida || 'ha',
-        ]);
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [{ wch: 15 }, { wch: 26 }, { wch: 20 }, { wch: 16 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 12 }];
-        XLSX.utils.book_append_sheet(wb, ws, 'Producciones');
-      }
-
-      // 4. Inventario Completo
-      if (inv.length > 0) {
-        const headers = ['ID', 'Insumo / Producto', 'Categoría', 'Stock Actual', 'Unidad', 'Stock Mínimo', 'Costo Unitario (COP)', 'Valor Total (COP)', 'Predio Bodega'];
-        const rows = inv.map((i: any) => [
-          i.id,
-          i.nombre || i.name,
-          i.categoria || i.category,
-          Number(i.cantidad || i.quantity || 0),
-          i.unidad || i.unit || 'unidades',
-          Number(i.stockMinimo || i.minAlertQuantity || 10),
-          Number(i.costo || 0),
-          Number(i.cantidad || i.quantity || 0) * Number(i.costo || 0),
-          i.finca?.nombre || 'Bodega Central',
-        ]);
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
-        XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
-      }
-
-      // 5. Ventas e Ingresos
-      const ingresos = fin.filter((t: any) => (t.tipo || t.type) === 'INGRESO');
-      if (ingresos.length > 0) {
-        const headers = ['ID', 'Categoría de Ingreso', 'Concepto / Detalle', 'Monto Recibido (COP)', 'Fecha de Registro'];
-        const rows = ingresos.map((t: any) => [
-          t.id,
-          t.categoria || t.category || 'Venta de Cosecha',
-          t.descripcion || t.description || 'N/A',
-          Number(t.monto || t.amount || 0),
-          t.fecha || t.date || 'N/A',
-        ]);
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [{ wch: 15 }, { wch: 22 }, { wch: 32 }, { wch: 22 }, { wch: 18 }];
-        XLSX.utils.book_append_sheet(wb, ws, 'Ventas e Ingresos');
-      }
-
-      // 6. Compras y Gastos
-      const gastos = fin.filter((t: any) => (t.tipo || t.type) === 'GASTO');
-      if (gastos.length > 0) {
-        const headers = ['ID', 'Categoría de Egreso', 'Concepto / Detalle', 'Monto Pagado (COP)', 'Fecha de Registro'];
-        const rows = gastos.map((t: any) => [
-          t.id,
-          t.categoria || t.category || 'Gasto Operativo',
-          t.descripcion || t.description || 'N/A',
-          Number(t.monto || t.amount || 0),
-          t.fecha || t.date || 'N/A',
-        ]);
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [{ wch: 15 }, { wch: 22 }, { wch: 32 }, { wch: 22 }, { wch: 18 }];
-        XLSX.utils.book_append_sheet(wb, ws, 'Compras y Gastos');
-      }
-
-      // 7. Personal
-      if (pers.length > 0) {
-        const headers = ['ID', 'Nombre', 'Cargo / Rol', 'Salario (COP)', 'Modalidad Contrato', 'Teléfono'];
-        const rows = pers.map((p: any) => [
-          p.id,
-          p.nombre || p.name,
-          p.cargo || p.role,
-          Number(p.salario || p.dailyRate || 0),
-          p.tipoContrato || p.status || 'Activo',
-          p.telefono || p.phone || 'N/A',
-        ]);
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [{ wch: 15 }, { wch: 24 }, { wch: 20 }, { wch: 18 }, { wch: 20 }, { wch: 16 }];
-        XLSX.utils.book_append_sheet(wb, ws, 'Personal');
-      }
-
-      // 8. Maquinaria
-      if (maq.length > 0) {
-        const headers = ['ID', 'Equipo / Maquinaria', 'Tipo', 'Estado Operativo', 'Próximo Mantenimiento', 'Costo Mantenimiento (COP)'];
-        const rows = maq.map((m: any) => [
-          m.id,
-          m.nombre || m.name,
-          m.tipo || 'Maquinaria',
-          m.estado || m.status,
-          m.proximoMantenimiento || m.lastMaintenance || 'N/A',
-          Number(m.costoMantenimiento || m.maintenanceCost || 0),
-        ]);
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [{ wch: 15 }, { wch: 26 }, { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 24 }];
-        XLSX.utils.book_append_sheet(wb, ws, 'Maquinaria');
-      }
-
-      // 9. Alertas Críticas
-      if (inventarioCritico.length > 0) {
-        const headers = ['ID Insumo', 'Producto en Alerta', 'Categoría', 'Stock Actual', 'Stock Mínimo Permitido', 'Unidad', 'Acción Requerida'];
-        const rows = inventarioCritico.map((i: any) => [
-          i.id,
-          i.nombre || i.name,
-          i.categoria || i.category,
-          Number(i.cantidad || i.quantity || 0),
-          Number(i.stockMinimo || i.minAlertQuantity || 10),
-          i.unidad || i.unit || 'unidades',
-          'Reponer existencias urgentemente antes de la próxima aplicación',
-        ]);
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [{ wch: 15 }, { wch: 24 }, { wch: 18 }, { wch: 14 }, { wch: 22 }, { wch: 12 }, { wch: 45 }];
-        XLSX.utils.book_append_sheet(wb, ws, 'Alertas de Abastecimiento');
-      }
-
-      XLSX.writeFile(wb, `AgroData_Informe_Oficial_${format(new Date(), 'yyyyMMdd_HHmm')}.xlsx`);
-      useToastStore.getState().success('Reporte integral multimódulo exportado exitosamente a Excel.');
-    } catch (err) {
-      console.error('Error al generar el reporte integral:', err);
-      useToastStore.getState().error('Error al generar el reporte multimódulo.');
-    } finally {
-      setLoading(false);
+      useToastStore.getState().success('Reporte Excel generado exitosamente.');
+    } catch (e) {
+      console.error(e);
+      useToastStore.getState().error('Error al generar el archivo Excel.');
     }
   };
 
   // Professional Printable / PDF trigger
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (filteredData.length === 0) {
-      useToastStore.getState().warning('No hay datos disponibles para imprimir.');
+      useToastStore.getState().warning('No hay datos disponibles para exportar.');
       return;
     }
-    window.print();
+    
+    try {
+      const { generatePDFReport } = await import('@/lib/pdfGenerator');
+      const orgName = user?.organizationName || 'AgroData';
+      const fincaLabel = selectedFinca === 'ALL' ? 'Todas las fincas' : fincas.find((f) => String(f.id) === selectedFinca)?.nombre || selectedFinca;
+      const periodoLabel = period.replace('_', ' ');
+      const { headers, rows } = getTableData();
+      
+      generatePDFReport({
+        organizationName: orgName,
+        reportType,
+        fincaLabel,
+        periodLabel: periodoLabel,
+        kpis,
+        headers,
+        rows: rows.map(r => r.map(c => String(c)))
+      });
+      useToastStore.getState().success('Reporte PDF generado exitosamente.');
+    } catch (e) {
+      console.error(e);
+      useToastStore.getState().error('Error al generar el PDF.');
+    }
   };
 
   return (
@@ -518,15 +348,6 @@ interface KpiItem {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button
-            onClick={exportFullReport}
-            disabled={loading}
-            className="btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--color-primary-dark)', color: 'white', borderColor: 'var(--color-primary-dark)' }}
-          >
-            <Layers size={16} />
-            <span>Reporte Completo</span>
-          </button>
-          <button
             onClick={handlePrint}
             disabled={loading || filteredData.length === 0}
             className="btn-secondary"
@@ -542,7 +363,7 @@ interface KpiItem {
             style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px' }}
           >
             <Download size={16} />
-            <span>Exportar Vista (XLSX)</span>
+            <span>Exportar Excel (.xlsx)</span>
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { finanzasApi, fincasApi } from '@/lib/api';
 import { useToastStore } from '@/store/toastStore';
 import { DollarSign, Plus, Trash2, Search, X, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
@@ -22,43 +22,41 @@ interface Transaccion {
   finca?: { id: string | number; nombre: string };
 }
 
-interface Finca { id: string | number; nombre: string; }
+interface Finca { id: string | number; nombre: string; lotes?: { producciones?: { id: string, name: string }[] }[] }
+interface Produccion { id: string | number; name: string; type: string }
 
-function TransaccionModal({ fincas, onClose, onSave }: { fincas: Finca[]; onClose: () => void; onSave: () => void; }) {
+function TransaccionModal({ fincas, producciones, onClose, onSave }: { fincas: Finca[]; producciones: Produccion[]; onClose: () => void; onSave: () => void; }) {
   const [form, setForm] = useState({
     tipo: 'INGRESO',
     categoria: '',
     monto: '',
     descripcion: '',
     fecha: new Date().toISOString().split('T')[0],
-    fincaId: fincas[0]?.id?.toString() || '',
+    fincaId: '',
+    produccionId: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const categorias = {
     INGRESO: [
-      'Venta de cosechas agrícolas',
-      'Venta de café / pergamino',
-      'Venta de ganado en pie / canal',
-      'Venta de leche y derivados',
-      'Venta de peces / alevinos',
-      'Venta de aves / huevos',
-      'Venta de cerdos',
-      'Subsidios e incentivos del sector',
-      'Otros ingresos',
+      'Venta de producción',
+      'Venta de animales',
+      'Venta de productos',
+      'Servicios',
+      'Otros',
     ],
     GASTO: [
-      'Insumos y fertilizantes',
-      'Semillas y material vegetal',
-      'Mano de obra / Jornales de campo',
-      'Medicamentos veterinarios y vacunas',
-      'Combustibles y lubricantes',
-      'Mantenimiento de maquinaria y equipos',
-      'Fletes y transporte de cosecha',
-      'Concentrado y nutrición animal',
-      'Servicios públicos y arriendos',
-      'Otros gastos operativos',
+      'Insumos',
+      'Fertilizantes',
+      'Alimentación',
+      'Mano de obra',
+      'Transporte',
+      'Combustible',
+      'Mantenimiento',
+      'Maquinaria',
+      'Servicios',
+      'Otros',
     ],
   };
 
@@ -70,7 +68,8 @@ function TransaccionModal({ fincas, onClose, onSave }: { fincas: Finca[]; onClos
       await finanzasApi.create({
         ...form,
         monto: parseFloat(form.monto),
-        fincaId: form.fincaId,
+        fincaId: form.fincaId || undefined,
+        produccionId: form.produccionId || undefined,
       });
       onSave();
       onClose();
@@ -119,9 +118,17 @@ function TransaccionModal({ fincas, onClose, onSave }: { fincas: Finca[]; onClos
               <input className="input-field" type="date" value={form.fecha} onChange={(e) => setForm(f => ({ ...f, fecha: e.target.value }))} required />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>Finca *</label>
-              <select className="input-field" value={form.fincaId} onChange={(e) => setForm(f => ({ ...f, fincaId: e.target.value }))} required>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>Finca (Opcional)</label>
+              <select className="input-field" value={form.fincaId} onChange={(e) => setForm(f => ({ ...f, fincaId: e.target.value }))}>
+                <option value="">Ninguna</option>
                 {fincas.map(fi => <option key={fi.id} value={fi.id}>{fi.nombre}</option>)}
+              </select>
+            </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>Producción (Opcional)</label>
+              <select className="input-field" value={form.produccionId} onChange={(e) => setForm(f => ({ ...f, produccionId: e.target.value }))}>
+                <option value="">Ninguna</option>
+                {producciones.map(p => <option key={p.id} value={p.id}>{p.name} - {p.type}</option>)}
               </select>
             </div>
             <div style={{ gridColumn: 'span 2' }}>
@@ -142,12 +149,14 @@ function TransaccionModal({ fincas, onClose, onSave }: { fincas: Finca[]; onClos
 export default function FinanzasPage() {
   const [transacciones, setTransacciones] = useState<Transaccion[]>([]);
   const [fincas, setFincas] = useState<Finca[]>([]);
-  const [resumen, setResumen] = useState({ totalIngresos: 0, totalGastos: 0, balance: 0 });
+  const [producciones, setProducciones] = useState<Produccion[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('');
+  const [filtroFinca, setFiltroFinca] = useState('');
+  const [filtroFechaDesde, setFiltroFechaDesde] = useState('');
+  const [filtroFechaHasta, setFiltroFechaHasta] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [chartData, setChartData] = useState<unknown[]>([]);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     id: number | string | null;
@@ -163,24 +172,17 @@ export default function FinanzasPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [transRes, fincasRes, resumenRes] = await Promise.allSettled([
+      // Usamos importación dinámica manual temporalmente si las APIs de produccion no estuvieran en api.ts exportadas igual
+      const { produccionesApi } = await import('@/lib/api');
+      const [transRes, fincasRes, prodsRes] = await Promise.allSettled([
         finanzasApi.getAll(),
         fincasApi.getAll(),
-        finanzasApi.resumen(),
+        produccionesApi.getAll(),
       ]);
       const trans = transRes.status === 'fulfilled' ? transRes.value.data : [];
       setTransacciones(trans);
       if (fincasRes.status === 'fulfilled') setFincas(fincasRes.value.data);
-      if (resumenRes.status === 'fulfilled') setResumen(resumenRes.value.data);
-
-      // Build category chart
-      const catMap: Record<string, { ingresos: number; gastos: number }> = {};
-      (trans as Transaccion[]).forEach(t => {
-        if (!catMap[t.categoria]) catMap[t.categoria] = { ingresos: 0, gastos: 0 };
-        if (t.tipo === 'INGRESO') catMap[t.categoria].ingresos += t.monto;
-        else catMap[t.categoria].gastos += t.monto;
-      });
-      setChartData(Object.entries(catMap).slice(0, 8).map(([cat, v]) => ({ cat, ...v })));
+      if (prodsRes.status === 'fulfilled') setProducciones(prodsRes.value.data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   }, []);
@@ -213,12 +215,44 @@ export default function FinanzasPage() {
   const formatCOP = (v: number) =>
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 
-  const filtered = transacciones.filter(t => {
-    const matchSearch = t.categoria.toLowerCase().includes(search.toLowerCase()) ||
-      (t.descripcion || '').toLowerCase().includes(search.toLowerCase());
-    const matchTipo = filtroTipo ? t.tipo === filtroTipo : true;
-    return matchSearch && matchTipo;
-  });
+  const filtered = useMemo(() => {
+    return transacciones.filter(t => {
+      const matchSearch = !search ||
+        t.categoria.toLowerCase().includes(search.toLowerCase()) ||
+        (t.descripcion || '').toLowerCase().includes(search.toLowerCase());
+      const matchTipo = filtroTipo ? t.tipo === filtroTipo : true;
+      const matchFinca = filtroFinca ? String(t.fincaId) === filtroFinca : true;
+      let matchFecha = true;
+      if (filtroFechaDesde) matchFecha = matchFecha && new Date(t.fecha) >= new Date(filtroFechaDesde);
+      if (filtroFechaHasta) matchFecha = matchFecha && new Date(t.fecha) <= new Date(filtroFechaHasta + 'T23:59:59');
+      return matchSearch && matchTipo && matchFinca && matchFecha;
+    });
+  }, [transacciones, search, filtroTipo, filtroFinca, filtroFechaDesde, filtroFechaHasta]);
+
+  // Calculate dynamic balance
+  const resumen = useMemo(() => {
+    return filtered.reduce((acc, t) => {
+      if (t.tipo === 'INGRESO') {
+        acc.totalIngresos += t.monto;
+        acc.balance += t.monto;
+      } else {
+        acc.totalGastos += t.monto;
+        acc.balance -= t.monto;
+      }
+      return acc;
+    }, { totalIngresos: 0, totalGastos: 0, balance: 0 });
+  }, [filtered]);
+
+  // Derive chart data directly without useEffect / setState loop
+  const chartData = useMemo(() => {
+    const catMap: Record<string, { ingresos: number; gastos: number }> = {};
+    filtered.forEach(t => {
+      if (!catMap[t.categoria]) catMap[t.categoria] = { ingresos: 0, gastos: 0 };
+      if (t.tipo === 'INGRESO') catMap[t.categoria].ingresos += t.monto;
+      else catMap[t.categoria].gastos += t.monto;
+    });
+    return Object.entries(catMap).slice(0, 10).map(([cat, v]) => ({ cat, ...v }));
+  }, [filtered]);
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -232,7 +266,7 @@ export default function FinanzasPage() {
         </button>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards (Dynamic) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
         <div className="card stat-card-green" style={{ padding: '18px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -263,6 +297,40 @@ export default function FinanzasPage() {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="card" style={{ padding: '16px 20px', marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>Buscar</label>
+          <div style={{ position: 'relative' }}>
+            <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
+            <input className="input-field" style={{ paddingLeft: 38 }} placeholder="Buscar por categoría o descripción..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>Tipo</label>
+          <select className="input-field" style={{ width: 'auto', minWidth: 120 }} value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="INGRESO">Ingresos</option>
+            <option value="GASTO">Gastos</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>Finca</label>
+          <select className="input-field" style={{ width: 'auto', minWidth: 140 }} value={filtroFinca} onChange={(e) => setFiltroFinca(e.target.value)}>
+            <option value="">Todas</option>
+            {fincas.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>Desde</label>
+          <input type="date" className="input-field" value={filtroFechaDesde} onChange={(e) => setFiltroFechaDesde(e.target.value)} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>Hasta</label>
+          <input type="date" className="input-field" value={filtroFechaHasta} onChange={(e) => setFiltroFechaHasta(e.target.value)} />
+        </div>
+      </div>
+
       {/* Chart */}
       {chartData.length > 0 && (
         <div className="card" style={{ padding: '24px', marginBottom: 24 }}>
@@ -270,7 +338,7 @@ export default function FinanzasPage() {
             <BarChart3 size={18} color="#4ade80" />
             <h3 style={{ fontSize: 16, fontWeight: 600 }}>Por Categoría</h3>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData as Array<{ cat: string; ingresos: number; gastos: number }>}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(42,61,42,0.5)" />
               <XAxis dataKey="cat" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -284,19 +352,7 @@ export default function FinanzasPage() {
         </div>
       )}
 
-      {/* Filters & table */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
-          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
-          <input className="input-field" style={{ paddingLeft: 38 }} placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <select className="input-field" style={{ width: 'auto', minWidth: 140 }} value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
-          <option value="">Todos</option>
-          <option value="INGRESO">Ingresos</option>
-          <option value="GASTO">Gastos</option>
-        </select>
-      </div>
-
+      {/* Table */}
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[...Array(5)].map((_, i) => <div key={i} className="skeleton" style={{ height: 60, borderRadius: 12 }} />)}
@@ -331,7 +387,7 @@ export default function FinanzasPage() {
                     </td>
                     <td style={{ fontWeight: 500 }}>{t.categoria}</td>
                     <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{t.descripcion || '-'}</td>
-                    <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{t.finca?.nombre || `Finca #${t.fincaId}`}</td>
+                    <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{t.finca?.nombre || (t.fincaId ? `Finca #${t.fincaId}` : '-')}</td>
                     <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{format(new Date(t.fecha), 'd MMM yyyy', { locale: es })}</td>
                     <td style={{ textAlign: 'right', fontWeight: 700, color: t.tipo === 'INGRESO' ? '#4ade80' : '#f87171' }}>
                       {formatCOP(t.monto)}
@@ -349,7 +405,7 @@ export default function FinanzasPage() {
         </div>
       )}
 
-      {modalOpen && <TransaccionModal fincas={fincas} onClose={() => setModalOpen(false)} onSave={loadData} />}
+      {modalOpen && <TransaccionModal fincas={fincas} producciones={producciones} onClose={() => setModalOpen(false)} onSave={loadData} />}
 
       {/* Modal Confirmación Eliminación Transacción */}
       <DeleteConfirmModal

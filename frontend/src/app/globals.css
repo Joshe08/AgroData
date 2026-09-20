@@ -38,55 +38,6 @@
   --shadow-hover: 0 12px 40px rgba(99, 102, 241, 0.15);
 }
 
-:root[data-theme="light"],
-html[data-theme="light"] {
-  /* Ultra-Clean Agritech Daylight Palette */
-  --color-primary: #059669;        /* Forest Emerald */
-  --color-primary-light: #10b981;  /* Vibrant Green */
-  --color-primary-dark: #047857;   /* Deep Forest */
-  --color-secondary: #4f46e5;      /* Indigo */
-  --color-accent: #d97706;         /* Amber */
-  --color-danger: #dc2626;         /* Crimson */
-  --color-warning: #ea580c;        /* Orange */
-
-  /* Light Base */
-  --color-bg: #f8fafc;             /* Crisp Slate 50 */
-  --color-surface: #ffffff;        /* Pure White */
-  --color-surface-2: #f1f5f9;      /* Slate 100 soft fill */
-  --color-surface-3: #e2e8f0;      /* Slate 200 pill/hover */
-  --color-border: #e2e8f0;         /* Slate 200 borders */
-  --color-border-light: #cbd5e1;   /* Slate 300 active */
-
-  /* Text Typography */
-  --color-text: #0f172a;           /* Slate 900 high contrast */
-  --color-text-muted: #475569;     /* Slate 600 secondary */
-  --color-text-subtle: #94a3b8;    /* Slate 400 helper */
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #059669 0%, #4f46e5 100%);
-  --gradient-gold: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
-  --gradient-surface: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-  --gradient-glow: linear-gradient(180deg, rgba(5, 150, 105, 0.08) 0%, rgba(79, 70, 229, 0.04) 100%);
-
-  /* Light Shadows */
-  --shadow-glow: 0 0 25px rgba(5, 150, 105, 0.1);
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
-  --shadow-hover: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
-}
-
-html[data-theme="light"] .glass {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--color-border);
-}
-
-html[data-theme="light"] .glass-hover:hover {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: var(--color-border-light);
-  box-shadow: var(--shadow-hover);
-}
 
 * {
   box-sizing: border-box;
