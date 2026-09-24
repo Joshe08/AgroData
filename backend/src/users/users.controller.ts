@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -95,17 +95,42 @@ export class UsersController {
       throw new ForbiddenException('No tienes permiso para agregar usuarios a esta organización');
     }
 
-    const existing = await this.usersService.findByEmail(body.email);
+    if (!body.email || !body.name) {
+      throw new BadRequestException('El nombre y correo electrónico son obligatorios');
+    }
+
+    // Validar límites de usuarios según el plan de suscripción
+    const org = await this.prisma.organization.findUnique({
+      where: { id: req.user.orgId },
+      select: { subscription: true },
+    });
+
+    const currentUsersCount = await this.prisma.user.count({
+      where: { organizationId: req.user.orgId },
+    });
+
+    const plan = org?.subscription || 'FREE';
+    if (plan === 'FREE' && currentUsersCount >= 2) {
+      throw new BadRequestException(
+        'El Plan FREE permite hasta 2 usuarios colaboradores. Actualiza a PREMIUM para ampliar tu equipo.'
+      );
+    } else if (plan === 'PREMIUM' && currentUsersCount >= 10) {
+      throw new BadRequestException(
+        'El Plan PREMIUM permite hasta 10 usuarios. Actualiza a ENTERPRISE para colaboradores ilimitados.'
+      );
+    }
+
+    const existing = await this.usersService.findByEmail(body.email.trim().toLowerCase());
     if (existing) {
-      throw new ForbiddenException('El correo electrónico ya está registrado');
+      throw new BadRequestException('El correo electrónico ya está registrado en la plataforma');
     }
 
     const passwordHash = await bcrypt.hash(body.password || '123456', 10);
 
     return this.prisma.user.create({
       data: {
-        email: body.email,
-        name: body.name,
+        email: body.email.trim().toLowerCase(),
+        name: body.name.trim(),
         passwordHash,
         role: body.role || 'TRABAJADOR',
         organizationId: req.user.orgId,

@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Organization: 'Organization',
+  SuspensionHistory: 'SuspensionHistory',
   User: 'User',
   Finca: 'Finca',
   Lote: 'Lote',
@@ -82,11 +83,31 @@ export const OrganizationScalarFieldEnum = {
   nit: 'nit',
   orgType: 'orgType',
   subscription: 'subscription',
+  status: 'status',
+  suspendedAt: 'suspendedAt',
+  suspendedReason: 'suspendedReason',
+  reactivatedAt: 'reactivatedAt',
+  phone: 'phone',
+  address: 'address',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type OrganizationScalarFieldEnum = (typeof OrganizationScalarFieldEnum)[keyof typeof OrganizationScalarFieldEnum]
+
+
+export const SuspensionHistoryScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  action: 'action',
+  reason: 'reason',
+  previousStatus: 'previousStatus',
+  newStatus: 'newStatus',
+  performedBy: 'performedBy',
+  createdAt: 'createdAt'
+} as const
+
+export type SuspensionHistoryScalarFieldEnum = (typeof SuspensionHistoryScalarFieldEnum)[keyof typeof SuspensionHistoryScalarFieldEnum]
 
 
 export const UserScalarFieldEnum = {
@@ -111,6 +132,17 @@ export const FincaScalarFieldEnum = {
   description: 'description',
   latitude: 'latitude',
   longitude: 'longitude',
+  tipoExplotacion: 'tipoExplotacion',
+  estado: 'estado',
+  tipoSuelo: 'tipoSuelo',
+  fuenteAgua: 'fuenteAgua',
+  sistemaRiego: 'sistemaRiego',
+  tipoAcceso: 'tipoAcceso',
+  departamento: 'departamento',
+  municipio: 'municipio',
+  vereda: 'vereda',
+  referenciaAcceso: 'referenciaAcceso',
+  actividades: 'actividades',
   organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -207,10 +239,16 @@ export type FinanzaScalarFieldEnum = (typeof FinanzaScalarFieldEnum)[keyof typeo
 export const EmpleadoScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  lastName: 'lastName',
+  documento: 'documento',
+  email: 'email',
+  phone: 'phone',
   role: 'role',
   status: 'status',
   dailyRate: 'dailyRate',
-  phone: 'phone',
+  fechaIngreso: 'fechaIngreso',
+  fincaId: 'fincaId',
+  notes: 'notes',
   organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -222,7 +260,15 @@ export type EmpleadoScalarFieldEnum = (typeof EmpleadoScalarFieldEnum)[keyof typ
 export const MaquinariaScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  tipo: 'tipo',
+  marca: 'marca',
+  modelo: 'modelo',
   status: 'status',
+  fincaId: 'fincaId',
+  fechaAdquisicion: 'fechaAdquisicion',
+  valor: 'valor',
+  horasUso: 'horasUso',
+  observaciones: 'observaciones',
   lastMaintenance: 'lastMaintenance',
   maintenanceCost: 'maintenanceCost',
   organizationId: 'organizationId',

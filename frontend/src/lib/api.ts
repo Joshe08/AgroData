@@ -32,6 +32,14 @@ const normalizeUser = (user: AnyRecord) => ({
 
 const mapFinca = (finca: AnyRecord) => {
   if (!finca) return null as any;
+  let parsedActividades = finca.actividades;
+  if (typeof finca.actividades === 'string') {
+    try {
+      parsedActividades = JSON.parse(finca.actividades);
+    } catch {
+      parsedActividades = [];
+    }
+  }
   return {
     ...finca,
     nombre: finca.nombre ?? finca.name ?? '',
@@ -40,6 +48,17 @@ const mapFinca = (finca: AnyRecord) => {
     descripcion: finca.descripcion ?? finca.description ?? '',
     latitude: finca.latitude != null ? Number(finca.latitude) : null,
     longitude: finca.longitude != null ? Number(finca.longitude) : null,
+    tipoExplotacion: finca.tipoExplotacion ?? '',
+    estado: finca.estado ?? 'ACTIVA',
+    tipoSuelo: finca.tipoSuelo ?? '',
+    fuenteAgua: finca.fuenteAgua ?? '',
+    sistemaRiego: finca.sistemaRiego ?? '',
+    tipoAcceso: finca.tipoAcceso ?? '',
+    departamento: finca.departamento ?? '',
+    municipio: finca.municipio ?? '',
+    vereda: finca.vereda ?? '',
+    referenciaAcceso: finca.referenciaAcceso ?? '',
+    actividades: Array.isArray(parsedActividades) ? parsedActividades : [],
     lotes: Array.isArray(finca.lotes)
       ? finca.lotes.map((lote: AnyRecord) => ({
           ...lote,
@@ -108,11 +127,19 @@ const mapFinanza = (tx: AnyRecord) => ({
 
 const mapPersonal = (persona: AnyRecord) => ({
   ...persona,
+  id: persona.id,
   nombre: persona.nombre ?? persona.name ?? '',
+  apellido: persona.apellido ?? persona.lastName ?? '',
+  documento: persona.documento ?? '',
+  email: persona.email ?? '',
   cargo: persona.cargo ?? persona.role ?? '',
   salario: persona.salario ?? persona.dailyRate,
-  telefono: persona.telefono ?? persona.phone,
+  telefono: persona.telefono ?? persona.phone ?? '',
   tipoContrato: persona.tipoContrato ?? persona.status ?? 'ACTIVE',
+  fechaIngreso: persona.fechaIngreso ?? null,
+  fincaId: persona.fincaId ?? null,
+  finca: persona.finca ? { id: persona.finca.id, nombre: persona.finca.nombre ?? persona.finca.name } : null,
+  notes: persona.notes ?? '',
 });
 
 const backendToUiStatus: Record<string, string> = {
@@ -125,26 +152,46 @@ const uiToBackendStatus: Record<string, string> = {
   OPERATIVO: 'OPERATIVE',
   MANTENIMIENTO: 'MAINTENANCE',
   DANADO: 'BROKEN',
-  'DAÃ‘ADO': 'BROKEN',
+  'DAÑADO': 'BROKEN',
   INACTIVO: 'BROKEN',
 };
 
 const mapMaquinaria = (maquina: AnyRecord) => ({
   ...maquina,
+  id: maquina.id,
   nombre: maquina.nombre ?? maquina.name ?? '',
   tipo: maquina.tipo ?? 'OTRO',
+  marca: maquina.marca ?? '',
+  modelo: maquina.modelo ?? '',
+  fincaId: maquina.fincaId ?? null,
+  finca: maquina.finca ? { id: maquina.finca.id, nombre: maquina.finca.nombre ?? maquina.finca.name } : null,
+  fechaAdquisicion: maquina.fechaAdquisicion ?? null,
+  valor: maquina.valor != null ? Number(maquina.valor) : null,
+  horasUso: maquina.horasUso != null ? Number(maquina.horasUso) : null,
   estado: maquina.estado ?? backendToUiStatus[maquina.status] ?? maquina.status ?? 'OPERATIVO',
+  observaciones: maquina.observaciones ?? '',
   proximoMantenimiento: maquina.proximoMantenimiento ?? maquina.lastMaintenance,
-  costoMantenimiento: maquina.costoMantenimiento ?? maquina.maintenanceCost,
+  costoMantenimiento: maquina.costoMantenimiento ?? maquina.maintenanceCost ?? 0,
 });
 
 const fincaPayload = (data: AnyRecord) => ({
   name: data.name ?? data.nombre,
   location: data.location ?? data.ubicacion,
-  area: data.area ?? data.hectareas,
+  area: data.area !== undefined && data.area !== '' ? parseFloat(data.area) : (data.hectareas !== undefined && data.hectareas !== '' ? parseFloat(data.hectareas) : 0),
   description: data.description ?? data.descripcion ?? null,
-  latitude: data.latitude,
-  longitude: data.longitude,
+  latitude: data.latitude != null && data.latitude !== '' ? parseFloat(data.latitude) : null,
+  longitude: data.longitude != null && data.longitude !== '' ? parseFloat(data.longitude) : null,
+  tipoExplotacion: data.tipoExplotacion,
+  estado: data.estado,
+  tipoSuelo: data.tipoSuelo,
+  fuenteAgua: data.fuenteAgua,
+  sistemaRiego: data.sistemaRiego,
+  tipoAcceso: data.tipoAcceso,
+  departamento: data.departamento,
+  municipio: data.municipio,
+  vereda: data.vereda,
+  referenciaAcceso: data.referenciaAcceso,
+  actividades: data.actividades,
 });
 
 const inventarioPayload = (data: AnyRecord) => ({
@@ -168,17 +215,31 @@ const finanzaPayload = (data: AnyRecord) => ({
 
 const personalPayload = (data: AnyRecord) => ({
   name: data.name ?? data.nombre,
+  lastName: data.lastName ?? data.apellido ?? '',
+  documento: data.documento ?? '',
+  email: data.email ?? '',
   role: data.role ?? data.cargo,
-  dailyRate: data.dailyRate ?? data.salario,
-  phone: data.phone ?? data.telefono,
-  status: data.status ?? 'ACTIVE',
+  dailyRate: data.dailyRate !== undefined && data.dailyRate !== '' ? parseFloat(data.dailyRate) : (data.salario !== undefined && data.salario !== '' ? parseFloat(data.salario) : undefined),
+  phone: data.phone ?? data.telefono ?? '',
+  status: data.status ?? data.tipoContrato ?? 'ACTIVE',
+  fechaIngreso: data.fechaIngreso || null,
+  fincaId: data.fincaId && String(data.fincaId).trim() !== '' ? String(data.fincaId) : null,
+  notes: data.notes ?? '',
 });
 
 const maquinariaPayload = (data: AnyRecord) => ({
   name: data.name ?? data.nombre,
+  tipo: data.tipo ?? 'OTRO',
+  marca: data.marca ?? '',
+  modelo: data.modelo ?? '',
+  fincaId: data.fincaId && String(data.fincaId).trim() !== '' ? String(data.fincaId) : null,
+  fechaAdquisicion: data.fechaAdquisicion || null,
+  valor: data.valor !== undefined && data.valor !== '' && data.valor !== null ? parseFloat(data.valor) : null,
+  horasUso: data.horasUso !== undefined && data.horasUso !== '' && data.horasUso !== null ? parseFloat(data.horasUso) : null,
   status: uiToBackendStatus[data.status ?? data.estado] ?? data.status ?? 'OPERATIVE',
+  observaciones: data.observaciones ?? '',
   lastMaintenance: data.lastMaintenance ?? data.proximoMantenimiento,
-  maintenanceCost: data.maintenanceCost ?? data.costoMantenimiento ?? 0,
+  maintenanceCost: data.maintenanceCost !== undefined && data.maintenanceCost !== '' ? parseFloat(data.maintenanceCost) : (data.costoMantenimiento !== undefined && data.costoMantenimiento !== '' ? parseFloat(data.costoMantenimiento) : 0),
 });
 
 const ensureLoteId = async (fincaId?: string | number) => {
@@ -270,7 +331,7 @@ export const fincasApi = {
   getAll: () => withData(api.get('/fincas'), (data) => mapArray(data, mapFinca)),
   getOne: (id: number | string) => withData(api.get(`/fincas/${id}`), mapFinca),
   create: (data: unknown) => withData(api.post('/fincas', fincaPayload(data as AnyRecord)), mapFinca),
-  update: (id: number | string, data: unknown) => withData(api.put(`/fincas/${id}`, fincaPayload(data as AnyRecord)), (res) => res),
+  update: (id: number | string, data: unknown) => withData(api.put(`/fincas/${id}`, fincaPayload(data as AnyRecord)), mapFinca),
   delete: (id: number | string) => api.delete(`/fincas/${id}`),
   getLotes: (fincaId: string | number) => api.get(`/fincas/${fincaId}/lotes`),
   createLote: (fincaId: string | number, data: { name: string; area: number; soilType?: string }) =>
@@ -305,7 +366,7 @@ export const finanzasApi = {
   resumen: (fincaId?: number | string) =>
     api.get('/finanzas/resumen', { params: fincaId ? { fincaId } : {} }),
   create: (data: unknown) => withData(api.post('/finanzas', finanzaPayload(data as AnyRecord)), mapFinanza),
-  update: (id: number | string, data: unknown) => withData(api.put(`/finanzas/${id}`, finanzaPayload(data as AnyRecord)), (res) => res),
+  update: (id: number | string, data: unknown) => withData(api.put(`/finanzas/${id}`, finanzaPayload(data as AnyRecord)), mapFinanza),
   delete: (id: number | string) => api.delete(`/finanzas/${id}`),
 };
 
@@ -314,7 +375,7 @@ export const personalApi = {
   getAll: (fincaId?: number | string) =>
     withData(api.get('/personal', { params: fincaId ? { fincaId } : {} }), (data) => mapArray(data, mapPersonal)),
   create: (data: unknown) => withData(api.post('/personal', personalPayload(data as AnyRecord)), mapPersonal),
-  update: (id: number | string, data: unknown) => withData(api.put(`/personal/${id}`, personalPayload(data as AnyRecord)), (res) => res),
+  update: (id: number | string, data: unknown) => withData(api.put(`/personal/${id}`, personalPayload(data as AnyRecord)), mapPersonal),
   delete: (id: number | string) => api.delete(`/personal/${id}`),
 };
 
@@ -323,7 +384,7 @@ export const maquinariaApi = {
   getAll: (fincaId?: number | string) =>
     withData(api.get('/maquinaria', { params: fincaId ? { fincaId } : {} }), (data) => mapArray(data, mapMaquinaria)),
   create: (data: unknown) => withData(api.post('/maquinaria', maquinariaPayload(data as AnyRecord)), mapMaquinaria),
-  update: (id: number | string, data: unknown) => withData(api.put(`/maquinaria/${id}`, maquinariaPayload(data as AnyRecord)), (res) => res),
+  update: (id: number | string, data: unknown) => withData(api.put(`/maquinaria/${id}`, maquinariaPayload(data as AnyRecord)), mapMaquinaria),
   delete: (id: number | string) => api.delete(`/maquinaria/${id}`),
 };
 
@@ -368,14 +429,20 @@ export const saasApi = {
   getOrganizations: () => api.get('/saas/organizations'),
   createOrganization: (data: {
     name: string;
+    orgType?: string;
     nit?: string;
     subscription?: string;
+    phone?: string;
+    address?: string;
     ownerEmail?: string;
     ownerName?: string;
     ownerPassword?: string;
   }) => api.post('/saas/organizations', data),
   updateOrganization: (id: string, data: unknown) => api.put(`/saas/organizations/${id}`, data),
   deleteOrganization: (id: string) => api.delete(`/saas/organizations/${id}`),
+  suspendOrganization: (id: string, reason: string) => api.patch(`/saas/organizations/${id}/suspend`, { reason }),
+  reactivateOrganization: (id: string) => api.patch(`/saas/organizations/${id}/reactivate`),
+  getSuspensionHistory: (id: string) => api.get(`/saas/organizations/${id}/history`),
   getUsers: () => api.get('/saas/users'),
   createUser: (data: {
     email: string;

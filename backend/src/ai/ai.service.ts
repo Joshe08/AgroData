@@ -213,17 +213,17 @@ export class AiService {
     const q = consulta.toLowerCase().trim();
 
     // 1. Preguntas sobre Fincas
-    if (q.includes('cuantas fincas') || q.includes('cuántas fincas') || q.includes('mis fincas') || (q.includes('fincas') && q.includes('tengo'))) {
-      const nombres = fincas.map((f) => `${f.name} (${f.area} ha en ${f.location || 'Cesar'})`).join(', ');
+    if (q.includes('finca') || q.includes('predio') || q.includes('terreno')) {
+      const nombres = fincas.map((f) => `${f.name} (${f.area} ha en ${f.location || 'Colombia'})`).join(', ');
       const totalHa = fincas.reduce((acc, f) => acc + (f.area || 0), 0);
       return {
         resumen: fincas.length === 0
-          ? 'Actualmente no tienes fincas registradas en tu organización. Puedes agregar tu primer predio desde el módulo "Mis Fincas".'
+          ? 'No hay datos suficientes para responder esta consulta. No tienes fincas registradas en tu organización.'
           : `Actualmente tienes ${fincas.length} finca(s) registrada(s) con un total de ${totalHa.toFixed(1)} hectáreas: ${nombres}.`,
         recomendaciones: [
           {
-            titulo: 'Verificación de Coordenadas GPS',
-            descripcion: 'Asegúrate de que cada predio cuente con coordenadas GPS guardadas para monitorear el pronóstico meteorológico satelital en tiempo real.',
+            titulo: 'Verificación de Predios',
+            descripcion: 'Mantén actualizadas las coordenadas satelitales y los lotes de cada predio para un seguimiento agronómico preciso.',
             prioridad: 'media',
             categoria: 'GENERAL',
           },
@@ -232,13 +232,24 @@ export class AiService {
     }
 
     // 2. Preguntas sobre Producción
-    if (q.includes('produccion') || q.includes('producción') || q.includes('cultivo') || q.includes('cosecha')) {
+    if (q.includes('produccion') || q.includes('producción') || q.includes('cultivo') || q.includes('cosecha') || q.includes('siembra')) {
       const totalProds = productions.length;
+      if (totalProds === 0) {
+        return {
+          resumen: 'No hay datos suficientes para responder esta consulta. No registras producciones activas en este momento.',
+          recomendaciones: [
+            {
+              titulo: 'Crear Ciclo Productivo',
+              descripcion: 'Ingresa al módulo "Producciones" para registrar el cultivo o actividad pecuaria en tus lotes.',
+              prioridad: 'alta',
+              categoria: 'COSECHA',
+            },
+          ],
+        };
+      }
       const listaProds = productions.map((p) => `${p.name} (${p.type}) en ${p.lote?.finca?.name || 'predio'}`).join(', ');
       return {
-        resumen: totalProds === 0
-          ? 'No registras producciones activas en este momento. Puedes crear un nuevo ciclo productivo desde el módulo "Producción".'
-          : `Tienes ${totalProds} producción(es) activa(s) registrada(s): ${listaProds}.`,
+        resumen: `Tienes ${totalProds} producción(es) activa(s) registrada(s): ${listaProds}.`,
         recomendaciones: [
           {
             titulo: 'Control de Diario de Campo',
@@ -250,29 +261,42 @@ export class AiService {
       };
     }
 
-    // 3. Preguntas sobre Inventario Bajo
-    if (q.includes('poco inventario') || q.includes('stock bajo') || q.includes('por agotar') || q.includes('insumos')) {
+    // 3. Preguntas sobre Inventario Bajo / Productos
+    if (q.includes('inventario') || q.includes('producto') || q.includes('insumo') || q.includes('stock') || q.includes('agotad')) {
+      if (inventory.length === 0) {
+        return {
+          resumen: 'No hay datos suficientes para responder esta consulta. Aún no tienes productos registrados en el inventario.',
+          recomendaciones: [
+            {
+              titulo: 'Registrar Insumos',
+              descripcion: 'Comienza registrando insumos, semillas o fertilizantes en el módulo de Inventario.',
+              prioridad: 'alta',
+              categoria: 'GENERAL',
+            },
+          ],
+        };
+      }
       const bajoStock = inventory.filter((i) => i.quantity <= i.minAlertQuantity);
       if (bajoStock.length === 0) {
         return {
-          resumen: `Todos los insumos (${inventory.length} items registrados) se encuentran con niveles por encima del stock mínimo. No hay alertas críticas de abastecimiento.`,
+          resumen: `Todos los productos (${inventory.length} items registrados) se encuentran con niveles por encima del stock mínimo recomendado. No hay alertas de agotamiento.`,
           recomendaciones: [
             {
-              titulo: 'Inventario en Óptimas Condiciones',
-              descripcion: 'Continúa realizando inventarios periódicos antes de iniciar aplicaciones masivas en campo.',
+              titulo: 'Inventario Abastecido',
+              descripcion: 'Continúa realizando inventarios periódicos para planificar tus labores sin contratiempos.',
               prioridad: 'baja',
               categoria: 'GENERAL',
             },
           ],
         };
       }
-      const detalle = bajoStock.map((i) => `${i.name}: ${i.quantity} ${i.unit} (mínimo: ${i.minAlertQuantity})`).join('; ');
+      const detalle = bajoStock.map((i) => `${i.name}: ${i.quantity} ${i.unit} (mínimo de alerta: ${i.minAlertQuantity} ${i.unit})`).join('; ');
       return {
-        resumen: `Se detectaron ${bajoStock.length} producto(s) en nivel crítico o por agotarse en bodega: ${detalle}.`,
+        resumen: `Se detectaron ${bajoStock.length} producto(s) con niveles bajos o críticos en bodega: ${detalle}.`,
         recomendaciones: [
           {
             titulo: 'Reponer Insumos Críticos',
-            descripcion: 'Gestiona la compra con tus proveedores antes de la próxima fertilización o jornada de aspersión programada.',
+            descripcion: 'Gestiona la compra con tus proveedores antes de la próxima fertilización o aplicación fitosanitaria programada.',
             prioridad: 'alta',
             categoria: 'FERTILIZACION',
           },
@@ -280,20 +304,46 @@ export class AiService {
       };
     }
 
-    // 4. Preguntas sobre Gastos y Finanzas
-    if (q.includes('cuanto gaste') || q.includes('cuánto gasté') || q.includes('gastos') || q.includes('costos') || q.includes('balance') || q.includes('ingresos')) {
-      const gastos = finances.filter((f) => f.type === 'GASTO').reduce((acc, f) => acc + f.amount, 0);
-      const ingresos = finances.filter((f) => f.type === 'INGRESO').reduce((acc, f) => acc + f.amount, 0);
-      const balance = ingresos - gastos;
+    // 4. Preguntas sobre Gastos, Costos y Finanzas (con soporte para "este mes")
+    if (q.includes('gaste') || q.includes('gasté') || q.includes('gasto') || q.includes('costo') || q.includes('balance') || q.includes('ingreso') || q.includes('dinero') || q.includes('financ')) {
+      if (finances.length === 0) {
+        return {
+          resumen: 'No hay datos suficientes para responder esta consulta. No se han registrado movimientos financieros en el sistema.',
+          recomendaciones: [
+            {
+              titulo: 'Registrar Transacciones',
+              descripcion: 'Ingresa al módulo de Finanzas para asentar los ingresos y gastos de tus fincas.',
+              prioridad: 'alta',
+              categoria: 'ECONOMICO',
+            },
+          ],
+        };
+      }
+
       const formatCOP = (v: number) =>
         new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 
+      const isEsteMes = q.includes('este mes') || q.includes('del mes') || q.includes('mes actual');
+      const now = new Date();
+      const filteredFinances = isEsteMes
+        ? finances.filter((f) => {
+            const d = new Date(f.date);
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          })
+        : finances;
+
+      const gastos = filteredFinances.filter((f) => f.type === 'GASTO').reduce((acc, f) => acc + f.amount, 0);
+      const ingresos = filteredFinances.filter((f) => f.type === 'INGRESO').reduce((acc, f) => acc + f.amount, 0);
+      const balance = ingresos - gastos;
+
+      const periodoStr = isEsteMes ? 'en el mes actual' : 'en tus registros contables recientes';
+
       return {
-        resumen: `En tus registros contables recientes acumulas ${formatCOP(ingresos)} en ingresos y ${formatCOP(gastos)} en gastos, generando un balance neto de ${formatCOP(balance)}.`,
+        resumen: `Gastaste ${formatCOP(gastos)} ${periodoStr} (Ingresos registrados: ${formatCOP(ingresos)}, Balance neto: ${formatCOP(balance)}).`,
         recomendaciones: [
           {
             titulo: 'Control de Costos Operativos',
-            descripcion: 'Asocia cada gasto a su lote o predio correspondiente para calcular con precisión la rentabilidad por hectárea.',
+            descripcion: 'Asocia cada gasto a su predio correspondiente para calcular la rentabilidad precisa.',
             prioridad: 'media',
             categoria: 'ECONOMICO',
           },

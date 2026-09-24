@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -25,16 +25,34 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { email: user.email, sub: user.id, role: user.role, orgId: user.organizationId };
-    // Fetch organizationName if not already included
+    // Check organization service status for non-SUPERADMIN
     let organizationName = user.organization?.name || user.organizationName;
-    if (!organizationName && user.organizationId) {
+    let organizationStatus = user.organization?.status || 'ACTIVE';
+
+    if (user.organizationId) {
       const org = await this.prisma.organization.findUnique({
         where: { id: user.organizationId },
-        select: { name: true },
+        select: { name: true, status: true },
       });
-      organizationName = org?.name;
+      if (org) {
+        organizationName = org.name;
+        organizationStatus = org.status || 'ACTIVE';
+      }
     }
+
+    if (user.role !== 'SUPERADMIN' && organizationStatus === 'SUSPENDED') {
+      throw new ForbiddenException(
+        'El acceso a esta organización se encuentra suspendido. Comunícate con el administrador de la plataforma.'
+      );
+    }
+
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role,
+      orgId: user.organizationId,
+    };
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -44,6 +62,7 @@ export class AuthService {
         role: user.role,
         organizationId: user.organizationId,
         organizationName,
+        organizationStatus,
       },
     };
   }
@@ -53,11 +72,12 @@ export class AuthService {
 
     if (!user) {
       // Auto-register flow for Google users
-      // Create a default organization for the new user
+      // Create a default organization for the new user as PROPIETARIO
       const org = await this.prisma.organization.create({
         data: {
           name: `Organización de ${name}`,
           subscription: 'FREE',
+          status: 'ACTIVE',
         },
       });
 
@@ -90,6 +110,7 @@ export class AuthService {
       data: {
         name: orgName || `Organización de ${name}`,
         subscription: 'FREE',
+        status: 'ACTIVE',
       },
     });
 

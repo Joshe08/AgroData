@@ -27,17 +27,29 @@ export type AggregateMaquinaria = {
 }
 
 export type MaquinariaAvgAggregateOutputType = {
+  valor: number | null
+  horasUso: number | null
   maintenanceCost: number | null
 }
 
 export type MaquinariaSumAggregateOutputType = {
+  valor: number | null
+  horasUso: number | null
   maintenanceCost: number | null
 }
 
 export type MaquinariaMinAggregateOutputType = {
   id: string | null
   name: string | null
+  tipo: string | null
+  marca: string | null
+  modelo: string | null
   status: string | null
+  fincaId: string | null
+  fechaAdquisicion: Date | null
+  valor: number | null
+  horasUso: number | null
+  observaciones: string | null
   lastMaintenance: Date | null
   maintenanceCost: number | null
   organizationId: string | null
@@ -48,7 +60,15 @@ export type MaquinariaMinAggregateOutputType = {
 export type MaquinariaMaxAggregateOutputType = {
   id: string | null
   name: string | null
+  tipo: string | null
+  marca: string | null
+  modelo: string | null
   status: string | null
+  fincaId: string | null
+  fechaAdquisicion: Date | null
+  valor: number | null
+  horasUso: number | null
+  observaciones: string | null
   lastMaintenance: Date | null
   maintenanceCost: number | null
   organizationId: string | null
@@ -59,7 +79,15 @@ export type MaquinariaMaxAggregateOutputType = {
 export type MaquinariaCountAggregateOutputType = {
   id: number
   name: number
+  tipo: number
+  marca: number
+  modelo: number
   status: number
+  fincaId: number
+  fechaAdquisicion: number
+  valor: number
+  horasUso: number
+  observaciones: number
   lastMaintenance: number
   maintenanceCost: number
   organizationId: number
@@ -70,17 +98,29 @@ export type MaquinariaCountAggregateOutputType = {
 
 
 export type MaquinariaAvgAggregateInputType = {
+  valor?: true
+  horasUso?: true
   maintenanceCost?: true
 }
 
 export type MaquinariaSumAggregateInputType = {
+  valor?: true
+  horasUso?: true
   maintenanceCost?: true
 }
 
 export type MaquinariaMinAggregateInputType = {
   id?: true
   name?: true
+  tipo?: true
+  marca?: true
+  modelo?: true
   status?: true
+  fincaId?: true
+  fechaAdquisicion?: true
+  valor?: true
+  horasUso?: true
+  observaciones?: true
   lastMaintenance?: true
   maintenanceCost?: true
   organizationId?: true
@@ -91,7 +131,15 @@ export type MaquinariaMinAggregateInputType = {
 export type MaquinariaMaxAggregateInputType = {
   id?: true
   name?: true
+  tipo?: true
+  marca?: true
+  modelo?: true
   status?: true
+  fincaId?: true
+  fechaAdquisicion?: true
+  valor?: true
+  horasUso?: true
+  observaciones?: true
   lastMaintenance?: true
   maintenanceCost?: true
   organizationId?: true
@@ -102,7 +150,15 @@ export type MaquinariaMaxAggregateInputType = {
 export type MaquinariaCountAggregateInputType = {
   id?: true
   name?: true
+  tipo?: true
+  marca?: true
+  modelo?: true
   status?: true
+  fincaId?: true
+  fechaAdquisicion?: true
+  valor?: true
+  horasUso?: true
+  observaciones?: true
   lastMaintenance?: true
   maintenanceCost?: true
   organizationId?: true
@@ -200,7 +256,15 @@ export type MaquinariaGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inter
 export type MaquinariaGroupByOutputType = {
   id: string
   name: string
+  tipo: string | null
+  marca: string | null
+  modelo: string | null
   status: string
+  fincaId: string | null
+  fechaAdquisicion: Date | null
+  valor: number | null
+  horasUso: number | null
+  observaciones: string | null
   lastMaintenance: Date | null
   maintenanceCost: number
   organizationId: string
@@ -234,24 +298,42 @@ export type MaquinariaWhereInput = {
   NOT?: Prisma.MaquinariaWhereInput | Prisma.MaquinariaWhereInput[]
   id?: Prisma.StringFilter<"Maquinaria"> | string
   name?: Prisma.StringFilter<"Maquinaria"> | string
+  tipo?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
+  marca?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
+  modelo?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
   status?: Prisma.StringFilter<"Maquinaria"> | string
+  fincaId?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
+  fechaAdquisicion?: Prisma.DateTimeNullableFilter<"Maquinaria"> | Date | string | null
+  valor?: Prisma.FloatNullableFilter<"Maquinaria"> | number | null
+  horasUso?: Prisma.FloatNullableFilter<"Maquinaria"> | number | null
+  observaciones?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
   lastMaintenance?: Prisma.DateTimeNullableFilter<"Maquinaria"> | Date | string | null
   maintenanceCost?: Prisma.FloatFilter<"Maquinaria"> | number
   organizationId?: Prisma.StringFilter<"Maquinaria"> | string
   createdAt?: Prisma.DateTimeFilter<"Maquinaria"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Maquinaria"> | Date | string
+  finca?: Prisma.XOR<Prisma.FincaNullableScalarRelationFilter, Prisma.FincaWhereInput> | null
   organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>
 }
 
 export type MaquinariaOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  tipo?: Prisma.SortOrderInput | Prisma.SortOrder
+  marca?: Prisma.SortOrderInput | Prisma.SortOrder
+  modelo?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  fechaAdquisicion?: Prisma.SortOrderInput | Prisma.SortOrder
+  valor?: Prisma.SortOrderInput | Prisma.SortOrder
+  horasUso?: Prisma.SortOrderInput | Prisma.SortOrder
+  observaciones?: Prisma.SortOrderInput | Prisma.SortOrder
   lastMaintenance?: Prisma.SortOrderInput | Prisma.SortOrder
   maintenanceCost?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  finca?: Prisma.FincaOrderByWithRelationInput
   organization?: Prisma.OrganizationOrderByWithRelationInput
 }
 
@@ -261,19 +343,36 @@ export type MaquinariaWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.MaquinariaWhereInput[]
   NOT?: Prisma.MaquinariaWhereInput | Prisma.MaquinariaWhereInput[]
   name?: Prisma.StringFilter<"Maquinaria"> | string
+  tipo?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
+  marca?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
+  modelo?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
   status?: Prisma.StringFilter<"Maquinaria"> | string
+  fincaId?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
+  fechaAdquisicion?: Prisma.DateTimeNullableFilter<"Maquinaria"> | Date | string | null
+  valor?: Prisma.FloatNullableFilter<"Maquinaria"> | number | null
+  horasUso?: Prisma.FloatNullableFilter<"Maquinaria"> | number | null
+  observaciones?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
   lastMaintenance?: Prisma.DateTimeNullableFilter<"Maquinaria"> | Date | string | null
   maintenanceCost?: Prisma.FloatFilter<"Maquinaria"> | number
   organizationId?: Prisma.StringFilter<"Maquinaria"> | string
   createdAt?: Prisma.DateTimeFilter<"Maquinaria"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Maquinaria"> | Date | string
+  finca?: Prisma.XOR<Prisma.FincaNullableScalarRelationFilter, Prisma.FincaWhereInput> | null
   organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>
 }, "id">
 
 export type MaquinariaOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  tipo?: Prisma.SortOrderInput | Prisma.SortOrder
+  marca?: Prisma.SortOrderInput | Prisma.SortOrder
+  modelo?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  fechaAdquisicion?: Prisma.SortOrderInput | Prisma.SortOrder
+  valor?: Prisma.SortOrderInput | Prisma.SortOrder
+  horasUso?: Prisma.SortOrderInput | Prisma.SortOrder
+  observaciones?: Prisma.SortOrderInput | Prisma.SortOrder
   lastMaintenance?: Prisma.SortOrderInput | Prisma.SortOrder
   maintenanceCost?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
@@ -292,7 +391,15 @@ export type MaquinariaScalarWhereWithAggregatesInput = {
   NOT?: Prisma.MaquinariaScalarWhereWithAggregatesInput | Prisma.MaquinariaScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Maquinaria"> | string
   name?: Prisma.StringWithAggregatesFilter<"Maquinaria"> | string
+  tipo?: Prisma.StringNullableWithAggregatesFilter<"Maquinaria"> | string | null
+  marca?: Prisma.StringNullableWithAggregatesFilter<"Maquinaria"> | string | null
+  modelo?: Prisma.StringNullableWithAggregatesFilter<"Maquinaria"> | string | null
   status?: Prisma.StringWithAggregatesFilter<"Maquinaria"> | string
+  fincaId?: Prisma.StringNullableWithAggregatesFilter<"Maquinaria"> | string | null
+  fechaAdquisicion?: Prisma.DateTimeNullableWithAggregatesFilter<"Maquinaria"> | Date | string | null
+  valor?: Prisma.FloatNullableWithAggregatesFilter<"Maquinaria"> | number | null
+  horasUso?: Prisma.FloatNullableWithAggregatesFilter<"Maquinaria"> | number | null
+  observaciones?: Prisma.StringNullableWithAggregatesFilter<"Maquinaria"> | string | null
   lastMaintenance?: Prisma.DateTimeNullableWithAggregatesFilter<"Maquinaria"> | Date | string | null
   maintenanceCost?: Prisma.FloatWithAggregatesFilter<"Maquinaria"> | number
   organizationId?: Prisma.StringWithAggregatesFilter<"Maquinaria"> | string
@@ -303,18 +410,34 @@ export type MaquinariaScalarWhereWithAggregatesInput = {
 export type MaquinariaCreateInput = {
   id?: string
   name: string
+  tipo?: string | null
+  marca?: string | null
+  modelo?: string | null
   status?: string
+  fechaAdquisicion?: Date | string | null
+  valor?: number | null
+  horasUso?: number | null
+  observaciones?: string | null
   lastMaintenance?: Date | string | null
   maintenanceCost?: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  finca?: Prisma.FincaCreateNestedOneWithoutMaquinariasInput
   organization: Prisma.OrganizationCreateNestedOneWithoutMaquinariasInput
 }
 
 export type MaquinariaUncheckedCreateInput = {
   id?: string
   name: string
+  tipo?: string | null
+  marca?: string | null
+  modelo?: string | null
   status?: string
+  fincaId?: string | null
+  fechaAdquisicion?: Date | string | null
+  valor?: number | null
+  horasUso?: number | null
+  observaciones?: string | null
   lastMaintenance?: Date | string | null
   maintenanceCost?: number
   organizationId: string
@@ -325,18 +448,34 @@ export type MaquinariaUncheckedCreateInput = {
 export type MaquinariaUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finca?: Prisma.FincaUpdateOneWithoutMaquinariasNestedInput
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutMaquinariasNestedInput
 }
 
 export type MaquinariaUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -347,7 +486,15 @@ export type MaquinariaUncheckedUpdateInput = {
 export type MaquinariaCreateManyInput = {
   id?: string
   name: string
+  tipo?: string | null
+  marca?: string | null
+  modelo?: string | null
   status?: string
+  fincaId?: string | null
+  fechaAdquisicion?: Date | string | null
+  valor?: number | null
+  horasUso?: number | null
+  observaciones?: string | null
   lastMaintenance?: Date | string | null
   maintenanceCost?: number
   organizationId: string
@@ -358,7 +505,14 @@ export type MaquinariaCreateManyInput = {
 export type MaquinariaUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -368,7 +522,15 @@ export type MaquinariaUpdateManyMutationInput = {
 export type MaquinariaUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -389,7 +551,15 @@ export type MaquinariaOrderByRelationAggregateInput = {
 export type MaquinariaCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  tipo?: Prisma.SortOrder
+  marca?: Prisma.SortOrder
+  modelo?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
+  fechaAdquisicion?: Prisma.SortOrder
+  valor?: Prisma.SortOrder
+  horasUso?: Prisma.SortOrder
+  observaciones?: Prisma.SortOrder
   lastMaintenance?: Prisma.SortOrder
   maintenanceCost?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
@@ -398,13 +568,23 @@ export type MaquinariaCountOrderByAggregateInput = {
 }
 
 export type MaquinariaAvgOrderByAggregateInput = {
+  valor?: Prisma.SortOrder
+  horasUso?: Prisma.SortOrder
   maintenanceCost?: Prisma.SortOrder
 }
 
 export type MaquinariaMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  tipo?: Prisma.SortOrder
+  marca?: Prisma.SortOrder
+  modelo?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
+  fechaAdquisicion?: Prisma.SortOrder
+  valor?: Prisma.SortOrder
+  horasUso?: Prisma.SortOrder
+  observaciones?: Prisma.SortOrder
   lastMaintenance?: Prisma.SortOrder
   maintenanceCost?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
@@ -415,7 +595,15 @@ export type MaquinariaMaxOrderByAggregateInput = {
 export type MaquinariaMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  tipo?: Prisma.SortOrder
+  marca?: Prisma.SortOrder
+  modelo?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
+  fechaAdquisicion?: Prisma.SortOrder
+  valor?: Prisma.SortOrder
+  horasUso?: Prisma.SortOrder
+  observaciones?: Prisma.SortOrder
   lastMaintenance?: Prisma.SortOrder
   maintenanceCost?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
@@ -424,6 +612,8 @@ export type MaquinariaMinOrderByAggregateInput = {
 }
 
 export type MaquinariaSumOrderByAggregateInput = {
+  valor?: Prisma.SortOrder
+  horasUso?: Prisma.SortOrder
   maintenanceCost?: Prisma.SortOrder
 }
 
@@ -469,20 +659,78 @@ export type MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput = {
   deleteMany?: Prisma.MaquinariaScalarWhereInput | Prisma.MaquinariaScalarWhereInput[]
 }
 
+export type MaquinariaCreateNestedManyWithoutFincaInput = {
+  create?: Prisma.XOR<Prisma.MaquinariaCreateWithoutFincaInput, Prisma.MaquinariaUncheckedCreateWithoutFincaInput> | Prisma.MaquinariaCreateWithoutFincaInput[] | Prisma.MaquinariaUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.MaquinariaCreateOrConnectWithoutFincaInput | Prisma.MaquinariaCreateOrConnectWithoutFincaInput[]
+  createMany?: Prisma.MaquinariaCreateManyFincaInputEnvelope
+  connect?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+}
+
+export type MaquinariaUncheckedCreateNestedManyWithoutFincaInput = {
+  create?: Prisma.XOR<Prisma.MaquinariaCreateWithoutFincaInput, Prisma.MaquinariaUncheckedCreateWithoutFincaInput> | Prisma.MaquinariaCreateWithoutFincaInput[] | Prisma.MaquinariaUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.MaquinariaCreateOrConnectWithoutFincaInput | Prisma.MaquinariaCreateOrConnectWithoutFincaInput[]
+  createMany?: Prisma.MaquinariaCreateManyFincaInputEnvelope
+  connect?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+}
+
+export type MaquinariaUpdateManyWithoutFincaNestedInput = {
+  create?: Prisma.XOR<Prisma.MaquinariaCreateWithoutFincaInput, Prisma.MaquinariaUncheckedCreateWithoutFincaInput> | Prisma.MaquinariaCreateWithoutFincaInput[] | Prisma.MaquinariaUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.MaquinariaCreateOrConnectWithoutFincaInput | Prisma.MaquinariaCreateOrConnectWithoutFincaInput[]
+  upsert?: Prisma.MaquinariaUpsertWithWhereUniqueWithoutFincaInput | Prisma.MaquinariaUpsertWithWhereUniqueWithoutFincaInput[]
+  createMany?: Prisma.MaquinariaCreateManyFincaInputEnvelope
+  set?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+  disconnect?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+  delete?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+  connect?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+  update?: Prisma.MaquinariaUpdateWithWhereUniqueWithoutFincaInput | Prisma.MaquinariaUpdateWithWhereUniqueWithoutFincaInput[]
+  updateMany?: Prisma.MaquinariaUpdateManyWithWhereWithoutFincaInput | Prisma.MaquinariaUpdateManyWithWhereWithoutFincaInput[]
+  deleteMany?: Prisma.MaquinariaScalarWhereInput | Prisma.MaquinariaScalarWhereInput[]
+}
+
+export type MaquinariaUncheckedUpdateManyWithoutFincaNestedInput = {
+  create?: Prisma.XOR<Prisma.MaquinariaCreateWithoutFincaInput, Prisma.MaquinariaUncheckedCreateWithoutFincaInput> | Prisma.MaquinariaCreateWithoutFincaInput[] | Prisma.MaquinariaUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.MaquinariaCreateOrConnectWithoutFincaInput | Prisma.MaquinariaCreateOrConnectWithoutFincaInput[]
+  upsert?: Prisma.MaquinariaUpsertWithWhereUniqueWithoutFincaInput | Prisma.MaquinariaUpsertWithWhereUniqueWithoutFincaInput[]
+  createMany?: Prisma.MaquinariaCreateManyFincaInputEnvelope
+  set?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+  disconnect?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+  delete?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+  connect?: Prisma.MaquinariaWhereUniqueInput | Prisma.MaquinariaWhereUniqueInput[]
+  update?: Prisma.MaquinariaUpdateWithWhereUniqueWithoutFincaInput | Prisma.MaquinariaUpdateWithWhereUniqueWithoutFincaInput[]
+  updateMany?: Prisma.MaquinariaUpdateManyWithWhereWithoutFincaInput | Prisma.MaquinariaUpdateManyWithWhereWithoutFincaInput[]
+  deleteMany?: Prisma.MaquinariaScalarWhereInput | Prisma.MaquinariaScalarWhereInput[]
+}
+
 export type MaquinariaCreateWithoutOrganizationInput = {
   id?: string
   name: string
+  tipo?: string | null
+  marca?: string | null
+  modelo?: string | null
   status?: string
+  fechaAdquisicion?: Date | string | null
+  valor?: number | null
+  horasUso?: number | null
+  observaciones?: string | null
   lastMaintenance?: Date | string | null
   maintenanceCost?: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  finca?: Prisma.FincaCreateNestedOneWithoutMaquinariasInput
 }
 
 export type MaquinariaUncheckedCreateWithoutOrganizationInput = {
   id?: string
   name: string
+  tipo?: string | null
+  marca?: string | null
+  modelo?: string | null
   status?: string
+  fincaId?: string | null
+  fechaAdquisicion?: Date | string | null
+  valor?: number | null
+  horasUso?: number | null
+  observaciones?: string | null
   lastMaintenance?: Date | string | null
   maintenanceCost?: number
   createdAt?: Date | string
@@ -520,7 +768,15 @@ export type MaquinariaScalarWhereInput = {
   NOT?: Prisma.MaquinariaScalarWhereInput | Prisma.MaquinariaScalarWhereInput[]
   id?: Prisma.StringFilter<"Maquinaria"> | string
   name?: Prisma.StringFilter<"Maquinaria"> | string
+  tipo?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
+  marca?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
+  modelo?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
   status?: Prisma.StringFilter<"Maquinaria"> | string
+  fincaId?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
+  fechaAdquisicion?: Prisma.DateTimeNullableFilter<"Maquinaria"> | Date | string | null
+  valor?: Prisma.FloatNullableFilter<"Maquinaria"> | number | null
+  horasUso?: Prisma.FloatNullableFilter<"Maquinaria"> | number | null
+  observaciones?: Prisma.StringNullableFilter<"Maquinaria"> | string | null
   lastMaintenance?: Prisma.DateTimeNullableFilter<"Maquinaria"> | Date | string | null
   maintenanceCost?: Prisma.FloatFilter<"Maquinaria"> | number
   organizationId?: Prisma.StringFilter<"Maquinaria"> | string
@@ -528,10 +784,79 @@ export type MaquinariaScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Maquinaria"> | Date | string
 }
 
+export type MaquinariaCreateWithoutFincaInput = {
+  id?: string
+  name: string
+  tipo?: string | null
+  marca?: string | null
+  modelo?: string | null
+  status?: string
+  fechaAdquisicion?: Date | string | null
+  valor?: number | null
+  horasUso?: number | null
+  observaciones?: string | null
+  lastMaintenance?: Date | string | null
+  maintenanceCost?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  organization: Prisma.OrganizationCreateNestedOneWithoutMaquinariasInput
+}
+
+export type MaquinariaUncheckedCreateWithoutFincaInput = {
+  id?: string
+  name: string
+  tipo?: string | null
+  marca?: string | null
+  modelo?: string | null
+  status?: string
+  fechaAdquisicion?: Date | string | null
+  valor?: number | null
+  horasUso?: number | null
+  observaciones?: string | null
+  lastMaintenance?: Date | string | null
+  maintenanceCost?: number
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type MaquinariaCreateOrConnectWithoutFincaInput = {
+  where: Prisma.MaquinariaWhereUniqueInput
+  create: Prisma.XOR<Prisma.MaquinariaCreateWithoutFincaInput, Prisma.MaquinariaUncheckedCreateWithoutFincaInput>
+}
+
+export type MaquinariaCreateManyFincaInputEnvelope = {
+  data: Prisma.MaquinariaCreateManyFincaInput | Prisma.MaquinariaCreateManyFincaInput[]
+}
+
+export type MaquinariaUpsertWithWhereUniqueWithoutFincaInput = {
+  where: Prisma.MaquinariaWhereUniqueInput
+  update: Prisma.XOR<Prisma.MaquinariaUpdateWithoutFincaInput, Prisma.MaquinariaUncheckedUpdateWithoutFincaInput>
+  create: Prisma.XOR<Prisma.MaquinariaCreateWithoutFincaInput, Prisma.MaquinariaUncheckedCreateWithoutFincaInput>
+}
+
+export type MaquinariaUpdateWithWhereUniqueWithoutFincaInput = {
+  where: Prisma.MaquinariaWhereUniqueInput
+  data: Prisma.XOR<Prisma.MaquinariaUpdateWithoutFincaInput, Prisma.MaquinariaUncheckedUpdateWithoutFincaInput>
+}
+
+export type MaquinariaUpdateManyWithWhereWithoutFincaInput = {
+  where: Prisma.MaquinariaScalarWhereInput
+  data: Prisma.XOR<Prisma.MaquinariaUpdateManyMutationInput, Prisma.MaquinariaUncheckedUpdateManyWithoutFincaInput>
+}
+
 export type MaquinariaCreateManyOrganizationInput = {
   id?: string
   name: string
+  tipo?: string | null
+  marca?: string | null
+  modelo?: string | null
   status?: string
+  fincaId?: string | null
+  fechaAdquisicion?: Date | string | null
+  valor?: number | null
+  horasUso?: number | null
+  observaciones?: string | null
   lastMaintenance?: Date | string | null
   maintenanceCost?: number
   createdAt?: Date | string
@@ -541,17 +866,33 @@ export type MaquinariaCreateManyOrganizationInput = {
 export type MaquinariaUpdateWithoutOrganizationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finca?: Prisma.FincaUpdateOneWithoutMaquinariasNestedInput
 }
 
 export type MaquinariaUncheckedUpdateWithoutOrganizationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -561,9 +902,89 @@ export type MaquinariaUncheckedUpdateWithoutOrganizationInput = {
 export type MaquinariaUncheckedUpdateManyWithoutOrganizationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type MaquinariaCreateManyFincaInput = {
+  id?: string
+  name: string
+  tipo?: string | null
+  marca?: string | null
+  modelo?: string | null
+  status?: string
+  fechaAdquisicion?: Date | string | null
+  valor?: number | null
+  horasUso?: number | null
+  observaciones?: string | null
+  lastMaintenance?: Date | string | null
+  maintenanceCost?: number
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type MaquinariaUpdateWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.OrganizationUpdateOneRequiredWithoutMaquinariasNestedInput
+}
+
+export type MaquinariaUncheckedUpdateWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type MaquinariaUncheckedUpdateManyWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tipo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marca?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  fechaAdquisicion?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  valor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  horasUso?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  observaciones?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastMaintenance?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maintenanceCost?: Prisma.FloatFieldUpdateOperationsInput | number
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -573,43 +994,78 @@ export type MaquinariaUncheckedUpdateManyWithoutOrganizationInput = {
 export type MaquinariaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  tipo?: boolean
+  marca?: boolean
+  modelo?: boolean
   status?: boolean
+  fincaId?: boolean
+  fechaAdquisicion?: boolean
+  valor?: boolean
+  horasUso?: boolean
+  observaciones?: boolean
   lastMaintenance?: boolean
   maintenanceCost?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Maquinaria$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["maquinaria"]>
 
 export type MaquinariaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  tipo?: boolean
+  marca?: boolean
+  modelo?: boolean
   status?: boolean
+  fincaId?: boolean
+  fechaAdquisicion?: boolean
+  valor?: boolean
+  horasUso?: boolean
+  observaciones?: boolean
   lastMaintenance?: boolean
   maintenanceCost?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Maquinaria$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["maquinaria"]>
 
 export type MaquinariaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  tipo?: boolean
+  marca?: boolean
+  modelo?: boolean
   status?: boolean
+  fincaId?: boolean
+  fechaAdquisicion?: boolean
+  valor?: boolean
+  horasUso?: boolean
+  observaciones?: boolean
   lastMaintenance?: boolean
   maintenanceCost?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Maquinaria$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["maquinaria"]>
 
 export type MaquinariaSelectScalar = {
   id?: boolean
   name?: boolean
+  tipo?: boolean
+  marca?: boolean
+  modelo?: boolean
   status?: boolean
+  fincaId?: boolean
+  fechaAdquisicion?: boolean
+  valor?: boolean
+  horasUso?: boolean
+  observaciones?: boolean
   lastMaintenance?: boolean
   maintenanceCost?: boolean
   organizationId?: boolean
@@ -617,26 +1073,38 @@ export type MaquinariaSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MaquinariaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "status" | "lastMaintenance" | "maintenanceCost" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["maquinaria"]>
+export type MaquinariaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "tipo" | "marca" | "modelo" | "status" | "fincaId" | "fechaAdquisicion" | "valor" | "horasUso" | "observaciones" | "lastMaintenance" | "maintenanceCost" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["maquinaria"]>
 export type MaquinariaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Maquinaria$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 export type MaquinariaIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Maquinaria$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 export type MaquinariaIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Maquinaria$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 
 export type $MaquinariaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Maquinaria"
   objects: {
+    finca: Prisma.$FincaPayload<ExtArgs> | null
     organization: Prisma.$OrganizationPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
+    tipo: string | null
+    marca: string | null
+    modelo: string | null
     status: string
+    fincaId: string | null
+    fechaAdquisicion: Date | null
+    valor: number | null
+    horasUso: number | null
+    observaciones: string | null
     lastMaintenance: Date | null
     maintenanceCost: number
     organizationId: string
@@ -1036,6 +1504,7 @@ readonly fields: MaquinariaFieldRefs;
  */
 export interface Prisma__MaquinariaClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  finca<T extends Prisma.Maquinaria$fincaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Maquinaria$fincaArgs<ExtArgs>>): Prisma.Prisma__FincaClient<runtime.Types.Result.GetResult<Prisma.$FincaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   organization<T extends Prisma.OrganizationDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.OrganizationDefaultArgs<ExtArgs>>): Prisma.Prisma__OrganizationClient<runtime.Types.Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1068,7 +1537,15 @@ export interface Prisma__MaquinariaClient<T, Null = never, ExtArgs extends runti
 export interface MaquinariaFieldRefs {
   readonly id: Prisma.FieldRef<"Maquinaria", 'String'>
   readonly name: Prisma.FieldRef<"Maquinaria", 'String'>
+  readonly tipo: Prisma.FieldRef<"Maquinaria", 'String'>
+  readonly marca: Prisma.FieldRef<"Maquinaria", 'String'>
+  readonly modelo: Prisma.FieldRef<"Maquinaria", 'String'>
   readonly status: Prisma.FieldRef<"Maquinaria", 'String'>
+  readonly fincaId: Prisma.FieldRef<"Maquinaria", 'String'>
+  readonly fechaAdquisicion: Prisma.FieldRef<"Maquinaria", 'DateTime'>
+  readonly valor: Prisma.FieldRef<"Maquinaria", 'Float'>
+  readonly horasUso: Prisma.FieldRef<"Maquinaria", 'Float'>
+  readonly observaciones: Prisma.FieldRef<"Maquinaria", 'String'>
   readonly lastMaintenance: Prisma.FieldRef<"Maquinaria", 'DateTime'>
   readonly maintenanceCost: Prisma.FieldRef<"Maquinaria", 'Float'>
   readonly organizationId: Prisma.FieldRef<"Maquinaria", 'String'>
@@ -1470,6 +1947,25 @@ export type MaquinariaDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Limit how many Maquinarias to delete.
    */
   limit?: number
+}
+
+/**
+ * Maquinaria.finca
+ */
+export type Maquinaria$fincaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Finca
+   */
+  select?: Prisma.FincaSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Finca
+   */
+  omit?: Prisma.FincaOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FincaInclude<ExtArgs> | null
+  where?: Prisma.FincaWhereInput
 }
 
 /**

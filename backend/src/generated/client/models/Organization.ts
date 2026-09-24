@@ -30,6 +30,12 @@ export type OrganizationMinAggregateOutputType = {
   nit: string | null
   orgType: string | null
   subscription: string | null
+  status: string | null
+  suspendedAt: Date | null
+  suspendedReason: string | null
+  reactivatedAt: Date | null
+  phone: string | null
+  address: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -40,6 +46,12 @@ export type OrganizationMaxAggregateOutputType = {
   nit: string | null
   orgType: string | null
   subscription: string | null
+  status: string | null
+  suspendedAt: Date | null
+  suspendedReason: string | null
+  reactivatedAt: Date | null
+  phone: string | null
+  address: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,6 +62,12 @@ export type OrganizationCountAggregateOutputType = {
   nit: number
   orgType: number
   subscription: number
+  status: number
+  suspendedAt: number
+  suspendedReason: number
+  reactivatedAt: number
+  phone: number
+  address: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -62,6 +80,12 @@ export type OrganizationMinAggregateInputType = {
   nit?: true
   orgType?: true
   subscription?: true
+  status?: true
+  suspendedAt?: true
+  suspendedReason?: true
+  reactivatedAt?: true
+  phone?: true
+  address?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -72,6 +96,12 @@ export type OrganizationMaxAggregateInputType = {
   nit?: true
   orgType?: true
   subscription?: true
+  status?: true
+  suspendedAt?: true
+  suspendedReason?: true
+  reactivatedAt?: true
+  phone?: true
+  address?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -82,6 +112,12 @@ export type OrganizationCountAggregateInputType = {
   nit?: true
   orgType?: true
   subscription?: true
+  status?: true
+  suspendedAt?: true
+  suspendedReason?: true
+  reactivatedAt?: true
+  phone?: true
+  address?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -165,6 +201,12 @@ export type OrganizationGroupByOutputType = {
   nit: string | null
   orgType: string | null
   subscription: string
+  status: string
+  suspendedAt: Date | null
+  suspendedReason: string | null
+  reactivatedAt: Date | null
+  phone: string | null
+  address: string | null
   createdAt: Date
   updatedAt: Date
   _count: OrganizationCountAggregateOutputType | null
@@ -196,6 +238,12 @@ export type OrganizationWhereInput = {
   nit?: Prisma.StringNullableFilter<"Organization"> | string | null
   orgType?: Prisma.StringNullableFilter<"Organization"> | string | null
   subscription?: Prisma.StringFilter<"Organization"> | string
+  status?: Prisma.StringFilter<"Organization"> | string
+  suspendedAt?: Prisma.DateTimeNullableFilter<"Organization"> | Date | string | null
+  suspendedReason?: Prisma.StringNullableFilter<"Organization"> | string | null
+  reactivatedAt?: Prisma.DateTimeNullableFilter<"Organization"> | Date | string | null
+  phone?: Prisma.StringNullableFilter<"Organization"> | string | null
+  address?: Prisma.StringNullableFilter<"Organization"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
   users?: Prisma.UserListRelationFilter
@@ -204,6 +252,7 @@ export type OrganizationWhereInput = {
   finanzas?: Prisma.FinanzaListRelationFilter
   empleados?: Prisma.EmpleadoListRelationFilter
   maquinarias?: Prisma.MaquinariaListRelationFilter
+  suspensionHistories?: Prisma.SuspensionHistoryListRelationFilter
 }
 
 export type OrganizationOrderByWithRelationInput = {
@@ -212,6 +261,12 @@ export type OrganizationOrderByWithRelationInput = {
   nit?: Prisma.SortOrderInput | Prisma.SortOrder
   orgType?: Prisma.SortOrderInput | Prisma.SortOrder
   subscription?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  suspendedReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  reactivatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  address?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   users?: Prisma.UserOrderByRelationAggregateInput
@@ -220,6 +275,7 @@ export type OrganizationOrderByWithRelationInput = {
   finanzas?: Prisma.FinanzaOrderByRelationAggregateInput
   empleados?: Prisma.EmpleadoOrderByRelationAggregateInput
   maquinarias?: Prisma.MaquinariaOrderByRelationAggregateInput
+  suspensionHistories?: Prisma.SuspensionHistoryOrderByRelationAggregateInput
 }
 
 export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -231,6 +287,12 @@ export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
   nit?: Prisma.StringNullableFilter<"Organization"> | string | null
   orgType?: Prisma.StringNullableFilter<"Organization"> | string | null
   subscription?: Prisma.StringFilter<"Organization"> | string
+  status?: Prisma.StringFilter<"Organization"> | string
+  suspendedAt?: Prisma.DateTimeNullableFilter<"Organization"> | Date | string | null
+  suspendedReason?: Prisma.StringNullableFilter<"Organization"> | string | null
+  reactivatedAt?: Prisma.DateTimeNullableFilter<"Organization"> | Date | string | null
+  phone?: Prisma.StringNullableFilter<"Organization"> | string | null
+  address?: Prisma.StringNullableFilter<"Organization"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
   users?: Prisma.UserListRelationFilter
@@ -239,6 +301,7 @@ export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
   finanzas?: Prisma.FinanzaListRelationFilter
   empleados?: Prisma.EmpleadoListRelationFilter
   maquinarias?: Prisma.MaquinariaListRelationFilter
+  suspensionHistories?: Prisma.SuspensionHistoryListRelationFilter
 }, "id">
 
 export type OrganizationOrderByWithAggregationInput = {
@@ -247,6 +310,12 @@ export type OrganizationOrderByWithAggregationInput = {
   nit?: Prisma.SortOrderInput | Prisma.SortOrder
   orgType?: Prisma.SortOrderInput | Prisma.SortOrder
   subscription?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  suspendedReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  reactivatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  address?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.OrganizationCountOrderByAggregateInput
@@ -263,6 +332,12 @@ export type OrganizationScalarWhereWithAggregatesInput = {
   nit?: Prisma.StringNullableWithAggregatesFilter<"Organization"> | string | null
   orgType?: Prisma.StringNullableWithAggregatesFilter<"Organization"> | string | null
   subscription?: Prisma.StringWithAggregatesFilter<"Organization"> | string
+  status?: Prisma.StringWithAggregatesFilter<"Organization"> | string
+  suspendedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Organization"> | Date | string | null
+  suspendedReason?: Prisma.StringNullableWithAggregatesFilter<"Organization"> | string | null
+  reactivatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Organization"> | Date | string | null
+  phone?: Prisma.StringNullableWithAggregatesFilter<"Organization"> | string | null
+  address?: Prisma.StringNullableWithAggregatesFilter<"Organization"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Organization"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Organization"> | Date | string
 }
@@ -273,6 +348,12 @@ export type OrganizationCreateInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
@@ -281,6 +362,7 @@ export type OrganizationCreateInput = {
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateInput = {
@@ -289,6 +371,12 @@ export type OrganizationUncheckedCreateInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
@@ -297,6 +385,7 @@ export type OrganizationUncheckedCreateInput = {
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUpdateInput = {
@@ -305,6 +394,12 @@ export type OrganizationUpdateInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
@@ -313,6 +408,7 @@ export type OrganizationUpdateInput = {
   finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateInput = {
@@ -321,6 +417,12 @@ export type OrganizationUncheckedUpdateInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -329,6 +431,7 @@ export type OrganizationUncheckedUpdateInput = {
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateManyInput = {
@@ -337,6 +440,12 @@ export type OrganizationCreateManyInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -347,6 +456,12 @@ export type OrganizationUpdateManyMutationInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -357,6 +472,12 @@ export type OrganizationUncheckedUpdateManyInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -367,6 +488,12 @@ export type OrganizationCountOrderByAggregateInput = {
   nit?: Prisma.SortOrder
   orgType?: Prisma.SortOrder
   subscription?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrder
+  suspendedReason?: Prisma.SortOrder
+  reactivatedAt?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
+  address?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -377,6 +504,12 @@ export type OrganizationMaxOrderByAggregateInput = {
   nit?: Prisma.SortOrder
   orgType?: Prisma.SortOrder
   subscription?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrder
+  suspendedReason?: Prisma.SortOrder
+  reactivatedAt?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
+  address?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -387,6 +520,12 @@ export type OrganizationMinOrderByAggregateInput = {
   nit?: Prisma.SortOrder
   orgType?: Prisma.SortOrder
   subscription?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrder
+  suspendedReason?: Prisma.SortOrder
+  reactivatedAt?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
+  address?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -404,8 +543,26 @@ export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
 }
 
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type OrganizationCreateNestedOneWithoutSuspensionHistoriesInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutSuspensionHistoriesInput, Prisma.OrganizationUncheckedCreateWithoutSuspensionHistoriesInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutSuspensionHistoriesInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+}
+
+export type OrganizationUpdateOneRequiredWithoutSuspensionHistoriesNestedInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutSuspensionHistoriesInput, Prisma.OrganizationUncheckedCreateWithoutSuspensionHistoriesInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutSuspensionHistoriesInput
+  upsert?: Prisma.OrganizationUpsertWithoutSuspensionHistoriesInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutSuspensionHistoriesInput, Prisma.OrganizationUpdateWithoutSuspensionHistoriesInput>, Prisma.OrganizationUncheckedUpdateWithoutSuspensionHistoriesInput>
 }
 
 export type OrganizationCreateNestedOneWithoutUsersInput = {
@@ -492,12 +649,122 @@ export type OrganizationUpdateOneRequiredWithoutMaquinariasNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutMaquinariasInput, Prisma.OrganizationUpdateWithoutMaquinariasInput>, Prisma.OrganizationUncheckedUpdateWithoutMaquinariasInput>
 }
 
+export type OrganizationCreateWithoutSuspensionHistoriesInput = {
+  id?: string
+  name: string
+  nit?: string | null
+  orgType?: string | null
+  subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
+  fincas?: Prisma.FincaCreateNestedManyWithoutOrganizationInput
+  inventarios?: Prisma.InventarioCreateNestedManyWithoutOrganizationInput
+  finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
+  empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
+  maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationUncheckedCreateWithoutSuspensionHistoriesInput = {
+  id?: string
+  name: string
+  nit?: string | null
+  orgType?: string | null
+  subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
+  fincas?: Prisma.FincaUncheckedCreateNestedManyWithoutOrganizationInput
+  inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutOrganizationInput
+  finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
+  empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
+  maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationCreateOrConnectWithoutSuspensionHistoriesInput = {
+  where: Prisma.OrganizationWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutSuspensionHistoriesInput, Prisma.OrganizationUncheckedCreateWithoutSuspensionHistoriesInput>
+}
+
+export type OrganizationUpsertWithoutSuspensionHistoriesInput = {
+  update: Prisma.XOR<Prisma.OrganizationUpdateWithoutSuspensionHistoriesInput, Prisma.OrganizationUncheckedUpdateWithoutSuspensionHistoriesInput>
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutSuspensionHistoriesInput, Prisma.OrganizationUncheckedCreateWithoutSuspensionHistoriesInput>
+  where?: Prisma.OrganizationWhereInput
+}
+
+export type OrganizationUpdateToOneWithWhereWithoutSuspensionHistoriesInput = {
+  where?: Prisma.OrganizationWhereInput
+  data: Prisma.XOR<Prisma.OrganizationUpdateWithoutSuspensionHistoriesInput, Prisma.OrganizationUncheckedUpdateWithoutSuspensionHistoriesInput>
+}
+
+export type OrganizationUpdateWithoutSuspensionHistoriesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
+  fincas?: Prisma.FincaUpdateManyWithoutOrganizationNestedInput
+  inventarios?: Prisma.InventarioUpdateManyWithoutOrganizationNestedInput
+  finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
+  empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
+  maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationUncheckedUpdateWithoutSuspensionHistoriesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
+  fincas?: Prisma.FincaUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutOrganizationNestedInput
+  finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
+  empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
+  maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
 export type OrganizationCreateWithoutUsersInput = {
   id?: string
   name: string
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   fincas?: Prisma.FincaCreateNestedManyWithoutOrganizationInput
@@ -505,6 +772,7 @@ export type OrganizationCreateWithoutUsersInput = {
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutUsersInput = {
@@ -513,6 +781,12 @@ export type OrganizationUncheckedCreateWithoutUsersInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   fincas?: Prisma.FincaUncheckedCreateNestedManyWithoutOrganizationInput
@@ -520,6 +794,7 @@ export type OrganizationUncheckedCreateWithoutUsersInput = {
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutUsersInput = {
@@ -544,6 +819,12 @@ export type OrganizationUpdateWithoutUsersInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   fincas?: Prisma.FincaUpdateManyWithoutOrganizationNestedInput
@@ -551,6 +832,7 @@ export type OrganizationUpdateWithoutUsersInput = {
   finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutUsersInput = {
@@ -559,6 +841,12 @@ export type OrganizationUncheckedUpdateWithoutUsersInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   fincas?: Prisma.FincaUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -566,6 +854,7 @@ export type OrganizationUncheckedUpdateWithoutUsersInput = {
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutFincasInput = {
@@ -574,6 +863,12 @@ export type OrganizationCreateWithoutFincasInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
@@ -581,6 +876,7 @@ export type OrganizationCreateWithoutFincasInput = {
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutFincasInput = {
@@ -589,6 +885,12 @@ export type OrganizationUncheckedCreateWithoutFincasInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
@@ -596,6 +898,7 @@ export type OrganizationUncheckedCreateWithoutFincasInput = {
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutFincasInput = {
@@ -620,6 +923,12 @@ export type OrganizationUpdateWithoutFincasInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
@@ -627,6 +936,7 @@ export type OrganizationUpdateWithoutFincasInput = {
   finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutFincasInput = {
@@ -635,6 +945,12 @@ export type OrganizationUncheckedUpdateWithoutFincasInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -642,6 +958,7 @@ export type OrganizationUncheckedUpdateWithoutFincasInput = {
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutInventariosInput = {
@@ -650,6 +967,12 @@ export type OrganizationCreateWithoutInventariosInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
@@ -657,6 +980,7 @@ export type OrganizationCreateWithoutInventariosInput = {
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutInventariosInput = {
@@ -665,6 +989,12 @@ export type OrganizationUncheckedCreateWithoutInventariosInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
@@ -672,6 +1002,7 @@ export type OrganizationUncheckedCreateWithoutInventariosInput = {
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutInventariosInput = {
@@ -696,6 +1027,12 @@ export type OrganizationUpdateWithoutInventariosInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
@@ -703,6 +1040,7 @@ export type OrganizationUpdateWithoutInventariosInput = {
   finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutInventariosInput = {
@@ -711,6 +1049,12 @@ export type OrganizationUncheckedUpdateWithoutInventariosInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -718,6 +1062,7 @@ export type OrganizationUncheckedUpdateWithoutInventariosInput = {
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutFinanzasInput = {
@@ -726,6 +1071,12 @@ export type OrganizationCreateWithoutFinanzasInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
@@ -733,6 +1084,7 @@ export type OrganizationCreateWithoutFinanzasInput = {
   inventarios?: Prisma.InventarioCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutFinanzasInput = {
@@ -741,6 +1093,12 @@ export type OrganizationUncheckedCreateWithoutFinanzasInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
@@ -748,6 +1106,7 @@ export type OrganizationUncheckedCreateWithoutFinanzasInput = {
   inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutFinanzasInput = {
@@ -772,6 +1131,12 @@ export type OrganizationUpdateWithoutFinanzasInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
@@ -779,6 +1144,7 @@ export type OrganizationUpdateWithoutFinanzasInput = {
   inventarios?: Prisma.InventarioUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutFinanzasInput = {
@@ -787,6 +1153,12 @@ export type OrganizationUncheckedUpdateWithoutFinanzasInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -794,6 +1166,7 @@ export type OrganizationUncheckedUpdateWithoutFinanzasInput = {
   inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutEmpleadosInput = {
@@ -802,6 +1175,12 @@ export type OrganizationCreateWithoutEmpleadosInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
@@ -809,6 +1188,7 @@ export type OrganizationCreateWithoutEmpleadosInput = {
   inventarios?: Prisma.InventarioCreateNestedManyWithoutOrganizationInput
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutEmpleadosInput = {
@@ -817,6 +1197,12 @@ export type OrganizationUncheckedCreateWithoutEmpleadosInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
@@ -824,6 +1210,7 @@ export type OrganizationUncheckedCreateWithoutEmpleadosInput = {
   inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutOrganizationInput
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutEmpleadosInput = {
@@ -848,6 +1235,12 @@ export type OrganizationUpdateWithoutEmpleadosInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
@@ -855,6 +1248,7 @@ export type OrganizationUpdateWithoutEmpleadosInput = {
   inventarios?: Prisma.InventarioUpdateManyWithoutOrganizationNestedInput
   finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutEmpleadosInput = {
@@ -863,6 +1257,12 @@ export type OrganizationUncheckedUpdateWithoutEmpleadosInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -870,6 +1270,7 @@ export type OrganizationUncheckedUpdateWithoutEmpleadosInput = {
   inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutOrganizationNestedInput
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutMaquinariasInput = {
@@ -878,6 +1279,12 @@ export type OrganizationCreateWithoutMaquinariasInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
@@ -885,6 +1292,7 @@ export type OrganizationCreateWithoutMaquinariasInput = {
   inventarios?: Prisma.InventarioCreateNestedManyWithoutOrganizationInput
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutMaquinariasInput = {
@@ -893,6 +1301,12 @@ export type OrganizationUncheckedCreateWithoutMaquinariasInput = {
   nit?: string | null
   orgType?: string | null
   subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
@@ -900,6 +1314,7 @@ export type OrganizationUncheckedCreateWithoutMaquinariasInput = {
   inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutOrganizationInput
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutMaquinariasInput = {
@@ -924,6 +1339,12 @@ export type OrganizationUpdateWithoutMaquinariasInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
@@ -931,6 +1352,7 @@ export type OrganizationUpdateWithoutMaquinariasInput = {
   inventarios?: Prisma.InventarioUpdateManyWithoutOrganizationNestedInput
   finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutMaquinariasInput = {
@@ -939,6 +1361,12 @@ export type OrganizationUncheckedUpdateWithoutMaquinariasInput = {
   nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -946,6 +1374,7 @@ export type OrganizationUncheckedUpdateWithoutMaquinariasInput = {
   inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutOrganizationNestedInput
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 
@@ -960,6 +1389,7 @@ export type OrganizationCountOutputType = {
   finanzas: number
   empleados: number
   maquinarias: number
+  suspensionHistories: number
 }
 
 export type OrganizationCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -969,6 +1399,7 @@ export type OrganizationCountOutputTypeSelect<ExtArgs extends runtime.Types.Exte
   finanzas?: boolean | OrganizationCountOutputTypeCountFinanzasArgs
   empleados?: boolean | OrganizationCountOutputTypeCountEmpleadosArgs
   maquinarias?: boolean | OrganizationCountOutputTypeCountMaquinariasArgs
+  suspensionHistories?: boolean | OrganizationCountOutputTypeCountSuspensionHistoriesArgs
 }
 
 /**
@@ -1023,6 +1454,13 @@ export type OrganizationCountOutputTypeCountMaquinariasArgs<ExtArgs extends runt
   where?: Prisma.MaquinariaWhereInput
 }
 
+/**
+ * OrganizationCountOutputType without action
+ */
+export type OrganizationCountOutputTypeCountSuspensionHistoriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SuspensionHistoryWhereInput
+}
+
 
 export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1030,6 +1468,12 @@ export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.Internal
   nit?: boolean
   orgType?: boolean
   subscription?: boolean
+  status?: boolean
+  suspendedAt?: boolean
+  suspendedReason?: boolean
+  reactivatedAt?: boolean
+  phone?: boolean
+  address?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   users?: boolean | Prisma.Organization$usersArgs<ExtArgs>
@@ -1038,6 +1482,7 @@ export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.Internal
   finanzas?: boolean | Prisma.Organization$finanzasArgs<ExtArgs>
   empleados?: boolean | Prisma.Organization$empleadosArgs<ExtArgs>
   maquinarias?: boolean | Prisma.Organization$maquinariasArgs<ExtArgs>
+  suspensionHistories?: boolean | Prisma.Organization$suspensionHistoriesArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["organization"]>
 
@@ -1047,6 +1492,12 @@ export type OrganizationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   nit?: boolean
   orgType?: boolean
   subscription?: boolean
+  status?: boolean
+  suspendedAt?: boolean
+  suspendedReason?: boolean
+  reactivatedAt?: boolean
+  phone?: boolean
+  address?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["organization"]>
@@ -1057,6 +1508,12 @@ export type OrganizationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   nit?: boolean
   orgType?: boolean
   subscription?: boolean
+  status?: boolean
+  suspendedAt?: boolean
+  suspendedReason?: boolean
+  reactivatedAt?: boolean
+  phone?: boolean
+  address?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["organization"]>
@@ -1067,11 +1524,17 @@ export type OrganizationSelectScalar = {
   nit?: boolean
   orgType?: boolean
   subscription?: boolean
+  status?: boolean
+  suspendedAt?: boolean
+  suspendedReason?: boolean
+  reactivatedAt?: boolean
+  phone?: boolean
+  address?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type OrganizationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "nit" | "orgType" | "subscription" | "createdAt" | "updatedAt", ExtArgs["result"]["organization"]>
+export type OrganizationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "nit" | "orgType" | "subscription" | "status" | "suspendedAt" | "suspendedReason" | "reactivatedAt" | "phone" | "address" | "createdAt" | "updatedAt", ExtArgs["result"]["organization"]>
 export type OrganizationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   users?: boolean | Prisma.Organization$usersArgs<ExtArgs>
   fincas?: boolean | Prisma.Organization$fincasArgs<ExtArgs>
@@ -1079,6 +1542,7 @@ export type OrganizationInclude<ExtArgs extends runtime.Types.Extensions.Interna
   finanzas?: boolean | Prisma.Organization$finanzasArgs<ExtArgs>
   empleados?: boolean | Prisma.Organization$empleadosArgs<ExtArgs>
   maquinarias?: boolean | Prisma.Organization$maquinariasArgs<ExtArgs>
+  suspensionHistories?: boolean | Prisma.Organization$suspensionHistoriesArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1093,6 +1557,7 @@ export type $OrganizationPayload<ExtArgs extends runtime.Types.Extensions.Intern
     finanzas: Prisma.$FinanzaPayload<ExtArgs>[]
     empleados: Prisma.$EmpleadoPayload<ExtArgs>[]
     maquinarias: Prisma.$MaquinariaPayload<ExtArgs>[]
+    suspensionHistories: Prisma.$SuspensionHistoryPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1100,6 +1565,12 @@ export type $OrganizationPayload<ExtArgs extends runtime.Types.Extensions.Intern
     nit: string | null
     orgType: string | null
     subscription: string
+    status: string
+    suspendedAt: Date | null
+    suspendedReason: string | null
+    reactivatedAt: Date | null
+    phone: string | null
+    address: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["organization"]>
@@ -1502,6 +1973,7 @@ export interface Prisma__OrganizationClient<T, Null = never, ExtArgs extends run
   finanzas<T extends Prisma.Organization$finanzasArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$finanzasArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FinanzaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   empleados<T extends Prisma.Organization$empleadosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$empleadosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmpleadoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   maquinarias<T extends Prisma.Organization$maquinariasArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$maquinariasArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MaquinariaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  suspensionHistories<T extends Prisma.Organization$suspensionHistoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$suspensionHistoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SuspensionHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1536,6 +2008,12 @@ export interface OrganizationFieldRefs {
   readonly nit: Prisma.FieldRef<"Organization", 'String'>
   readonly orgType: Prisma.FieldRef<"Organization", 'String'>
   readonly subscription: Prisma.FieldRef<"Organization", 'String'>
+  readonly status: Prisma.FieldRef<"Organization", 'String'>
+  readonly suspendedAt: Prisma.FieldRef<"Organization", 'DateTime'>
+  readonly suspendedReason: Prisma.FieldRef<"Organization", 'String'>
+  readonly reactivatedAt: Prisma.FieldRef<"Organization", 'DateTime'>
+  readonly phone: Prisma.FieldRef<"Organization", 'String'>
+  readonly address: Prisma.FieldRef<"Organization", 'String'>
   readonly createdAt: Prisma.FieldRef<"Organization", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Organization", 'DateTime'>
 }
@@ -2070,6 +2548,30 @@ export type Organization$maquinariasArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   distinct?: Prisma.MaquinariaScalarFieldEnum | Prisma.MaquinariaScalarFieldEnum[]
+}
+
+/**
+ * Organization.suspensionHistories
+ */
+export type Organization$suspensionHistoriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SuspensionHistory
+   */
+  select?: Prisma.SuspensionHistorySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SuspensionHistory
+   */
+  omit?: Prisma.SuspensionHistoryOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SuspensionHistoryInclude<ExtArgs> | null
+  where?: Prisma.SuspensionHistoryWhereInput
+  orderBy?: Prisma.SuspensionHistoryOrderByWithRelationInput | Prisma.SuspensionHistoryOrderByWithRelationInput[]
+  cursor?: Prisma.SuspensionHistoryWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SuspensionHistoryScalarFieldEnum | Prisma.SuspensionHistoryScalarFieldEnum[]
 }
 
 /**

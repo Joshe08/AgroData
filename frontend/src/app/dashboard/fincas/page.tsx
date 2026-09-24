@@ -93,19 +93,63 @@ function FincaModal({
     municipio: finca?.municipio || 'Valledupar',
     vereda: finca?.vereda || '',
     referenciaAcceso: finca?.referenciaAcceso || '',
-    latitude: finca?.latitude ? String(finca.latitude) : '',
-    longitude: finca?.longitude ? String(finca.longitude) : '',
-    hectareas: finca?.hectareas ? String(finca.hectareas) : '',
+    latitude: finca?.latitude != null ? String(finca.latitude) : '',
+    longitude: finca?.longitude != null ? String(finca.longitude) : '',
+    hectareas: finca?.hectareas != null ? String(finca.hectareas) : '',
     unidadMedida: finca?.unidadMedida || 'Hectáreas',
     tipoSuelo: finca?.tipoSuelo || 'Franco',
     fuenteAgua: finca?.fuenteAgua || 'Río o quebrada permanente',
     sistemaRiego: finca?.sistemaRiego || 'Secano (lluvia natural)',
     tipoAcceso: finca?.tipoAcceso || 'Carretera destapada (afirmado)',
-    actividades: finca?.actividades || ['AGRICULTURA'],
+    actividades: finca?.actividades && finca.actividades.length > 0 ? finca.actividades : ['AGRICULTURA'],
     capacidadCabezas: '',
     alturaMsnm: '',
     numeroEstanques: '',
   });
+
+  useEffect(() => {
+    if (finca) {
+      let dep = finca.departamento || 'Cesar';
+      let mun = finca.municipio || 'Valledupar';
+      let ver = finca.vereda || '';
+      if ((!finca.municipio || !finca.vereda) && finca.ubicacion) {
+        const parts = finca.ubicacion.split(',').map((p) => p.trim());
+        if (parts.length === 3) {
+          ver = parts[0];
+          mun = parts[1];
+          dep = parts[2];
+        } else if (parts.length === 2) {
+          mun = parts[0];
+          dep = parts[1];
+        } else if (parts.length === 1 && !finca.departamento) {
+          mun = parts[0];
+        }
+      }
+
+      setForm({
+        nombre: finca.nombre || '',
+        descripcion: finca.descripcion || '',
+        tipoExplotacion: finca.tipoExplotacion || 'MIXTA',
+        estado: finca.estado || 'ACTIVA',
+        departamento: dep,
+        municipio: mun,
+        vereda: ver,
+        referenciaAcceso: finca.referenciaAcceso || '',
+        latitude: finca.latitude != null ? String(finca.latitude) : '',
+        longitude: finca.longitude != null ? String(finca.longitude) : '',
+        hectareas: finca.hectareas != null ? String(finca.hectareas) : '',
+        unidadMedida: finca.unidadMedida || 'Hectáreas',
+        tipoSuelo: finca.tipoSuelo || 'Franco',
+        fuenteAgua: finca.fuenteAgua || 'Río o quebrada permanente',
+        sistemaRiego: finca.sistemaRiego || 'Secano (lluvia natural)',
+        tipoAcceso: finca.tipoAcceso || 'Carretera destapada (afirmado)',
+        actividades: finca.actividades && finca.actividades.length > 0 ? finca.actividades : ['AGRICULTURA'],
+        capacidadCabezas: '',
+        alturaMsnm: '',
+        numeroEstanques: '',
+      });
+    }
+  }, [finca]);
 
   const toggleActividad = (id: string) => {
     setForm((prev) => {
@@ -161,7 +205,17 @@ function FincaModal({
         latitude: form.latitude ? parseFloat(form.latitude) : undefined,
         longitude: form.longitude ? parseFloat(form.longitude) : undefined,
         descripcion: form.descripcion || undefined,
+        tipoExplotacion: form.tipoExplotacion,
+        estado: form.estado,
         tipoSuelo: form.tipoSuelo,
+        fuenteAgua: form.fuenteAgua,
+        sistemaRiego: form.sistemaRiego,
+        tipoAcceso: form.tipoAcceso,
+        departamento: form.departamento,
+        municipio: form.municipio,
+        vereda: form.vereda,
+        referenciaAcceso: form.referenciaAcceso,
+        actividades: form.actividades,
       };
 
       if (finca) {
@@ -173,8 +227,9 @@ function FincaModal({
       }
       onSave();
       onClose();
-    } catch {
-      useToastStore.getState().error('Error al guardar la finca. Verifica la conexión.');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al guardar la finca. Verifica la conexión.';
+      useToastStore.getState().error(msg);
     } finally {
       setLoading(false);
     }

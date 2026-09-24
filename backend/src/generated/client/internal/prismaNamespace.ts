@@ -385,6 +385,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Organization: 'Organization',
+  SuspensionHistory: 'SuspensionHistory',
   User: 'User',
   Finca: 'Finca',
   Lote: 'Lote',
@@ -409,7 +410,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "organization" | "user" | "finca" | "lote" | "produccion" | "diarioProduccion" | "inventario" | "finanza" | "empleado" | "maquinaria"
+    modelProps: "organization" | "suspensionHistory" | "user" | "finca" | "lote" | "produccion" | "diarioProduccion" | "inventario" | "finanza" | "empleado" | "maquinaria"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -484,6 +485,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.OrganizationCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.OrganizationCountAggregateOutputType> | number
+        }
+      }
+    }
+    SuspensionHistory: {
+      payload: Prisma.$SuspensionHistoryPayload<ExtArgs>
+      fields: Prisma.SuspensionHistoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SuspensionHistoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SuspensionHistoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload>
+        }
+        findFirst: {
+          args: Prisma.SuspensionHistoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SuspensionHistoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload>
+        }
+        findMany: {
+          args: Prisma.SuspensionHistoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload>[]
+        }
+        create: {
+          args: Prisma.SuspensionHistoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload>
+        }
+        createMany: {
+          args: Prisma.SuspensionHistoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SuspensionHistoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload>[]
+        }
+        delete: {
+          args: Prisma.SuspensionHistoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload>
+        }
+        update: {
+          args: Prisma.SuspensionHistoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.SuspensionHistoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SuspensionHistoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SuspensionHistoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.SuspensionHistoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SuspensionHistoryPayload>
+        }
+        aggregate: {
+          args: Prisma.SuspensionHistoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSuspensionHistory>
+        }
+        groupBy: {
+          args: Prisma.SuspensionHistoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SuspensionHistoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SuspensionHistoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SuspensionHistoryCountAggregateOutputType> | number
         }
       }
     }
@@ -1195,11 +1270,31 @@ export const OrganizationScalarFieldEnum = {
   nit: 'nit',
   orgType: 'orgType',
   subscription: 'subscription',
+  status: 'status',
+  suspendedAt: 'suspendedAt',
+  suspendedReason: 'suspendedReason',
+  reactivatedAt: 'reactivatedAt',
+  phone: 'phone',
+  address: 'address',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type OrganizationScalarFieldEnum = (typeof OrganizationScalarFieldEnum)[keyof typeof OrganizationScalarFieldEnum]
+
+
+export const SuspensionHistoryScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  action: 'action',
+  reason: 'reason',
+  previousStatus: 'previousStatus',
+  newStatus: 'newStatus',
+  performedBy: 'performedBy',
+  createdAt: 'createdAt'
+} as const
+
+export type SuspensionHistoryScalarFieldEnum = (typeof SuspensionHistoryScalarFieldEnum)[keyof typeof SuspensionHistoryScalarFieldEnum]
 
 
 export const UserScalarFieldEnum = {
@@ -1224,6 +1319,17 @@ export const FincaScalarFieldEnum = {
   description: 'description',
   latitude: 'latitude',
   longitude: 'longitude',
+  tipoExplotacion: 'tipoExplotacion',
+  estado: 'estado',
+  tipoSuelo: 'tipoSuelo',
+  fuenteAgua: 'fuenteAgua',
+  sistemaRiego: 'sistemaRiego',
+  tipoAcceso: 'tipoAcceso',
+  departamento: 'departamento',
+  municipio: 'municipio',
+  vereda: 'vereda',
+  referenciaAcceso: 'referenciaAcceso',
+  actividades: 'actividades',
   organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1320,10 +1426,16 @@ export type FinanzaScalarFieldEnum = (typeof FinanzaScalarFieldEnum)[keyof typeo
 export const EmpleadoScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  lastName: 'lastName',
+  documento: 'documento',
+  email: 'email',
+  phone: 'phone',
   role: 'role',
   status: 'status',
   dailyRate: 'dailyRate',
-  phone: 'phone',
+  fechaIngreso: 'fechaIngreso',
+  fincaId: 'fincaId',
+  notes: 'notes',
   organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1335,7 +1447,15 @@ export type EmpleadoScalarFieldEnum = (typeof EmpleadoScalarFieldEnum)[keyof typ
 export const MaquinariaScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  tipo: 'tipo',
+  marca: 'marca',
+  modelo: 'modelo',
   status: 'status',
+  fincaId: 'fincaId',
+  fechaAdquisicion: 'fechaAdquisicion',
+  valor: 'valor',
+  horasUso: 'horasUso',
+  observaciones: 'observaciones',
   lastMaintenance: 'lastMaintenance',
   maintenanceCost: 'maintenanceCost',
   organizationId: 'organizationId',
@@ -1513,6 +1633,7 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   organization?: Prisma.OrganizationOmit
+  suspensionHistory?: Prisma.SuspensionHistoryOmit
   user?: Prisma.UserOmit
   finca?: Prisma.FincaOmit
   lote?: Prisma.LoteOmit

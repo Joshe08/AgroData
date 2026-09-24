@@ -23,6 +23,11 @@ export * from './enums';
  */
 export type Organization = Prisma.OrganizationModel
 /**
+ * Model SuspensionHistory
+ * 
+ */
+export type SuspensionHistory = Prisma.SuspensionHistoryModel
+/**
  * Model User
  * 
  */

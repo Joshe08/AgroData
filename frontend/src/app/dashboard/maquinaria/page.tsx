@@ -13,7 +13,12 @@ import {
   AlertTriangle,
   Clock,
   MapPin,
-  CheckCircle,
+  Eye,
+  Calendar,
+  DollarSign,
+  FileText,
+  Tag,
+  Tractor,
 } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
@@ -25,9 +30,12 @@ interface Maquina {
   modelo?: string;
   estado: string;
   horasUso?: number;
+  valor?: number;
+  fechaAdquisicion?: string;
+  observaciones?: string;
   proximoMantenimiento?: string;
-  fincaId: string | number;
-  finca?: { id: string | number; nombre: string };
+  fincaId?: string | number | null;
+  finca?: { id: string | number; nombre: string } | null;
 }
 
 interface Finca {
@@ -39,6 +47,7 @@ const ESTADO_BADGE: Record<string, { bg: string; text: string; label: string }> 
   OPERATIVO: { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', label: 'Operativo' },
   MANTENIMIENTO: { bg: 'rgba(245, 158, 11, 0.15)', text: '#fbbf24', label: 'En mantenimiento' },
   DAÑADO: { bg: 'rgba(239, 68, 68, 0.15)', text: '#f87171', label: 'Averiado / Fuera de servicio' },
+  DANADO: { bg: 'rgba(239, 68, 68, 0.15)', text: '#f87171', label: 'Averiado / Fuera de servicio' },
   INACTIVO: { bg: 'rgba(107, 114, 128, 0.15)', text: '#9ca3af', label: 'Inactivo / En reserva' },
 };
 
@@ -52,8 +61,142 @@ const TIPOS_MAQUINARIA = [
   'Remolque agrícola',
   'Vehículo de campo / Camioneta',
   'Motosierra / Podadora',
+  'Sembradora / Abonadora',
+  'Arado / Rastra de discos',
   'Otro equipo o apero',
 ];
+
+// ─── Modal Ficha Técnica Detallada (Botón "Ver") ─────────────────────────────
+
+function FichaTecnicaModal({
+  maquina,
+  onClose,
+  onEdit,
+}: {
+  maquina: Maquina;
+  onClose: () => void;
+  onEdit: () => void;
+}) {
+  const badge = ESTADO_BADGE[maquina.estado] || ESTADO_BADGE['OPERATIVO'];
+
+  const formatCOP = (v: number) =>
+    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
+
+  const formatDate = (d?: string) => {
+    if (!d) return 'No registrada';
+    try {
+      return new Date(d).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch {
+      return d;
+    }
+  };
+
+  const Row = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}>
+      <span style={{ color: 'var(--color-primary)', marginTop: 2, flexShrink: 0 }}>{icon}</span>
+      <div>
+        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{value}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
+      <div className="modal-content" style={{ maxWidth: 540 }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Tractor size={22} color="#fbbf24" />
+            <h2 className="font-display" style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
+              Ficha Técnica del Equipo
+            </h2>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Hero Card */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: '16px', background: 'rgba(245,158,11,0.06)', borderRadius: 12, border: '1px solid rgba(245,158,11,0.2)' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 12, background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#fbbf24', flexShrink: 0 }}>
+            <Wrench size={28} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>{maquina.nombre}</div>
+            <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 2 }}>
+              {maquina.tipo} {maquina.marca ? `· ${maquina.marca}` : ''} {maquina.modelo ? `(${maquina.modelo})` : ''}
+            </div>
+            <span
+              style={{
+                display: 'inline-block',
+                marginTop: 6,
+                padding: '3px 8px',
+                borderRadius: 12,
+                fontSize: 11,
+                fontWeight: 600,
+                background: badge.bg,
+                color: badge.text,
+              }}
+            >
+              {badge.label}
+            </span>
+          </div>
+        </div>
+
+        {/* Technical Data Grid */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Row
+            icon={<MapPin size={15} />}
+            label="Predio / Finca asignada"
+            value={maquina.finca?.nombre || (maquina.fincaId ? `Finca #${maquina.fincaId}` : 'Sin finca asignada')}
+          />
+          <Row
+            icon={<Clock size={15} />}
+            label="Horómetro / Horas de uso"
+            value={maquina.horasUso != null ? `${maquina.horasUso} horas de trabajo` : 'No registrado'}
+          />
+          {maquina.proximoMantenimiento && (
+            <Row
+              icon={<Calendar size={15} />}
+              label="Próximo Mantenimiento Preventivo"
+              value={formatDate(maquina.proximoMantenimiento)}
+            />
+          )}
+          {maquina.valor != null && (
+            <Row
+              icon={<DollarSign size={15} />}
+              label="Valor comercial estimado"
+              value={formatCOP(maquina.valor)}
+            />
+          )}
+          {maquina.fechaAdquisicion && (
+            <Row
+              icon={<Calendar size={15} />}
+              label="Fecha de Adquisición"
+              value={formatDate(maquina.fechaAdquisicion)}
+            />
+          )}
+          {maquina.observaciones && (
+            <Row
+              icon={<FileText size={15} />}
+              label="Observaciones y Mantenimiento"
+              value={maquina.observaciones}
+            />
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 24 }}>
+          <button onClick={onClose} className="btn-secondary">Cerrar</button>
+          <button onClick={onEdit} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Edit3 size={14} /> Editar Maquinaria
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal Formulario (Crear / Editar) ────────────────────────────────────────
 
 function MaquinaModal({
   maquina,
@@ -72,11 +215,32 @@ function MaquinaModal({
     marca: maquina?.marca || '',
     modelo: maquina?.modelo || '',
     estado: maquina?.estado || 'OPERATIVO',
-    horasUso: maquina?.horasUso?.toString() || '',
+    horasUso: maquina?.horasUso != null ? String(maquina.horasUso) : '',
+    valor: maquina?.valor != null ? String(maquina.valor) : '',
+    fechaAdquisicion: maquina?.fechaAdquisicion ? maquina.fechaAdquisicion.split('T')[0] : '',
+    observaciones: maquina?.observaciones || '',
     proximoMantenimiento: maquina?.proximoMantenimiento?.split('T')[0] || '',
-    fincaId: maquina?.fincaId?.toString() || fincas[0]?.id?.toString() || '',
+    fincaId: maquina?.fincaId != null ? String(maquina.fincaId) : (fincas[0]?.id ? String(fincas[0].id) : ''),
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (maquina) {
+      setForm({
+        nombre: maquina.nombre || '',
+        tipo: maquina.tipo || 'Tractor agrícola',
+        marca: maquina.marca || '',
+        modelo: maquina.modelo || '',
+        estado: maquina.estado || 'OPERATIVO',
+        horasUso: maquina.horasUso != null ? String(maquina.horasUso) : '',
+        valor: maquina.valor != null ? String(maquina.valor) : '',
+        fechaAdquisicion: maquina.fechaAdquisicion ? maquina.fechaAdquisicion.split('T')[0] : '',
+        observaciones: maquina.observaciones || '',
+        proximoMantenimiento: maquina.proximoMantenimiento ? maquina.proximoMantenimiento.split('T')[0] : '',
+        fincaId: maquina.fincaId != null ? String(maquina.fincaId) : '',
+      });
+    }
+  }, [maquina]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,11 +252,19 @@ function MaquinaModal({
     setLoading(true);
     try {
       const p = {
-        ...form,
-        fincaId: form.fincaId,
+        name: form.nombre.trim(),
+        tipo: form.tipo,
+        marca: form.marca.trim() || undefined,
+        modelo: form.modelo.trim() || undefined,
+        estado: form.estado,
+        fincaId: form.fincaId || null,
         horasUso: form.horasUso ? parseFloat(form.horasUso) : undefined,
+        valor: form.valor ? parseFloat(form.valor) : undefined,
+        fechaAdquisicion: form.fechaAdquisicion || undefined,
+        observaciones: form.observaciones.trim() || undefined,
         proximoMantenimiento: form.proximoMantenimiento || undefined,
       };
+
       if (maquina) {
         await maquinariaApi.update(maquina.id, p);
         useToastStore.getState().success('Equipo actualizado exitosamente.');
@@ -102,16 +274,17 @@ function MaquinaModal({
       }
       onSave();
       onClose();
-    } catch {
-      useToastStore.getState().error('Error al guardar la maquinaria.');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al guardar la maquinaria.';
+      useToastStore.getState().error(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" style={{ maxWidth: 540 }} onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
+      <div className="modal-content" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <h2 className="font-display" style={{ fontSize: 20, fontWeight: 700 }}>
             {maquina ? 'Editar Equipo' : 'Nuevo Equipo o Maquinaria'}
@@ -193,6 +366,22 @@ function MaquinaModal({
 
             <div>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                Finca / Predio asignado
+              </label>
+              <select
+                className="input-field"
+                value={form.fincaId}
+                onChange={(e) => setForm((f) => ({ ...f, fincaId: e.target.value }))}
+              >
+                <option value="">— Sin finca asignada —</option>
+                {fincas.map((fi) => (
+                  <option key={fi.id} value={fi.id}>{fi.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
                 Horas de uso / Horómetro
               </label>
               <input
@@ -208,7 +397,34 @@ function MaquinaModal({
 
             <div>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Próximo mantenimiento
+                Valor comercial estimado (COP)
+              </label>
+              <input
+                className="input-field"
+                type="number"
+                min="0"
+                step="100000"
+                value={form.valor}
+                onChange={(e) => setForm((f) => ({ ...f, valor: e.target.value }))}
+                placeholder="Ej: 85000000"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                Fecha de adquisición
+              </label>
+              <input
+                className="input-field"
+                type="date"
+                value={form.fechaAdquisicion}
+                onChange={(e) => setForm((f) => ({ ...f, fechaAdquisicion: e.target.value }))}
+              />
+            </div>
+
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                Próximo mantenimiento preventivo
               </label>
               <input
                 className="input-field"
@@ -220,18 +436,15 @@ function MaquinaModal({
 
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Finca / Predio donde se encuentra *
+                Observaciones y Especificaciones
               </label>
-              <select
+              <textarea
                 className="input-field"
-                value={form.fincaId}
-                onChange={(e) => setForm((f) => ({ ...f, fincaId: e.target.value }))}
-                required
-              >
-                {fincas.map((fi) => (
-                  <option key={fi.id} value={fi.id}>{fi.nombre}</option>
-                ))}
-              </select>
+                rows={2}
+                value={form.observaciones}
+                onChange={(e) => setForm((f) => ({ ...f, observaciones: e.target.value }))}
+                placeholder="Detalles de filtros, cambio de aceite, aperos compatibles o conductor a cargo..."
+              />
             </div>
           </div>
 
@@ -249,13 +462,18 @@ function MaquinaModal({
   );
 }
 
+// ─── Página Principal de Maquinaria ──────────────────────────────────────────
+
 export default function MaquinariaPage() {
   const [maquinaria, setMaquinaria] = useState<Maquina[]>([]);
   const [fincas, setFincas] = useState<Finca[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterFinca, setFilterFinca] = useState('ALL');
   const [modalOpen, setModalOpen] = useState(false);
   const [editMaquina, setEditMaquina] = useState<Maquina | undefined>();
+  const [detalleMaquina, setDetalleMaquina] = useState<Maquina | undefined>();
+
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     id: string | number | null;
@@ -308,12 +526,21 @@ export default function MaquinariaPage() {
     });
   };
 
-  const filtered = maquinaria.filter(
-    (m) =>
+  const filtered = maquinaria.filter((m) => {
+    const matchSearch =
       m.nombre.toLowerCase().includes(search.toLowerCase()) ||
       (m.marca || '').toLowerCase().includes(search.toLowerCase()) ||
-      (m.tipo || '').toLowerCase().includes(search.toLowerCase())
-  );
+      (m.tipo || '').toLowerCase().includes(search.toLowerCase());
+
+    let matchFinca = true;
+    if (filterFinca === 'NONE') {
+      matchFinca = !m.fincaId && !m.finca;
+    } else if (filterFinca !== 'ALL') {
+      matchFinca = String(m.fincaId) === filterFinca || String(m.finca?.id) === filterFinca;
+    }
+
+    return matchSearch && matchFinca;
+  });
 
   const proximoMant = maquinaria.filter((m) => {
     if (!m.proximoMantenimiento) return false;
@@ -355,15 +582,31 @@ export default function MaquinariaPage() {
         </div>
       )}
 
-      <div style={{ position: 'relative', marginBottom: 20, maxWidth: 380 }}>
-        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
-        <input
+      {/* Filtros */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flex: '1 1 260px', maxWidth: 380 }}>
+          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
+          <input
+            className="input-field"
+            style={{ paddingLeft: 38 }}
+            placeholder="Buscar equipo por nombre, tipo o marca..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <select
           className="input-field"
-          style={{ paddingLeft: 38 }}
-          placeholder="Buscar equipo por nombre o marca..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+          style={{ flex: '1 1 180px', maxWidth: 220 }}
+          value={filterFinca}
+          onChange={(e) => setFilterFinca(e.target.value)}
+        >
+          <option value="ALL">Todas las fincas</option>
+          <option value="NONE">Sin finca asignada</option>
+          {fincas.map((f) => (
+            <option key={f.id} value={String(f.id)}>{f.nombre}</option>
+          ))}
+        </select>
       </div>
 
       {loading ? (
@@ -376,13 +619,15 @@ export default function MaquinariaPage() {
         <div style={{ textAlign: 'center', padding: '60px', color: 'var(--color-text-subtle)' }}>
           <Wrench size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
           <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-muted)' }}>
-            No hay maquinaria registrada
+            No hay maquinaria registrada que coincida con la búsqueda
           </p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
           {filtered.map((m) => {
             const badge = ESTADO_BADGE[m.estado] || ESTADO_BADGE['OPERATIVO'];
+            const displayFinca = m.finca?.nombre || (m.fincaId ? `Finca #${m.fincaId}` : 'Sin finca asignada');
+
             return (
               <div key={m.id} className="card glass-hover" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -403,18 +648,25 @@ export default function MaquinariaPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     <button
+                      onClick={() => setDetalleMaquina(m)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
+                      title="Ver ficha técnica"
+                    >
+                      <Eye size={15} />
+                    </button>
+                    <button
                       onClick={() => { setEditMaquina(m); setModalOpen(true); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
                       title="Editar"
                     >
-                      <Edit3 size={14} />
+                      <Edit3 size={15} />
                     </button>
                     <button
                       onClick={() => handleDelete(m)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}
                       title="Eliminar"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
@@ -430,7 +682,7 @@ export default function MaquinariaPage() {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-subtle)' }}>
                   <MapPin size={12} />
-                  <span>{m.finca?.nombre || 'Predio asignado'}</span>
+                  <span>{displayFinca}</span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingTop: 10, borderTop: '1px solid var(--color-border)' }}>
@@ -466,12 +718,26 @@ export default function MaquinariaPage() {
         </div>
       )}
 
+      {/* Modal Formulario */}
       {modalOpen && (
         <MaquinaModal
           maquina={editMaquina}
           fincas={fincas}
           onClose={() => setModalOpen(false)}
           onSave={loadData}
+        />
+      )}
+
+      {/* Modal Detalle Ficha Técnica (Ver) */}
+      {detalleMaquina && (
+        <FichaTecnicaModal
+          maquina={detalleMaquina}
+          onClose={() => setDetalleMaquina(undefined)}
+          onEdit={() => {
+            setEditMaquina(detalleMaquina);
+            setDetalleMaquina(undefined);
+            setModalOpen(true);
+          }}
         />
       )}
 

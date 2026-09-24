@@ -609,10 +609,6 @@ export type ProduccionUncheckedUpdateManyWithoutLoteNestedInput = {
   deleteMany?: Prisma.ProduccionScalarWhereInput | Prisma.ProduccionScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type ProduccionCreateNestedOneWithoutDiariosInput = {
   create?: Prisma.XOR<Prisma.ProduccionCreateWithoutDiariosInput, Prisma.ProduccionUncheckedCreateWithoutDiariosInput>
   connectOrCreate?: Prisma.ProduccionCreateOrConnectWithoutDiariosInput

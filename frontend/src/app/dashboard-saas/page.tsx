@@ -20,11 +20,14 @@ import {
   Edit3,
   X,
   AlertCircle,
+  AlertTriangle,
+  PlayCircle,
+  History,
   Check,
   Search,
-  Key,
   LogOut,
-  Info,
+  Phone,
+  MapPin,
 } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
@@ -32,12 +35,19 @@ interface PlatformStats {
   totalOrganizaciones: number;
   totalUsuarios: number;
   suscripciones: { plan: string; cantidad: number }[];
+  organizacionesPorEstado?: { status: string; cantidad: number }[];
   organizaciones: {
     id: string;
     nombre: string;
     nit: string | null;
     orgType?: string | null;
     plan: string;
+    status: string;
+    suspendedAt?: string | null;
+    suspendedReason?: string | null;
+    reactivatedAt?: string | null;
+    phone?: string | null;
+    address?: string | null;
     usuarios: number;
     fincas: number;
     fechaRegistro: string;
@@ -50,7 +60,15 @@ interface PlatformUser {
   name: string;
   role: string;
   organizationId: string;
-  organization?: { id: string; name: string; subscription: string };
+  organization?: { id: string; name: string; subscription: string; status?: string };
+  createdAt: string;
+}
+
+interface SuspensionRecord {
+  id: string;
+  action: 'SUSPENSION' | 'REACTIVACION';
+  reason?: string;
+  createdBy?: string;
   createdAt: string;
 }
 
@@ -64,6 +82,13 @@ const planIcon: Record<string, React.ReactNode> = {
   PREMIUM: <Zap size={13} />,
   ENTERPRISE: <Crown size={13} />,
   FREE: <CheckCircle size={13} />,
+};
+
+const statusColors: Record<string, { bg: string; text: string; label: string }> = {
+  ACTIVE: { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', label: 'ACTIVA' },
+  SUSPENDED: { bg: 'rgba(239, 68, 68, 0.15)', text: '#f87171', label: 'SUSPENDIDA' },
+  PENDING: { bg: 'rgba(245, 158, 11, 0.15)', text: '#fbbf24', label: 'PENDIENTE' },
+  CANCELLED: { bg: 'rgba(107, 114, 128, 0.15)', text: '#9ca3af', label: 'CANCELADA' },
 };
 
 const roleBadgeColors: Record<string, { bg: string; text: string }> = {
@@ -83,12 +108,17 @@ export default function SaasAdminPage() {
   const [usersList, setUsersList] = useState<PlatformUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [actionSuccess, setActionSuccess] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
   const [showOrgModal, setShowOrgModal] = useState(false);
+  const [showEditOrgModal, setShowEditOrgModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [showSuspendModal, setShowSuspendModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyRecords, setHistoryRecords] = useState<SuspensionRecord[]>([]);
+  const [selectedOrgName, setSelectedOrgName] = useState('');
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Delete modal state
   const [deleteModal, setDeleteModal] = useState<{
@@ -105,17 +135,39 @@ export default function SaasAdminPage() {
     loading: false,
   });
 
-  // Form states
+  // Create Org Form
   const [orgForm, setOrgForm] = useState({
     name: '',
     orgType: 'EMPRESA',
     nit: '',
     subscription: 'FREE',
+    phone: '',
+    address: '',
     ownerEmail: '',
     ownerName: '',
     ownerPassword: '',
   });
 
+  // Edit Org Form
+  const [editOrgForm, setEditOrgForm] = useState({
+    id: '',
+    name: '',
+    orgType: 'EMPRESA',
+    nit: '',
+    subscription: 'FREE',
+    status: 'ACTIVE',
+    phone: '',
+    address: '',
+  });
+
+  // Suspend Form
+  const [suspendTarget, setSuspendTarget] = useState<{ id: string; name: string; reason: string }>({
+    id: '',
+    name: '',
+    reason: '',
+  });
+
+  // User Form
   const [userForm, setUserForm] = useState({
     name: '',
     email: '',
@@ -158,13 +210,28 @@ export default function SaasAdminPage() {
     router.replace('/login');
   };
 
+  // Create Org
   const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (orgForm.orgType !== 'PERSONA_NATURAL' && !orgForm.nit.trim()) {
+      useToastStore.getState().error('El NIT es obligatorio para Empresas y Cooperativas.');
+      return;
+    }
     try {
       await saasApi.createOrganization(orgForm);
       useToastStore.getState().success(`Organización "${orgForm.name}" creada exitosamente.`);
       setShowOrgModal(false);
-      setOrgForm({ name: '', orgType: 'EMPRESA', nit: '', subscription: 'FREE', ownerEmail: '', ownerName: '', ownerPassword: '' });
+      setOrgForm({
+        name: '',
+        orgType: 'EMPRESA',
+        nit: '',
+        subscription: 'FREE',
+        phone: '',
+        address: '',
+        ownerEmail: '',
+        ownerName: '',
+        ownerPassword: '',
+      });
       loadData();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Error al crear la empresa.';
@@ -173,6 +240,98 @@ export default function SaasAdminPage() {
     }
   };
 
+  // Open Edit Org Modal
+  const openEditOrgModal = (org: PlatformStats['organizaciones'][0]) => {
+    setEditOrgForm({
+      id: org.id,
+      name: org.nombre,
+      orgType: org.orgType || 'EMPRESA',
+      nit: org.nit || '',
+      subscription: org.plan,
+      status: org.status || 'ACTIVE',
+      phone: org.phone || '',
+      address: org.address || '',
+    });
+    setShowEditOrgModal(true);
+  };
+
+  // Save Edit Org
+  const handleSaveEditOrg = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editOrgForm.orgType !== 'PERSONA_NATURAL' && !editOrgForm.nit.trim()) {
+      useToastStore.getState().error('El NIT es obligatorio para Empresas y Cooperativas.');
+      return;
+    }
+    try {
+      await saasApi.updateOrganization(editOrgForm.id, {
+        name: editOrgForm.name,
+        orgType: editOrgForm.orgType,
+        nit: editOrgForm.nit || null,
+        subscription: editOrgForm.subscription,
+        status: editOrgForm.status,
+        phone: editOrgForm.phone || null,
+        address: editOrgForm.address || null,
+      });
+      useToastStore.getState().success(`Organización "${editOrgForm.name}" actualizada con éxito.`);
+      setShowEditOrgModal(false);
+      loadData();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al actualizar la organización.';
+      useToastStore.getState().error(msg);
+      setError(msg);
+    }
+  };
+
+  // Suspend Org
+  const handleSuspendOrg = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!suspendTarget.reason.trim()) {
+      useToastStore.getState().error('Debes indicar un motivo de suspensión.');
+      return;
+    }
+    try {
+      await saasApi.suspendOrganization(suspendTarget.id, suspendTarget.reason);
+      useToastStore.getState().success(`Organización "${suspendTarget.name}" suspendida.`);
+      setShowSuspendModal(false);
+      setSuspendTarget({ id: '', name: '', reason: '' });
+      loadData();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al suspender la empresa.';
+      useToastStore.getState().error(msg);
+      setError(msg);
+    }
+  };
+
+  // Reactivate Org
+  const handleReactivateOrg = async (orgId: string, orgName: string) => {
+    try {
+      await saasApi.reactivateOrganization(orgId);
+      useToastStore.getState().success(`Organización "${orgName}" reactivada con éxito.`);
+      loadData();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al reactivar la organización.';
+      useToastStore.getState().error(msg);
+      setError(msg);
+    }
+  };
+
+  // View Suspension History
+  const handleViewHistory = async (orgId: string, orgName: string) => {
+    setSelectedOrgName(orgName);
+    setHistoryRecords([]);
+    setShowHistoryModal(true);
+    setHistoryLoading(true);
+    try {
+      const res = await saasApi.getSuspensionHistory(orgId);
+      setHistoryRecords(res.data || []);
+    } catch (err: any) {
+      useToastStore.getState().error('Error al cargar historial de suspensiones.');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Update Org Plan directly
   const handleUpdateOrgPlan = async (id: string, newPlan: string) => {
     try {
       await saasApi.updateOrganization(id, { subscription: newPlan });
@@ -388,7 +547,7 @@ export default function SaasAdminPage() {
 
       {/* Main Container */}
       <main style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1250, margin: '0 auto' }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
             <div>
@@ -402,8 +561,8 @@ export default function SaasAdminPage() {
                 </h1>
               </div>
               <p style={{ color: 'var(--color-text-muted)', fontSize: 14, margin: 0 }}>
-                {activeTab === 'resumen' && 'Visión global del negocio: Organizaciones, suscripciones y actividad de la plataforma.'}
-                {activeTab === 'empresas' && 'Crea y administra las organizaciones agrícolas clientes y sus planes.'}
+                {activeTab === 'resumen' && 'Visión global del negocio: Organizaciones, estados de servicio, suscripciones y actividad.'}
+                {activeTab === 'empresas' && 'Control total de empresas: asignación de planes, suspensión de servicio y trazabilidad.'}
                 {activeTab === 'usuarios' && 'Asigna credenciales y roles para cada empresa registrada.'}
                 {activeTab === 'seguridad' && 'Estructura jerárquica de permisos basada en roles (RBAC).'}
               </p>
@@ -434,14 +593,6 @@ export default function SaasAdminPage() {
             </div>
           </div>
 
-          {/* Alerts */}
-          {actionSuccess && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 10, marginBottom: 24, color: '#34d399', fontSize: 14 }}>
-              <CheckCircle size={16} />
-              {actionSuccess}
-            </div>
-          )}
-
           {error && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, marginBottom: 24, color: '#f87171', fontSize: 14 }}>
               <AlertCircle size={16} />
@@ -458,7 +609,7 @@ export default function SaasAdminPage() {
           {/* TAB 1: RESUMEN SAAS */}
           {!loading && activeTab === 'resumen' && stats && (
             <div>
-              {/* Stat Cards */}
+              {/* Interactive KPI Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
                 {[
                   {
@@ -466,78 +617,144 @@ export default function SaasAdminPage() {
                     value: stats.totalOrganizaciones,
                     icon: <Building2 size={22} />,
                     color: '#6366f1',
+                    targetTab: 'empresas' as const,
+                    subtext: 'Ver listado completo →',
                   },
                   {
                     label: 'Usuarios Activos',
                     value: stats.totalUsuarios,
                     icon: <Users size={22} />,
                     color: '#10b981',
+                    targetTab: 'usuarios' as const,
+                    subtext: 'Ver cuentas y accesos →',
                   },
                   {
                     label: 'Suscripciones Premium',
                     value: stats.suscripciones.find((s) => s.plan === 'PREMIUM')?.cantidad ?? 0,
                     icon: <Zap size={22} />,
                     color: '#f59e0b',
+                    targetTab: 'empresas' as const,
+                    subtext: 'Filtrar empresas →',
                   },
                   {
                     label: 'Fincas Totales',
                     value: stats.organizaciones.reduce((acc, o) => acc + o.fincas, 0),
                     icon: <Check size={22} />,
                     color: '#3b82f6',
+                    targetTab: 'empresas' as const,
+                    subtext: 'Ver predios registrados →',
                   },
                 ].map((card) => (
-                  <div key={card.label} className="card" style={{ padding: '22px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <div
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 12,
-                        background: `${card.color}15`,
-                        border: `1px solid ${card.color}30`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: card.color,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {card.icon}
+                  <div
+                    key={card.label}
+                    onClick={() => setActiveTab(card.targetTab)}
+                    className="card hover-scale"
+                    style={{
+                      padding: '22px 24px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      border: '1px solid var(--color-border)',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = card.color)}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--color-border)')}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 12,
+                          background: `${card.color}15`,
+                          border: `1px solid ${card.color}30`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: card.color,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {card.icon}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--color-text)' }}>{card.value}</div>
+                        <div style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>{card.label}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--color-text)' }}>{card.value}</div>
-                      <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>{card.label}</div>
+                    <div style={{ fontSize: 11, color: card.color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {card.subtext}
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Subscriptions breakdown */}
-              <div className="card" style={{ padding: '24px', marginBottom: 28 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: 'var(--color-text)' }}>
-                  Planes de Suscripción Activos
-                </h2>
-                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                  {stats.suscripciones.map((s) => (
-                    <div
-                      key={s.plan}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        padding: '12px 18px',
-                        background: `${planColors[s.plan] || '#6b7280'}12`,
-                        border: `1px solid ${planColors[s.plan] || '#6b7280'}30`,
-                        borderRadius: 10,
-                        color: planColors[s.plan] || '#6b7280',
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {planIcon[s.plan]}
-                      <span>Plan {s.plan}</span>
-                      <strong style={{ fontSize: 16, marginLeft: 8 }}>{s.cantidad} org.</strong>
-                    </div>
-                  ))}
+              {/* Status & Subscriptions breakdown */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginBottom: 28 }}>
+                {/* Subscriptions breakdown */}
+                <div className="card" style={{ padding: '24px' }}>
+                  <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: 'var(--color-text)' }}>
+                    Planes de Suscripción
+                  </h2>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    {stats.suscripciones.map((s) => (
+                      <div
+                        key={s.plan}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          padding: '10px 14px',
+                          background: `${planColors[s.plan] || '#6b7280'}12`,
+                          border: `1px solid ${planColors[s.plan] || '#6b7280'}30`,
+                          borderRadius: 10,
+                          color: planColors[s.plan] || '#6b7280',
+                          fontSize: 13,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {planIcon[s.plan]}
+                        <span>Plan {s.plan}:</span>
+                        <strong style={{ fontSize: 15, marginLeft: 4 }}>{s.cantidad}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status breakdown */}
+                <div className="card" style={{ padding: '24px' }}>
+                  <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: 'var(--color-text)' }}>
+                    Estado del Servicio de Empresas
+                  </h2>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    {(stats.organizacionesPorEstado || [
+                      { status: 'ACTIVE', cantidad: stats.organizaciones.filter((o) => o.status === 'ACTIVE').length },
+                      { status: 'SUSPENDED', cantidad: stats.organizaciones.filter((o) => o.status === 'SUSPENDED').length },
+                    ]).map((item) => {
+                      const cfg = statusColors[item.status] || { bg: 'rgba(255,255,255,0.08)', text: '#fff', label: item.status };
+                      return (
+                        <div
+                          key={item.status}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '10px 14px',
+                            background: cfg.bg,
+                            border: `1px solid ${cfg.text}30`,
+                            borderRadius: 10,
+                            color: cfg.text,
+                            fontSize: 13,
+                            fontWeight: 600,
+                          }}
+                        >
+                          <span>{cfg.label}:</span>
+                          <strong style={{ fontSize: 15, marginLeft: 4 }}>{item.cantidad}</strong>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -551,14 +768,14 @@ export default function SaasAdminPage() {
                     onClick={() => setActiveTab('empresas')}
                     style={{ background: 'none', border: 'none', color: '#818cf8', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
                   >
-                    Ver todas →
+                    Ver todas ({stats.totalOrganizaciones}) →
                   </button>
                 </div>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                        {['Organización', 'NIT', 'Plan', 'Usuarios', 'Fincas', 'Registro'].map((col) => (
+                        {['Organización', 'NIT', 'Plan', 'Estado', 'Usuarios', 'Fincas', 'Registro'].map((col) => (
                           <th key={col} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--color-text-subtle)', fontWeight: 600, fontSize: 11 }}>
                             {col}
                           </th>
@@ -566,22 +783,30 @@ export default function SaasAdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.organizaciones.slice(0, 5).map((org) => (
-                        <tr key={org.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                          <td style={{ padding: '12px', color: 'var(--color-text)', fontWeight: 600 }}>{org.nombre}</td>
-                          <td style={{ padding: '12px', color: 'var(--color-text-muted)' }}>{org.nit || '—'}</td>
-                          <td style={{ padding: '12px' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: `${planColors[org.plan] || '#6b7280'}15`, borderRadius: 6, color: planColors[org.plan], fontSize: 11, fontWeight: 700 }}>
-                              {planIcon[org.plan]} {org.plan}
-                            </span>
-                          </td>
-                          <td style={{ padding: '12px', color: 'var(--color-text-muted)' }}>{org.usuarios}</td>
-                          <td style={{ padding: '12px', color: 'var(--color-text-muted)' }}>{org.fincas}</td>
-                          <td style={{ padding: '12px', color: 'var(--color-text-muted)' }}>
-                            {new Date(org.fechaRegistro).toLocaleDateString('es-CO')}
-                          </td>
-                        </tr>
-                      ))}
+                      {stats.organizaciones.slice(0, 5).map((org) => {
+                        const st = statusColors[org.status] || statusColors.ACTIVE;
+                        return (
+                          <tr key={org.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                            <td style={{ padding: '12px', color: 'var(--color-text)', fontWeight: 600 }}>{org.nombre}</td>
+                            <td style={{ padding: '12px', color: 'var(--color-text-muted)' }}>{org.nit || '—'}</td>
+                            <td style={{ padding: '12px' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: `${planColors[org.plan] || '#6b7280'}15`, borderRadius: 6, color: planColors[org.plan], fontSize: 11, fontWeight: 700 }}>
+                                {planIcon[org.plan]} {org.plan}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px' }}>
+                              <span style={{ display: 'inline-block', padding: '3px 8px', background: st.bg, color: st.text, borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                                {st.label}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px', color: 'var(--color-text-muted)' }}>{org.usuarios}</td>
+                            <td style={{ padding: '12px', color: 'var(--color-text-muted)' }}>{org.fincas}</td>
+                            <td style={{ padding: '12px', color: 'var(--color-text-muted)' }}>
+                              {new Date(org.fechaRegistro).toLocaleDateString('es-CO')}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -613,7 +838,7 @@ export default function SaasAdminPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                        {['Empresa / Organización', 'NIT', 'Plan Actual', 'Usuarios', 'Fincas', 'Acciones de Plan', 'Eliminar'].map((col) => (
+                        {['Empresa / Organización', 'NIT / Tipo', 'Plan Actual', 'Estado', 'Usuarios / Fincas', 'Servicio', 'Acciones'].map((col) => (
                           <th key={col} style={{ textAlign: 'left', padding: '12px 14px', color: 'var(--color-text-subtle)', fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>
                             {col}
                           </th>
@@ -621,45 +846,98 @@ export default function SaasAdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredOrgs.map((org) => (
-                        <tr key={org.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                          <td style={{ padding: '14px', fontWeight: 600, color: 'var(--color-text)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <Building2 size={16} color="#818cf8" />
-                              {org.nombre}
-                            </div>
-                          </td>
-                          <td style={{ padding: '14px', color: 'var(--color-text-muted)' }}>{org.nit || '—'}</td>
-                          <td style={{ padding: '14px' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: `${planColors[org.plan] || '#6b7280'}15`, border: `1px solid ${planColors[org.plan] || '#6b7280'}30`, borderRadius: 6, color: planColors[org.plan], fontSize: 11, fontWeight: 700 }}>
-                              {planIcon[org.plan]} {org.plan}
-                            </span>
-                          </td>
-                          <td style={{ padding: '14px', color: 'var(--color-text-muted)' }}>{org.usuarios} usuarios</td>
-                          <td style={{ padding: '14px', color: 'var(--color-text-muted)' }}>{org.fincas} fincas</td>
-                          <td style={{ padding: '14px' }}>
-                            <select
-                              value={org.plan}
-                              onChange={(e) => handleUpdateOrgPlan(org.id, e.target.value)}
-                              className="input-field"
-                              style={{ padding: '6px 10px', fontSize: 12, width: 'auto' }}
-                            >
-                              <option value="FREE">Plan FREE</option>
-                              <option value="PREMIUM">Plan PREMIUM</option>
-                              <option value="ENTERPRISE">Plan ENTERPRISE</option>
-                            </select>
-                          </td>
-                          <td style={{ padding: '14px' }}>
-                            <button
-                              onClick={() => handleDeleteOrg(org.id, org.nombre)}
-                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 6, borderRadius: 6 }}
-                              title="Eliminar Empresa"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {filteredOrgs.map((org) => {
+                        const st = statusColors[org.status] || statusColors.ACTIVE;
+                        const isSuspended = org.status === 'SUSPENDED';
+
+                        return (
+                          <tr key={org.id} style={{ borderBottom: '1px solid var(--color-border)', opacity: isSuspended ? 0.85 : 1 }}>
+                            <td style={{ padding: '14px', fontWeight: 600, color: 'var(--color-text)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <Building2 size={16} color="#818cf8" />
+                                <div>
+                                  <div>{org.nombre}</div>
+                                  {org.phone && <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 400 }}>{org.phone}</div>}
+                                </div>
+                              </div>
+                            </td>
+                            <td style={{ padding: '14px', color: 'var(--color-text-muted)' }}>
+                              <div>{org.nit || '—'}</div>
+                              <div style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>{org.orgType || 'EMPRESA'}</div>
+                            </td>
+                            <td style={{ padding: '14px' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: `${planColors[org.plan] || '#6b7280'}15`, border: `1px solid ${planColors[org.plan] || '#6b7280'}30`, borderRadius: 6, color: planColors[org.plan], fontSize: 11, fontWeight: 700 }}>
+                                {planIcon[org.plan]} {org.plan}
+                              </span>
+                            </td>
+                            <td style={{ padding: '14px' }}>
+                              <span style={{ display: 'inline-block', padding: '4px 9px', background: st.bg, color: st.text, border: `1px solid ${st.text}30`, borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                                {st.label}
+                              </span>
+                              {isSuspended && org.suspendedReason && (
+                                <div style={{ fontSize: 10, color: '#f87171', marginTop: 3, maxWidth: 160 }} title={org.suspendedReason}>
+                                  Motivo: {org.suspendedReason.length > 25 ? org.suspendedReason.slice(0, 25) + '...' : org.suspendedReason}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ padding: '14px', color: 'var(--color-text-muted)' }}>
+                              <div>{org.usuarios} usuarios</div>
+                              <div style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>{org.fincas} fincas</div>
+                            </td>
+                            <td style={{ padding: '14px' }}>
+                              {isSuspended ? (
+                                <button
+                                  onClick={() => handleReactivateOrg(org.id, org.nombre)}
+                                  className="btn-secondary"
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', fontSize: 12, color: '#34d399', borderColor: 'rgba(16,185,129,0.4)' }}
+                                  title="Reactivar acceso a la empresa"
+                                >
+                                  <PlayCircle size={14} />
+                                  <span>Reactivar</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setSuspendTarget({ id: org.id, name: org.nombre, reason: '' });
+                                    setShowSuspendModal(true);
+                                  }}
+                                  className="btn-secondary"
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', fontSize: 12, color: '#f87171', borderColor: 'rgba(239,68,68,0.4)' }}
+                                  title="Suspender acceso de esta organización"
+                                >
+                                  <AlertTriangle size={14} />
+                                  <span>Suspender</span>
+                                </button>
+                              )}
+                            </td>
+                            <td style={{ padding: '14px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <button
+                                  onClick={() => handleViewHistory(org.id, org.nombre)}
+                                  style={{ background: 'none', border: 'none', color: '#818cf8', cursor: 'pointer', padding: 6, borderRadius: 6 }}
+                                  title="Ver historial de suspensiones"
+                                >
+                                  <History size={16} />
+                                </button>
+                                <button
+                                  onClick={() => openEditOrgModal(org)}
+                                  style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: 6, borderRadius: 6 }}
+                                  title="Editar Empresa"
+                                >
+                                  <Edit3 size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteOrg(org.id, org.nombre)}
+                                  style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 6, borderRadius: 6 }}
+                                  title="Eliminar Empresa"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -775,7 +1053,7 @@ export default function SaasAdminPage() {
                   </h2>
                 </div>
                 <p style={{ color: 'var(--color-text-muted)', lineHeight: 1.6, fontSize: 14, marginBottom: 28 }}>
-                  AgroData Cesar implementa una separación estricta de responsabilidades. El <strong>SuperAdmin</strong> no participa en las operaciones agrícolas diarias de las empresas (como registrar cosechas o fertilizaciones), sino que gestiona el ecosistema de empresas y usuarios. Cada usuario accede únicamente a los módulos pertinentes a su rol dentro de su organización.
+                  AgroData implementa una separación estricta de responsabilidades y aislamiento multitenant. El <strong>SuperAdmin</strong> gobierna la infraestructura, supervisa el estado de servicio y asigna planes sin interactuar con las labores agronómicas de los clientes. El <strong>Propietario</strong> posee el control de su organización y administración de fincas.
                 </p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
@@ -783,16 +1061,23 @@ export default function SaasAdminPage() {
                     {
                       role: 'SUPERADMIN',
                       title: 'Administrador SaaS Global',
-                      desc: 'Gestión exclusiva de la plataforma: creación de empresas clientes, asignación de planes y supervisión de accesos.',
-                      modules: ['Panel SaaS', 'Gestión de Empresas', 'Gestión de Usuarios', 'Métricas Globales'],
+                      desc: 'Gestión de la plataforma: creación de empresas, asignación de planes, suspensión inmediata de servicio e historial de auditoría.',
+                      modules: ['Panel SaaS', 'Gestión de Empresas', 'Gestión de Usuarios', 'Suspensiones / Auditoría'],
                       badge: roleBadgeColors.SUPERADMIN,
                     },
                     {
-                      role: 'PROPIETARIO / ADMIN',
-                      title: 'Dueño de Empresa Agrícola',
-                      desc: 'Acceso total a todos los módulos operativos de su organización y gestión de colaboradores de sus fincas.',
-                      modules: ['Dashboard', 'Fincas y Lotes', 'Producciones', 'Inventario', 'Finanzas', 'Personal', 'Maquinaria', 'Clima', 'AgroIA', 'Organización'],
+                      role: 'PROPIETARIO',
+                      title: 'Titular de la Organización',
+                      desc: 'Acceso total a todos los módulos operativos, predios, finanzas y administración de colaboradores de su empresa.',
+                      modules: ['Dashboard', 'Fincas y Lotes', 'Producciones', 'Inventario', 'Finanzas', 'Personal', 'Maquinaria', 'Clima', 'AgroIA', 'Colaboradores'],
                       badge: roleBadgeColors.PROPIETARIO,
+                    },
+                    {
+                      role: 'ADMIN',
+                      title: 'Administrador Delegado',
+                      desc: 'Gestión operativa y administrativa de las fincas y recursos de la organización con permisos delegados.',
+                      modules: ['Dashboard', 'Fincas', 'Producciones', 'Inventario', 'Personal', 'Maquinaria', 'Clima'],
+                      badge: roleBadgeColors.ADMIN,
                     },
                     {
                       role: 'AGRONOMO',
@@ -805,7 +1090,7 @@ export default function SaasAdminPage() {
                       role: 'TRABAJADOR',
                       title: 'Operario de Campo',
                       desc: 'Registro de labores diarias en campo, consulta de maquinaria asignada y verificación climática.',
-                      modules: ['Dashboard', 'Producciones (Diarios)', 'Inventario', 'Maquinaria', 'Clima'],
+                      modules: ['Dashboard', 'Producciones', 'Inventario', 'Maquinaria', 'Clima'],
                       badge: roleBadgeColors.TRABAJADOR,
                     },
                   ].map((p) => (
@@ -922,10 +1207,35 @@ export default function SaasAdminPage() {
                     value={orgForm.subscription}
                     onChange={(e) => setOrgForm({ ...orgForm, subscription: e.target.value })}
                   >
-                    <option value="FREE">Plan FREE</option>
-                    <option value="PREMIUM">Plan PREMIUM</option>
-                    <option value="ENTERPRISE">Plan ENTERPRISE</option>
+                    <option value="FREE">Plan FREE (1 Finca, 2 Colaboradores)</option>
+                    <option value="PREMIUM">Plan PREMIUM (5 Fincas, 10 Colaboradores)</option>
+                    <option value="ENTERPRISE">Plan ENTERPRISE (Ilimitado)</option>
                   </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Teléfono de Contacto</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: +57 310 123 4567"
+                    className="input-field"
+                    style={{ marginTop: 6 }}
+                    value={orgForm.phone}
+                    onChange={(e) => setOrgForm({ ...orgForm, phone: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Dirección / Municipio</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Valledupar, Cesar"
+                    className="input-field"
+                    style={{ marginTop: 6 }}
+                    value={orgForm.address}
+                    onChange={(e) => setOrgForm({ ...orgForm, address: e.target.value })}
+                  />
                 </div>
               </div>
 
@@ -981,6 +1291,254 @@ export default function SaasAdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDITAR EMPRESA */}
+      {showEditOrgModal && (
+        <div className="modal-overlay" onClick={() => setShowEditOrgModal(false)}>
+          <div className="modal-content" style={{ maxWidth: 540 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Edit3 size={20} color="#818cf8" />
+                <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Editar Organización</h2>
+              </div>
+              <button onClick={() => setShowEditOrgModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditOrg} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Tipo de Organización *</label>
+                <select
+                  className="input-field"
+                  style={{ marginTop: 6 }}
+                  value={editOrgForm.orgType}
+                  onChange={(e) => setEditOrgForm({ ...editOrgForm, orgType: e.target.value })}
+                >
+                  <option value="EMPRESA">Empresa / Sociedad Comercial (Requiere NIT)</option>
+                  <option value="PERSONA_NATURAL">Persona Natural / Productor Individual</option>
+                  <option value="COOPERATIVA">Cooperativa / Asociación Agropecuaria (Requiere NIT)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Nombre de la Organización *</label>
+                <input
+                  type="text"
+                  required
+                  className="input-field"
+                  style={{ marginTop: 6 }}
+                  value={editOrgForm.name}
+                  onChange={(e) => setEditOrgForm({ ...editOrgForm, name: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                    {editOrgForm.orgType === 'PERSONA_NATURAL' ? 'Cédula / Documento (Opcional)' : 'NIT *'}
+                  </label>
+                  <input
+                    type="text"
+                    required={editOrgForm.orgType !== 'PERSONA_NATURAL'}
+                    className="input-field"
+                    style={{ marginTop: 6 }}
+                    value={editOrgForm.nit}
+                    onChange={(e) => setEditOrgForm({ ...editOrgForm, nit: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Plan de Suscripción</label>
+                  <select
+                    className="input-field"
+                    style={{ marginTop: 6 }}
+                    value={editOrgForm.subscription}
+                    onChange={(e) => setEditOrgForm({ ...editOrgForm, subscription: e.target.value })}
+                  >
+                    <option value="FREE">Plan FREE</option>
+                    <option value="PREMIUM">Plan PREMIUM</option>
+                    <option value="ENTERPRISE">Plan ENTERPRISE</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Estado del Servicio</label>
+                  <select
+                    className="input-field"
+                    style={{ marginTop: 6 }}
+                    value={editOrgForm.status}
+                    onChange={(e) => setEditOrgForm({ ...editOrgForm, status: e.target.value })}
+                  >
+                    <option value="ACTIVE">ACTIVA</option>
+                    <option value="SUSPENDED">SUSPENDIDA</option>
+                    <option value="PENDING">PENDIENTE</option>
+                    <option value="CANCELLED">CANCELADA</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Teléfono</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    style={{ marginTop: 6 }}
+                    value={editOrgForm.phone}
+                    onChange={(e) => setEditOrgForm({ ...editOrgForm, phone: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Dirección</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  style={{ marginTop: 6 }}
+                  value={editOrgForm.address}
+                  onChange={(e) => setEditOrgForm({ ...editOrgForm, address: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
+                <button type="button" onClick={() => setShowEditOrgModal(false)} className="btn-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary" style={{ background: '#6366f1' }}>
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: SUSPENDER SERVICIO */}
+      {showSuspendModal && (
+        <div className="modal-overlay" onClick={() => setShowSuspendModal(false)}>
+          <div className="modal-content" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#f87171' }}>
+                <AlertTriangle size={22} />
+                <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
+                  Suspender Organización
+                </h2>
+              </div>
+              <button onClick={() => setShowSuspendModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.5, marginBottom: 16 }}>
+              Estás a punto de suspender el acceso a la empresa <strong>{suspendTarget.name}</strong>. Todos sus usuarios quedarán bloqueados inmediatamente tanto en el inicio de sesión como en cualquier petición en curso.
+            </p>
+
+            <form onSubmit={handleSuspendOrg} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 600 }}>
+                  Motivo de la Suspensión *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Ej: Mora en el pago de suscripción mensual / Incumplimiento de términos..."
+                  className="input-field"
+                  style={{ marginTop: 6, width: '100%', resize: 'vertical' }}
+                  value={suspendTarget.reason}
+                  onChange={(e) => setSuspendTarget({ ...suspendTarget, reason: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
+                <button type="button" onClick={() => setShowSuspendModal(false)} className="btn-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary" style={{ background: '#ef4444' }}>
+                  Confirmar Suspensión
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: HISTORIAL DE SUSPENSIONES */}
+      {showHistoryModal && (
+        <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
+          <div className="modal-content" style={{ maxWidth: 580 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <History size={20} color="#818cf8" />
+                <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>
+                  Historial de Auditoría: {selectedOrgName}
+                </h2>
+              </div>
+              <button onClick={() => setShowHistoryModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {historyLoading ? (
+              <div style={{ padding: '30px 0', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                Cargando historial...
+              </div>
+            ) : historyRecords.length === 0 ? (
+              <div style={{ padding: '30px 0', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 14 }}>
+                No hay registros de suspensión o reactivación para esta empresa.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 360, overflowY: 'auto' }}>
+                {historyRecords.map((rec) => (
+                  <div
+                    key={rec.id}
+                    style={{
+                      padding: '12px 16px',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 8,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: 4,
+                          background: rec.action === 'SUSPENSION' ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+                          color: rec.action === 'SUSPENSION' ? '#f87171' : '#34d399',
+                        }}
+                      >
+                        {rec.action}
+                      </span>
+                      <span style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>
+                        {new Date(rec.createdAt).toLocaleString('es-CO')}
+                      </span>
+                    </div>
+                    {rec.reason && (
+                      <div style={{ fontSize: 13, color: 'var(--color-text)', marginTop: 4 }}>
+                        <strong>Motivo:</strong> {rec.reason}
+                      </div>
+                    )}
+                    <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                      Registrado por: {rec.createdBy || 'SuperAdmin'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+              <button type="button" onClick={() => setShowHistoryModal(false)} className="btn-secondary">
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1104,4 +1662,3 @@ export default function SaasAdminPage() {
     </div>
   );
 }
-

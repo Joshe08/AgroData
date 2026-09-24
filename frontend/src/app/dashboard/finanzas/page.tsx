@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { finanzasApi, fincasApi } from '@/lib/api';
 import { useToastStore } from '@/store/toastStore';
-import { DollarSign, Plus, Trash2, Search, X, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
+import { DollarSign, Plus, Trash2, Edit3, Search, X, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -25,18 +25,44 @@ interface Transaccion {
 interface Finca { id: string | number; nombre: string; lotes?: { producciones?: { id: string, name: string }[] }[] }
 interface Produccion { id: string | number; name: string; type: string }
 
-function TransaccionModal({ fincas, producciones, onClose, onSave }: { fincas: Finca[]; producciones: Produccion[]; onClose: () => void; onSave: () => void; }) {
+function TransaccionModal({
+  transaccion,
+  fincas,
+  producciones,
+  onClose,
+  onSave,
+}: {
+  transaccion?: Transaccion | null;
+  fincas: Finca[];
+  producciones: Produccion[];
+  onClose: () => void;
+  onSave: () => void;
+}) {
   const [form, setForm] = useState({
-    tipo: 'INGRESO',
-    categoria: '',
-    monto: '',
-    descripcion: '',
-    fecha: new Date().toISOString().split('T')[0],
-    fincaId: '',
+    tipo: transaccion?.tipo || 'INGRESO',
+    categoria: transaccion?.categoria || '',
+    monto: transaccion?.monto != null ? String(transaccion.monto) : '',
+    descripcion: transaccion?.descripcion || '',
+    fecha: transaccion?.fecha ? new Date(transaccion.fecha).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    fincaId: transaccion?.fincaId != null ? String(transaccion.fincaId) : '',
     produccionId: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (transaccion) {
+      setForm({
+        tipo: transaccion.tipo || 'INGRESO',
+        categoria: transaccion.categoria || '',
+        monto: transaccion.monto != null ? String(transaccion.monto) : '',
+        descripcion: transaccion.descripcion || '',
+        fecha: transaccion.fecha ? new Date(transaccion.fecha).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        fincaId: transaccion.fincaId != null ? String(transaccion.fincaId) : '',
+        produccionId: '',
+      });
+    }
+  }, [transaccion]);
 
   const categorias = {
     INGRESO: [
@@ -65,16 +91,26 @@ function TransaccionModal({ fincas, producciones, onClose, onSave }: { fincas: F
     setLoading(true);
     setError('');
     try {
-      await finanzasApi.create({
+      const payload = {
         ...form,
         monto: parseFloat(form.monto),
         fincaId: form.fincaId || undefined,
         produccionId: form.produccionId || undefined,
-      });
+      };
+
+      if (transaccion) {
+        await finanzasApi.update(transaccion.id, payload);
+        useToastStore.getState().success('Transacción actualizada exitosamente.');
+      } else {
+        await finanzasApi.create(payload);
+        useToastStore.getState().success('Transacción registrada exitosamente.');
+      }
       onSave();
       onClose();
-    } catch {
-      setError('Error al guardar la transacción');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al guardar la transacción';
+      setError(msg);
+      useToastStore.getState().error(msg);
     } finally {
       setLoading(false);
     }
@@ -84,7 +120,9 @@ function TransaccionModal({ fincas, producciones, onClose, onSave }: { fincas: F
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-          <h2 className="font-display" style={{ fontSize: 20, fontWeight: 700 }}>Nueva Transacción</h2>
+          <h2 className="font-display" style={{ fontSize: 20, fontWeight: 700 }}>
+            {transaccion ? 'Editar Transacción' : 'Nueva Transacción'}
+          </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={20} /></button>
         </div>
         {error && <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, color: '#f87171', fontSize: 13, marginBottom: 16 }}>{error}</div>}
@@ -138,7 +176,9 @@ function TransaccionModal({ fincas, producciones, onClose, onSave }: { fincas: F
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
             <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
-            <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Guardando...' : 'Registrar'}</button>
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Guardando...' : transaccion ? 'Actualizar Transacción' : 'Registrar'}
+            </button>
           </div>
         </form>
       </div>
@@ -157,6 +197,7 @@ export default function FinanzasPage() {
   const [filtroFechaDesde, setFiltroFechaDesde] = useState('');
   const [filtroFechaHasta, setFiltroFechaHasta] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingTransaccion, setEditingTransaccion] = useState<Transaccion | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     id: number | string | null;
@@ -261,7 +302,7 @@ export default function FinanzasPage() {
           <h1 className="font-display" style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Finanzas</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Control de ingresos y gastos</p>
         </div>
-        <button onClick={() => setModalOpen(true)} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }} id="btn-nueva-transaccion">
+        <button onClick={() => { setEditingTransaccion(null); setModalOpen(true); }} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }} id="btn-nueva-transaccion">
           <Plus size={18} /> Nueva Transacción
         </button>
       </div>
@@ -393,9 +434,21 @@ export default function FinanzasPage() {
                       {formatCOP(t.monto)}
                     </td>
                     <td>
-                      <button onClick={() => handleDelete(t)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}>
-                        <Trash2 size={14} />
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                        <button
+                          onClick={() => {
+                            setEditingTransaccion(t);
+                            setModalOpen(true);
+                          }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#818cf8', padding: 6, borderRadius: 8 }}
+                          title="Editar Transacción"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button onClick={() => handleDelete(t)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }} title="Eliminar Transacción">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -405,7 +458,18 @@ export default function FinanzasPage() {
         </div>
       )}
 
-      {modalOpen && <TransaccionModal fincas={fincas} producciones={producciones} onClose={() => setModalOpen(false)} onSave={loadData} />}
+      {modalOpen && (
+        <TransaccionModal
+          transaccion={editingTransaccion}
+          fincas={fincas}
+          producciones={producciones}
+          onClose={() => {
+            setModalOpen(false);
+            setEditingTransaccion(null);
+          }}
+          onSave={loadData}
+        />
+      )}
 
       {/* Modal Confirmación Eliminación Transacción */}
       <DeleteConfirmModal

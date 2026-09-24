@@ -46,6 +46,17 @@ export type FincaMinAggregateOutputType = {
   description: string | null
   latitude: number | null
   longitude: number | null
+  tipoExplotacion: string | null
+  estado: string | null
+  tipoSuelo: string | null
+  fuenteAgua: string | null
+  sistemaRiego: string | null
+  tipoAcceso: string | null
+  departamento: string | null
+  municipio: string | null
+  vereda: string | null
+  referenciaAcceso: string | null
+  actividades: string | null
   organizationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -59,6 +70,17 @@ export type FincaMaxAggregateOutputType = {
   description: string | null
   latitude: number | null
   longitude: number | null
+  tipoExplotacion: string | null
+  estado: string | null
+  tipoSuelo: string | null
+  fuenteAgua: string | null
+  sistemaRiego: string | null
+  tipoAcceso: string | null
+  departamento: string | null
+  municipio: string | null
+  vereda: string | null
+  referenciaAcceso: string | null
+  actividades: string | null
   organizationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -72,6 +94,17 @@ export type FincaCountAggregateOutputType = {
   description: number
   latitude: number
   longitude: number
+  tipoExplotacion: number
+  estado: number
+  tipoSuelo: number
+  fuenteAgua: number
+  sistemaRiego: number
+  tipoAcceso: number
+  departamento: number
+  municipio: number
+  vereda: number
+  referenciaAcceso: number
+  actividades: number
   organizationId: number
   createdAt: number
   updatedAt: number
@@ -99,6 +132,17 @@ export type FincaMinAggregateInputType = {
   description?: true
   latitude?: true
   longitude?: true
+  tipoExplotacion?: true
+  estado?: true
+  tipoSuelo?: true
+  fuenteAgua?: true
+  sistemaRiego?: true
+  tipoAcceso?: true
+  departamento?: true
+  municipio?: true
+  vereda?: true
+  referenciaAcceso?: true
+  actividades?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -112,6 +156,17 @@ export type FincaMaxAggregateInputType = {
   description?: true
   latitude?: true
   longitude?: true
+  tipoExplotacion?: true
+  estado?: true
+  tipoSuelo?: true
+  fuenteAgua?: true
+  sistemaRiego?: true
+  tipoAcceso?: true
+  departamento?: true
+  municipio?: true
+  vereda?: true
+  referenciaAcceso?: true
+  actividades?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -125,6 +180,17 @@ export type FincaCountAggregateInputType = {
   description?: true
   latitude?: true
   longitude?: true
+  tipoExplotacion?: true
+  estado?: true
+  tipoSuelo?: true
+  fuenteAgua?: true
+  sistemaRiego?: true
+  tipoAcceso?: true
+  departamento?: true
+  municipio?: true
+  vereda?: true
+  referenciaAcceso?: true
+  actividades?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -225,6 +291,17 @@ export type FincaGroupByOutputType = {
   description: string | null
   latitude: number | null
   longitude: number | null
+  tipoExplotacion: string | null
+  estado: string | null
+  tipoSuelo: string | null
+  fuenteAgua: string | null
+  sistemaRiego: string | null
+  tipoAcceso: string | null
+  departamento: string | null
+  municipio: string | null
+  vereda: string | null
+  referenciaAcceso: string | null
+  actividades: string | null
   organizationId: string
   createdAt: Date
   updatedAt: Date
@@ -261,6 +338,17 @@ export type FincaWhereInput = {
   description?: Prisma.StringNullableFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
+  tipoExplotacion?: Prisma.StringNullableFilter<"Finca"> | string | null
+  estado?: Prisma.StringNullableFilter<"Finca"> | string | null
+  tipoSuelo?: Prisma.StringNullableFilter<"Finca"> | string | null
+  fuenteAgua?: Prisma.StringNullableFilter<"Finca"> | string | null
+  sistemaRiego?: Prisma.StringNullableFilter<"Finca"> | string | null
+  tipoAcceso?: Prisma.StringNullableFilter<"Finca"> | string | null
+  departamento?: Prisma.StringNullableFilter<"Finca"> | string | null
+  municipio?: Prisma.StringNullableFilter<"Finca"> | string | null
+  vereda?: Prisma.StringNullableFilter<"Finca"> | string | null
+  referenciaAcceso?: Prisma.StringNullableFilter<"Finca"> | string | null
+  actividades?: Prisma.StringNullableFilter<"Finca"> | string | null
   organizationId?: Prisma.StringFilter<"Finca"> | string
   createdAt?: Prisma.DateTimeFilter<"Finca"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Finca"> | Date | string
@@ -268,6 +356,8 @@ export type FincaWhereInput = {
   lotes?: Prisma.LoteListRelationFilter
   inventarios?: Prisma.InventarioListRelationFilter
   finanzas?: Prisma.FinanzaListRelationFilter
+  empleados?: Prisma.EmpleadoListRelationFilter
+  maquinarias?: Prisma.MaquinariaListRelationFilter
 }
 
 export type FincaOrderByWithRelationInput = {
@@ -278,6 +368,17 @@ export type FincaOrderByWithRelationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  tipoExplotacion?: Prisma.SortOrderInput | Prisma.SortOrder
+  estado?: Prisma.SortOrderInput | Prisma.SortOrder
+  tipoSuelo?: Prisma.SortOrderInput | Prisma.SortOrder
+  fuenteAgua?: Prisma.SortOrderInput | Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrderInput | Prisma.SortOrder
+  tipoAcceso?: Prisma.SortOrderInput | Prisma.SortOrder
+  departamento?: Prisma.SortOrderInput | Prisma.SortOrder
+  municipio?: Prisma.SortOrderInput | Prisma.SortOrder
+  vereda?: Prisma.SortOrderInput | Prisma.SortOrder
+  referenciaAcceso?: Prisma.SortOrderInput | Prisma.SortOrder
+  actividades?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -285,6 +386,8 @@ export type FincaOrderByWithRelationInput = {
   lotes?: Prisma.LoteOrderByRelationAggregateInput
   inventarios?: Prisma.InventarioOrderByRelationAggregateInput
   finanzas?: Prisma.FinanzaOrderByRelationAggregateInput
+  empleados?: Prisma.EmpleadoOrderByRelationAggregateInput
+  maquinarias?: Prisma.MaquinariaOrderByRelationAggregateInput
 }
 
 export type FincaWhereUniqueInput = Prisma.AtLeast<{
@@ -298,6 +401,17 @@ export type FincaWhereUniqueInput = Prisma.AtLeast<{
   description?: Prisma.StringNullableFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
+  tipoExplotacion?: Prisma.StringNullableFilter<"Finca"> | string | null
+  estado?: Prisma.StringNullableFilter<"Finca"> | string | null
+  tipoSuelo?: Prisma.StringNullableFilter<"Finca"> | string | null
+  fuenteAgua?: Prisma.StringNullableFilter<"Finca"> | string | null
+  sistemaRiego?: Prisma.StringNullableFilter<"Finca"> | string | null
+  tipoAcceso?: Prisma.StringNullableFilter<"Finca"> | string | null
+  departamento?: Prisma.StringNullableFilter<"Finca"> | string | null
+  municipio?: Prisma.StringNullableFilter<"Finca"> | string | null
+  vereda?: Prisma.StringNullableFilter<"Finca"> | string | null
+  referenciaAcceso?: Prisma.StringNullableFilter<"Finca"> | string | null
+  actividades?: Prisma.StringNullableFilter<"Finca"> | string | null
   organizationId?: Prisma.StringFilter<"Finca"> | string
   createdAt?: Prisma.DateTimeFilter<"Finca"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Finca"> | Date | string
@@ -305,6 +419,8 @@ export type FincaWhereUniqueInput = Prisma.AtLeast<{
   lotes?: Prisma.LoteListRelationFilter
   inventarios?: Prisma.InventarioListRelationFilter
   finanzas?: Prisma.FinanzaListRelationFilter
+  empleados?: Prisma.EmpleadoListRelationFilter
+  maquinarias?: Prisma.MaquinariaListRelationFilter
 }, "id">
 
 export type FincaOrderByWithAggregationInput = {
@@ -315,6 +431,17 @@ export type FincaOrderByWithAggregationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  tipoExplotacion?: Prisma.SortOrderInput | Prisma.SortOrder
+  estado?: Prisma.SortOrderInput | Prisma.SortOrder
+  tipoSuelo?: Prisma.SortOrderInput | Prisma.SortOrder
+  fuenteAgua?: Prisma.SortOrderInput | Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrderInput | Prisma.SortOrder
+  tipoAcceso?: Prisma.SortOrderInput | Prisma.SortOrder
+  departamento?: Prisma.SortOrderInput | Prisma.SortOrder
+  municipio?: Prisma.SortOrderInput | Prisma.SortOrder
+  vereda?: Prisma.SortOrderInput | Prisma.SortOrder
+  referenciaAcceso?: Prisma.SortOrderInput | Prisma.SortOrder
+  actividades?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -336,6 +463,17 @@ export type FincaScalarWhereWithAggregatesInput = {
   description?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableWithAggregatesFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableWithAggregatesFilter<"Finca"> | number | null
+  tipoExplotacion?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  estado?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  tipoSuelo?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  fuenteAgua?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  sistemaRiego?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  tipoAcceso?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  departamento?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  municipio?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  vereda?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  referenciaAcceso?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
+  actividades?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
   organizationId?: Prisma.StringWithAggregatesFilter<"Finca"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Finca"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Finca"> | Date | string
@@ -349,12 +487,25 @@ export type FincaCreateInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   organization: Prisma.OrganizationCreateNestedOneWithoutFincasInput
   lotes?: Prisma.LoteCreateNestedManyWithoutFincaInput
   inventarios?: Prisma.InventarioCreateNestedManyWithoutFincaInput
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutFincaInput
 }
 
 export type FincaUncheckedCreateInput = {
@@ -365,12 +516,25 @@ export type FincaUncheckedCreateInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
   lotes?: Prisma.LoteUncheckedCreateNestedManyWithoutFincaInput
   inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutFincaInput
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutFincaInput
 }
 
 export type FincaUpdateInput = {
@@ -381,12 +545,25 @@ export type FincaUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutFincasNestedInput
   lotes?: Prisma.LoteUpdateManyWithoutFincaNestedInput
   inventarios?: Prisma.InventarioUpdateManyWithoutFincaNestedInput
   finanzas?: Prisma.FinanzaUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaUncheckedUpdateInput = {
@@ -397,12 +574,25 @@ export type FincaUncheckedUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lotes?: Prisma.LoteUncheckedUpdateManyWithoutFincaNestedInput
   inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutFincaNestedInput
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaCreateManyInput = {
@@ -413,6 +603,17 @@ export type FincaCreateManyInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -426,6 +627,17 @@ export type FincaUpdateManyMutationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -438,6 +650,17 @@ export type FincaUncheckedUpdateManyInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -461,6 +684,17 @@ export type FincaCountOrderByAggregateInput = {
   description?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
+  tipoExplotacion?: Prisma.SortOrder
+  estado?: Prisma.SortOrder
+  tipoSuelo?: Prisma.SortOrder
+  fuenteAgua?: Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrder
+  tipoAcceso?: Prisma.SortOrder
+  departamento?: Prisma.SortOrder
+  municipio?: Prisma.SortOrder
+  vereda?: Prisma.SortOrder
+  referenciaAcceso?: Prisma.SortOrder
+  actividades?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -480,6 +714,17 @@ export type FincaMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
+  tipoExplotacion?: Prisma.SortOrder
+  estado?: Prisma.SortOrder
+  tipoSuelo?: Prisma.SortOrder
+  fuenteAgua?: Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrder
+  tipoAcceso?: Prisma.SortOrder
+  departamento?: Prisma.SortOrder
+  municipio?: Prisma.SortOrder
+  vereda?: Prisma.SortOrder
+  referenciaAcceso?: Prisma.SortOrder
+  actividades?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -493,6 +738,17 @@ export type FincaMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
+  tipoExplotacion?: Prisma.SortOrder
+  estado?: Prisma.SortOrder
+  tipoSuelo?: Prisma.SortOrder
+  fuenteAgua?: Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrder
+  tipoAcceso?: Prisma.SortOrder
+  departamento?: Prisma.SortOrder
+  municipio?: Prisma.SortOrder
+  vereda?: Prisma.SortOrder
+  referenciaAcceso?: Prisma.SortOrder
+  actividades?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -618,6 +874,38 @@ export type FincaUpdateOneWithoutFinanzasNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.FincaUpdateToOneWithWhereWithoutFinanzasInput, Prisma.FincaUpdateWithoutFinanzasInput>, Prisma.FincaUncheckedUpdateWithoutFinanzasInput>
 }
 
+export type FincaCreateNestedOneWithoutEmpleadosInput = {
+  create?: Prisma.XOR<Prisma.FincaCreateWithoutEmpleadosInput, Prisma.FincaUncheckedCreateWithoutEmpleadosInput>
+  connectOrCreate?: Prisma.FincaCreateOrConnectWithoutEmpleadosInput
+  connect?: Prisma.FincaWhereUniqueInput
+}
+
+export type FincaUpdateOneWithoutEmpleadosNestedInput = {
+  create?: Prisma.XOR<Prisma.FincaCreateWithoutEmpleadosInput, Prisma.FincaUncheckedCreateWithoutEmpleadosInput>
+  connectOrCreate?: Prisma.FincaCreateOrConnectWithoutEmpleadosInput
+  upsert?: Prisma.FincaUpsertWithoutEmpleadosInput
+  disconnect?: Prisma.FincaWhereInput | boolean
+  delete?: Prisma.FincaWhereInput | boolean
+  connect?: Prisma.FincaWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.FincaUpdateToOneWithWhereWithoutEmpleadosInput, Prisma.FincaUpdateWithoutEmpleadosInput>, Prisma.FincaUncheckedUpdateWithoutEmpleadosInput>
+}
+
+export type FincaCreateNestedOneWithoutMaquinariasInput = {
+  create?: Prisma.XOR<Prisma.FincaCreateWithoutMaquinariasInput, Prisma.FincaUncheckedCreateWithoutMaquinariasInput>
+  connectOrCreate?: Prisma.FincaCreateOrConnectWithoutMaquinariasInput
+  connect?: Prisma.FincaWhereUniqueInput
+}
+
+export type FincaUpdateOneWithoutMaquinariasNestedInput = {
+  create?: Prisma.XOR<Prisma.FincaCreateWithoutMaquinariasInput, Prisma.FincaUncheckedCreateWithoutMaquinariasInput>
+  connectOrCreate?: Prisma.FincaCreateOrConnectWithoutMaquinariasInput
+  upsert?: Prisma.FincaUpsertWithoutMaquinariasInput
+  disconnect?: Prisma.FincaWhereInput | boolean
+  delete?: Prisma.FincaWhereInput | boolean
+  connect?: Prisma.FincaWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.FincaUpdateToOneWithWhereWithoutMaquinariasInput, Prisma.FincaUpdateWithoutMaquinariasInput>, Prisma.FincaUncheckedUpdateWithoutMaquinariasInput>
+}
+
 export type FincaCreateWithoutOrganizationInput = {
   id?: string
   name: string
@@ -626,11 +914,24 @@ export type FincaCreateWithoutOrganizationInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   lotes?: Prisma.LoteCreateNestedManyWithoutFincaInput
   inventarios?: Prisma.InventarioCreateNestedManyWithoutFincaInput
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutFincaInput
 }
 
 export type FincaUncheckedCreateWithoutOrganizationInput = {
@@ -641,11 +942,24 @@ export type FincaUncheckedCreateWithoutOrganizationInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   lotes?: Prisma.LoteUncheckedCreateNestedManyWithoutFincaInput
   inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutFincaInput
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutFincaInput
 }
 
 export type FincaCreateOrConnectWithoutOrganizationInput = {
@@ -684,6 +998,17 @@ export type FincaScalarWhereInput = {
   description?: Prisma.StringNullableFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
+  tipoExplotacion?: Prisma.StringNullableFilter<"Finca"> | string | null
+  estado?: Prisma.StringNullableFilter<"Finca"> | string | null
+  tipoSuelo?: Prisma.StringNullableFilter<"Finca"> | string | null
+  fuenteAgua?: Prisma.StringNullableFilter<"Finca"> | string | null
+  sistemaRiego?: Prisma.StringNullableFilter<"Finca"> | string | null
+  tipoAcceso?: Prisma.StringNullableFilter<"Finca"> | string | null
+  departamento?: Prisma.StringNullableFilter<"Finca"> | string | null
+  municipio?: Prisma.StringNullableFilter<"Finca"> | string | null
+  vereda?: Prisma.StringNullableFilter<"Finca"> | string | null
+  referenciaAcceso?: Prisma.StringNullableFilter<"Finca"> | string | null
+  actividades?: Prisma.StringNullableFilter<"Finca"> | string | null
   organizationId?: Prisma.StringFilter<"Finca"> | string
   createdAt?: Prisma.DateTimeFilter<"Finca"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Finca"> | Date | string
@@ -697,11 +1022,24 @@ export type FincaCreateWithoutLotesInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   organization: Prisma.OrganizationCreateNestedOneWithoutFincasInput
   inventarios?: Prisma.InventarioCreateNestedManyWithoutFincaInput
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutFincaInput
 }
 
 export type FincaUncheckedCreateWithoutLotesInput = {
@@ -712,11 +1050,24 @@ export type FincaUncheckedCreateWithoutLotesInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
   inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutFincaInput
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutFincaInput
 }
 
 export type FincaCreateOrConnectWithoutLotesInput = {
@@ -743,11 +1094,24 @@ export type FincaUpdateWithoutLotesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutFincasNestedInput
   inventarios?: Prisma.InventarioUpdateManyWithoutFincaNestedInput
   finanzas?: Prisma.FinanzaUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaUncheckedUpdateWithoutLotesInput = {
@@ -758,11 +1122,24 @@ export type FincaUncheckedUpdateWithoutLotesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutFincaNestedInput
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaCreateWithoutInventariosInput = {
@@ -773,11 +1150,24 @@ export type FincaCreateWithoutInventariosInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   organization: Prisma.OrganizationCreateNestedOneWithoutFincasInput
   lotes?: Prisma.LoteCreateNestedManyWithoutFincaInput
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutFincaInput
 }
 
 export type FincaUncheckedCreateWithoutInventariosInput = {
@@ -788,11 +1178,24 @@ export type FincaUncheckedCreateWithoutInventariosInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
   lotes?: Prisma.LoteUncheckedCreateNestedManyWithoutFincaInput
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutFincaInput
 }
 
 export type FincaCreateOrConnectWithoutInventariosInput = {
@@ -819,11 +1222,24 @@ export type FincaUpdateWithoutInventariosInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutFincasNestedInput
   lotes?: Prisma.LoteUpdateManyWithoutFincaNestedInput
   finanzas?: Prisma.FinanzaUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaUncheckedUpdateWithoutInventariosInput = {
@@ -834,11 +1250,24 @@ export type FincaUncheckedUpdateWithoutInventariosInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lotes?: Prisma.LoteUncheckedUpdateManyWithoutFincaNestedInput
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaCreateWithoutFinanzasInput = {
@@ -849,11 +1278,24 @@ export type FincaCreateWithoutFinanzasInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   organization: Prisma.OrganizationCreateNestedOneWithoutFincasInput
   lotes?: Prisma.LoteCreateNestedManyWithoutFincaInput
   inventarios?: Prisma.InventarioCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutFincaInput
 }
 
 export type FincaUncheckedCreateWithoutFinanzasInput = {
@@ -864,11 +1306,24 @@ export type FincaUncheckedCreateWithoutFinanzasInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
   lotes?: Prisma.LoteUncheckedCreateNestedManyWithoutFincaInput
   inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutFincaInput
 }
 
 export type FincaCreateOrConnectWithoutFinanzasInput = {
@@ -895,11 +1350,24 @@ export type FincaUpdateWithoutFinanzasInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutFincasNestedInput
   lotes?: Prisma.LoteUpdateManyWithoutFincaNestedInput
   inventarios?: Prisma.InventarioUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaUncheckedUpdateWithoutFinanzasInput = {
@@ -910,11 +1378,280 @@ export type FincaUncheckedUpdateWithoutFinanzasInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lotes?: Prisma.LoteUncheckedUpdateManyWithoutFincaNestedInput
   inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutFincaNestedInput
+}
+
+export type FincaCreateWithoutEmpleadosInput = {
+  id?: string
+  name: string
+  location: string
+  area: number
+  description?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  organization: Prisma.OrganizationCreateNestedOneWithoutFincasInput
+  lotes?: Prisma.LoteCreateNestedManyWithoutFincaInput
+  inventarios?: Prisma.InventarioCreateNestedManyWithoutFincaInput
+  finanzas?: Prisma.FinanzaCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutFincaInput
+}
+
+export type FincaUncheckedCreateWithoutEmpleadosInput = {
+  id?: string
+  name: string
+  location: string
+  area: number
+  description?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lotes?: Prisma.LoteUncheckedCreateNestedManyWithoutFincaInput
+  inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutFincaInput
+  finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutFincaInput
+  maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutFincaInput
+}
+
+export type FincaCreateOrConnectWithoutEmpleadosInput = {
+  where: Prisma.FincaWhereUniqueInput
+  create: Prisma.XOR<Prisma.FincaCreateWithoutEmpleadosInput, Prisma.FincaUncheckedCreateWithoutEmpleadosInput>
+}
+
+export type FincaUpsertWithoutEmpleadosInput = {
+  update: Prisma.XOR<Prisma.FincaUpdateWithoutEmpleadosInput, Prisma.FincaUncheckedUpdateWithoutEmpleadosInput>
+  create: Prisma.XOR<Prisma.FincaCreateWithoutEmpleadosInput, Prisma.FincaUncheckedCreateWithoutEmpleadosInput>
+  where?: Prisma.FincaWhereInput
+}
+
+export type FincaUpdateToOneWithWhereWithoutEmpleadosInput = {
+  where?: Prisma.FincaWhereInput
+  data: Prisma.XOR<Prisma.FincaUpdateWithoutEmpleadosInput, Prisma.FincaUncheckedUpdateWithoutEmpleadosInput>
+}
+
+export type FincaUpdateWithoutEmpleadosInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  location?: Prisma.StringFieldUpdateOperationsInput | string
+  area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.OrganizationUpdateOneRequiredWithoutFincasNestedInput
+  lotes?: Prisma.LoteUpdateManyWithoutFincaNestedInput
+  inventarios?: Prisma.InventarioUpdateManyWithoutFincaNestedInput
+  finanzas?: Prisma.FinanzaUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUpdateManyWithoutFincaNestedInput
+}
+
+export type FincaUncheckedUpdateWithoutEmpleadosInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  location?: Prisma.StringFieldUpdateOperationsInput | string
+  area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lotes?: Prisma.LoteUncheckedUpdateManyWithoutFincaNestedInput
+  inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutFincaNestedInput
+  finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutFincaNestedInput
+}
+
+export type FincaCreateWithoutMaquinariasInput = {
+  id?: string
+  name: string
+  location: string
+  area: number
+  description?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  organization: Prisma.OrganizationCreateNestedOneWithoutFincasInput
+  lotes?: Prisma.LoteCreateNestedManyWithoutFincaInput
+  inventarios?: Prisma.InventarioCreateNestedManyWithoutFincaInput
+  finanzas?: Prisma.FinanzaCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoCreateNestedManyWithoutFincaInput
+}
+
+export type FincaUncheckedCreateWithoutMaquinariasInput = {
+  id?: string
+  name: string
+  location: string
+  area: number
+  description?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lotes?: Prisma.LoteUncheckedCreateNestedManyWithoutFincaInput
+  inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutFincaInput
+  finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutFincaInput
+  empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutFincaInput
+}
+
+export type FincaCreateOrConnectWithoutMaquinariasInput = {
+  where: Prisma.FincaWhereUniqueInput
+  create: Prisma.XOR<Prisma.FincaCreateWithoutMaquinariasInput, Prisma.FincaUncheckedCreateWithoutMaquinariasInput>
+}
+
+export type FincaUpsertWithoutMaquinariasInput = {
+  update: Prisma.XOR<Prisma.FincaUpdateWithoutMaquinariasInput, Prisma.FincaUncheckedUpdateWithoutMaquinariasInput>
+  create: Prisma.XOR<Prisma.FincaCreateWithoutMaquinariasInput, Prisma.FincaUncheckedCreateWithoutMaquinariasInput>
+  where?: Prisma.FincaWhereInput
+}
+
+export type FincaUpdateToOneWithWhereWithoutMaquinariasInput = {
+  where?: Prisma.FincaWhereInput
+  data: Prisma.XOR<Prisma.FincaUpdateWithoutMaquinariasInput, Prisma.FincaUncheckedUpdateWithoutMaquinariasInput>
+}
+
+export type FincaUpdateWithoutMaquinariasInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  location?: Prisma.StringFieldUpdateOperationsInput | string
+  area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.OrganizationUpdateOneRequiredWithoutFincasNestedInput
+  lotes?: Prisma.LoteUpdateManyWithoutFincaNestedInput
+  inventarios?: Prisma.InventarioUpdateManyWithoutFincaNestedInput
+  finanzas?: Prisma.FinanzaUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUpdateManyWithoutFincaNestedInput
+}
+
+export type FincaUncheckedUpdateWithoutMaquinariasInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  location?: Prisma.StringFieldUpdateOperationsInput | string
+  area?: Prisma.FloatFieldUpdateOperationsInput | number
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lotes?: Prisma.LoteUncheckedUpdateManyWithoutFincaNestedInput
+  inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutFincaNestedInput
+  finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaCreateManyOrganizationInput = {
@@ -925,6 +1662,17 @@ export type FincaCreateManyOrganizationInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  tipoExplotacion?: string | null
+  estado?: string | null
+  tipoSuelo?: string | null
+  fuenteAgua?: string | null
+  sistemaRiego?: string | null
+  tipoAcceso?: string | null
+  departamento?: string | null
+  municipio?: string | null
+  vereda?: string | null
+  referenciaAcceso?: string | null
+  actividades?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -937,11 +1685,24 @@ export type FincaUpdateWithoutOrganizationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lotes?: Prisma.LoteUpdateManyWithoutFincaNestedInput
   inventarios?: Prisma.InventarioUpdateManyWithoutFincaNestedInput
   finanzas?: Prisma.FinanzaUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaUncheckedUpdateWithoutOrganizationInput = {
@@ -952,11 +1713,24 @@ export type FincaUncheckedUpdateWithoutOrganizationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lotes?: Prisma.LoteUncheckedUpdateManyWithoutFincaNestedInput
   inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutFincaNestedInput
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutFincaNestedInput
+  empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutFincaNestedInput
+  maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutFincaNestedInput
 }
 
 export type FincaUncheckedUpdateManyWithoutOrganizationInput = {
@@ -967,6 +1741,17 @@ export type FincaUncheckedUpdateManyWithoutOrganizationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fuenteAgua?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tipoAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  departamento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  municipio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vereda?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenciaAcceso?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  actividades?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -980,12 +1765,16 @@ export type FincaCountOutputType = {
   lotes: number
   inventarios: number
   finanzas: number
+  empleados: number
+  maquinarias: number
 }
 
 export type FincaCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   lotes?: boolean | FincaCountOutputTypeCountLotesArgs
   inventarios?: boolean | FincaCountOutputTypeCountInventariosArgs
   finanzas?: boolean | FincaCountOutputTypeCountFinanzasArgs
+  empleados?: boolean | FincaCountOutputTypeCountEmpleadosArgs
+  maquinarias?: boolean | FincaCountOutputTypeCountMaquinariasArgs
 }
 
 /**
@@ -1019,6 +1808,20 @@ export type FincaCountOutputTypeCountFinanzasArgs<ExtArgs extends runtime.Types.
   where?: Prisma.FinanzaWhereInput
 }
 
+/**
+ * FincaCountOutputType without action
+ */
+export type FincaCountOutputTypeCountEmpleadosArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.EmpleadoWhereInput
+}
+
+/**
+ * FincaCountOutputType without action
+ */
+export type FincaCountOutputTypeCountMaquinariasArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MaquinariaWhereInput
+}
+
 
 export type FincaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1028,6 +1831,17 @@ export type FincaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   description?: boolean
   latitude?: boolean
   longitude?: boolean
+  tipoExplotacion?: boolean
+  estado?: boolean
+  tipoSuelo?: boolean
+  fuenteAgua?: boolean
+  sistemaRiego?: boolean
+  tipoAcceso?: boolean
+  departamento?: boolean
+  municipio?: boolean
+  vereda?: boolean
+  referenciaAcceso?: boolean
+  actividades?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1035,6 +1849,8 @@ export type FincaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   lotes?: boolean | Prisma.Finca$lotesArgs<ExtArgs>
   inventarios?: boolean | Prisma.Finca$inventariosArgs<ExtArgs>
   finanzas?: boolean | Prisma.Finca$finanzasArgs<ExtArgs>
+  empleados?: boolean | Prisma.Finca$empleadosArgs<ExtArgs>
+  maquinarias?: boolean | Prisma.Finca$maquinariasArgs<ExtArgs>
   _count?: boolean | Prisma.FincaCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["finca"]>
 
@@ -1046,6 +1862,17 @@ export type FincaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   description?: boolean
   latitude?: boolean
   longitude?: boolean
+  tipoExplotacion?: boolean
+  estado?: boolean
+  tipoSuelo?: boolean
+  fuenteAgua?: boolean
+  sistemaRiego?: boolean
+  tipoAcceso?: boolean
+  departamento?: boolean
+  municipio?: boolean
+  vereda?: boolean
+  referenciaAcceso?: boolean
+  actividades?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1060,6 +1887,17 @@ export type FincaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   description?: boolean
   latitude?: boolean
   longitude?: boolean
+  tipoExplotacion?: boolean
+  estado?: boolean
+  tipoSuelo?: boolean
+  fuenteAgua?: boolean
+  sistemaRiego?: boolean
+  tipoAcceso?: boolean
+  departamento?: boolean
+  municipio?: boolean
+  vereda?: boolean
+  referenciaAcceso?: boolean
+  actividades?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1074,17 +1912,30 @@ export type FincaSelectScalar = {
   description?: boolean
   latitude?: boolean
   longitude?: boolean
+  tipoExplotacion?: boolean
+  estado?: boolean
+  tipoSuelo?: boolean
+  fuenteAgua?: boolean
+  sistemaRiego?: boolean
+  tipoAcceso?: boolean
+  departamento?: boolean
+  municipio?: boolean
+  vereda?: boolean
+  referenciaAcceso?: boolean
+  actividades?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type FincaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "location" | "area" | "description" | "latitude" | "longitude" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["finca"]>
+export type FincaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "location" | "area" | "description" | "latitude" | "longitude" | "tipoExplotacion" | "estado" | "tipoSuelo" | "fuenteAgua" | "sistemaRiego" | "tipoAcceso" | "departamento" | "municipio" | "vereda" | "referenciaAcceso" | "actividades" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["finca"]>
 export type FincaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
   lotes?: boolean | Prisma.Finca$lotesArgs<ExtArgs>
   inventarios?: boolean | Prisma.Finca$inventariosArgs<ExtArgs>
   finanzas?: boolean | Prisma.Finca$finanzasArgs<ExtArgs>
+  empleados?: boolean | Prisma.Finca$empleadosArgs<ExtArgs>
+  maquinarias?: boolean | Prisma.Finca$maquinariasArgs<ExtArgs>
   _count?: boolean | Prisma.FincaCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type FincaIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1101,6 +1952,8 @@ export type $FincaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     lotes: Prisma.$LotePayload<ExtArgs>[]
     inventarios: Prisma.$InventarioPayload<ExtArgs>[]
     finanzas: Prisma.$FinanzaPayload<ExtArgs>[]
+    empleados: Prisma.$EmpleadoPayload<ExtArgs>[]
+    maquinarias: Prisma.$MaquinariaPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1110,6 +1963,17 @@ export type $FincaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     description: string | null
     latitude: number | null
     longitude: number | null
+    tipoExplotacion: string | null
+    estado: string | null
+    tipoSuelo: string | null
+    fuenteAgua: string | null
+    sistemaRiego: string | null
+    tipoAcceso: string | null
+    departamento: string | null
+    municipio: string | null
+    vereda: string | null
+    referenciaAcceso: string | null
+    actividades: string | null
     organizationId: string
     createdAt: Date
     updatedAt: Date
@@ -1511,6 +2375,8 @@ export interface Prisma__FincaClient<T, Null = never, ExtArgs extends runtime.Ty
   lotes<T extends Prisma.Finca$lotesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Finca$lotesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   inventarios<T extends Prisma.Finca$inventariosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Finca$inventariosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InventarioPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   finanzas<T extends Prisma.Finca$finanzasArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Finca$finanzasArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FinanzaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  empleados<T extends Prisma.Finca$empleadosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Finca$empleadosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmpleadoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  maquinarias<T extends Prisma.Finca$maquinariasArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Finca$maquinariasArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MaquinariaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1547,6 +2413,17 @@ export interface FincaFieldRefs {
   readonly description: Prisma.FieldRef<"Finca", 'String'>
   readonly latitude: Prisma.FieldRef<"Finca", 'Float'>
   readonly longitude: Prisma.FieldRef<"Finca", 'Float'>
+  readonly tipoExplotacion: Prisma.FieldRef<"Finca", 'String'>
+  readonly estado: Prisma.FieldRef<"Finca", 'String'>
+  readonly tipoSuelo: Prisma.FieldRef<"Finca", 'String'>
+  readonly fuenteAgua: Prisma.FieldRef<"Finca", 'String'>
+  readonly sistemaRiego: Prisma.FieldRef<"Finca", 'String'>
+  readonly tipoAcceso: Prisma.FieldRef<"Finca", 'String'>
+  readonly departamento: Prisma.FieldRef<"Finca", 'String'>
+  readonly municipio: Prisma.FieldRef<"Finca", 'String'>
+  readonly vereda: Prisma.FieldRef<"Finca", 'String'>
+  readonly referenciaAcceso: Prisma.FieldRef<"Finca", 'String'>
+  readonly actividades: Prisma.FieldRef<"Finca", 'String'>
   readonly organizationId: Prisma.FieldRef<"Finca", 'String'>
   readonly createdAt: Prisma.FieldRef<"Finca", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Finca", 'DateTime'>
@@ -2018,6 +2895,54 @@ export type Finca$finanzasArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.FinanzaScalarFieldEnum | Prisma.FinanzaScalarFieldEnum[]
+}
+
+/**
+ * Finca.empleados
+ */
+export type Finca$empleadosArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Empleado
+   */
+  select?: Prisma.EmpleadoSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Empleado
+   */
+  omit?: Prisma.EmpleadoOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EmpleadoInclude<ExtArgs> | null
+  where?: Prisma.EmpleadoWhereInput
+  orderBy?: Prisma.EmpleadoOrderByWithRelationInput | Prisma.EmpleadoOrderByWithRelationInput[]
+  cursor?: Prisma.EmpleadoWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.EmpleadoScalarFieldEnum | Prisma.EmpleadoScalarFieldEnum[]
+}
+
+/**
+ * Finca.maquinarias
+ */
+export type Finca$maquinariasArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Maquinaria
+   */
+  select?: Prisma.MaquinariaSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Maquinaria
+   */
+  omit?: Prisma.MaquinariaOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MaquinariaInclude<ExtArgs> | null
+  where?: Prisma.MaquinariaWhereInput
+  orderBy?: Prisma.MaquinariaOrderByWithRelationInput | Prisma.MaquinariaOrderByWithRelationInput[]
+  cursor?: Prisma.MaquinariaWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MaquinariaScalarFieldEnum | Prisma.MaquinariaScalarFieldEnum[]
 }
 
 /**

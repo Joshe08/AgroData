@@ -37,10 +37,16 @@ export type EmpleadoSumAggregateOutputType = {
 export type EmpleadoMinAggregateOutputType = {
   id: string | null
   name: string | null
+  lastName: string | null
+  documento: string | null
+  email: string | null
+  phone: string | null
   role: string | null
   status: string | null
   dailyRate: number | null
-  phone: string | null
+  fechaIngreso: Date | null
+  fincaId: string | null
+  notes: string | null
   organizationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -49,10 +55,16 @@ export type EmpleadoMinAggregateOutputType = {
 export type EmpleadoMaxAggregateOutputType = {
   id: string | null
   name: string | null
+  lastName: string | null
+  documento: string | null
+  email: string | null
+  phone: string | null
   role: string | null
   status: string | null
   dailyRate: number | null
-  phone: string | null
+  fechaIngreso: Date | null
+  fincaId: string | null
+  notes: string | null
   organizationId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -61,10 +73,16 @@ export type EmpleadoMaxAggregateOutputType = {
 export type EmpleadoCountAggregateOutputType = {
   id: number
   name: number
+  lastName: number
+  documento: number
+  email: number
+  phone: number
   role: number
   status: number
   dailyRate: number
-  phone: number
+  fechaIngreso: number
+  fincaId: number
+  notes: number
   organizationId: number
   createdAt: number
   updatedAt: number
@@ -83,10 +101,16 @@ export type EmpleadoSumAggregateInputType = {
 export type EmpleadoMinAggregateInputType = {
   id?: true
   name?: true
+  lastName?: true
+  documento?: true
+  email?: true
+  phone?: true
   role?: true
   status?: true
   dailyRate?: true
-  phone?: true
+  fechaIngreso?: true
+  fincaId?: true
+  notes?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -95,10 +119,16 @@ export type EmpleadoMinAggregateInputType = {
 export type EmpleadoMaxAggregateInputType = {
   id?: true
   name?: true
+  lastName?: true
+  documento?: true
+  email?: true
+  phone?: true
   role?: true
   status?: true
   dailyRate?: true
-  phone?: true
+  fechaIngreso?: true
+  fincaId?: true
+  notes?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -107,10 +137,16 @@ export type EmpleadoMaxAggregateInputType = {
 export type EmpleadoCountAggregateInputType = {
   id?: true
   name?: true
+  lastName?: true
+  documento?: true
+  email?: true
+  phone?: true
   role?: true
   status?: true
   dailyRate?: true
-  phone?: true
+  fechaIngreso?: true
+  fincaId?: true
+  notes?: true
   organizationId?: true
   createdAt?: true
   updatedAt?: true
@@ -206,10 +242,16 @@ export type EmpleadoGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
 export type EmpleadoGroupByOutputType = {
   id: string
   name: string
+  lastName: string | null
+  documento: string | null
+  email: string | null
+  phone: string | null
   role: string
   status: string
   dailyRate: number | null
-  phone: string | null
+  fechaIngreso: Date | null
+  fincaId: string | null
+  notes: string | null
   organizationId: string
   createdAt: Date
   updatedAt: Date
@@ -241,26 +283,40 @@ export type EmpleadoWhereInput = {
   NOT?: Prisma.EmpleadoWhereInput | Prisma.EmpleadoWhereInput[]
   id?: Prisma.StringFilter<"Empleado"> | string
   name?: Prisma.StringFilter<"Empleado"> | string
+  lastName?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  documento?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  email?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  phone?: Prisma.StringNullableFilter<"Empleado"> | string | null
   role?: Prisma.StringFilter<"Empleado"> | string
   status?: Prisma.StringFilter<"Empleado"> | string
   dailyRate?: Prisma.FloatNullableFilter<"Empleado"> | number | null
-  phone?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  fechaIngreso?: Prisma.DateTimeNullableFilter<"Empleado"> | Date | string | null
+  fincaId?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  notes?: Prisma.StringNullableFilter<"Empleado"> | string | null
   organizationId?: Prisma.StringFilter<"Empleado"> | string
   createdAt?: Prisma.DateTimeFilter<"Empleado"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Empleado"> | Date | string
+  finca?: Prisma.XOR<Prisma.FincaNullableScalarRelationFilter, Prisma.FincaWhereInput> | null
   organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>
 }
 
 export type EmpleadoOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  lastName?: Prisma.SortOrderInput | Prisma.SortOrder
+  documento?: Prisma.SortOrderInput | Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
+  phone?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
   dailyRate?: Prisma.SortOrderInput | Prisma.SortOrder
-  phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  fechaIngreso?: Prisma.SortOrderInput | Prisma.SortOrder
+  fincaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  notes?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  finca?: Prisma.FincaOrderByWithRelationInput
   organization?: Prisma.OrganizationOrderByWithRelationInput
 }
 
@@ -270,23 +326,36 @@ export type EmpleadoWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.EmpleadoWhereInput[]
   NOT?: Prisma.EmpleadoWhereInput | Prisma.EmpleadoWhereInput[]
   name?: Prisma.StringFilter<"Empleado"> | string
+  lastName?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  documento?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  email?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  phone?: Prisma.StringNullableFilter<"Empleado"> | string | null
   role?: Prisma.StringFilter<"Empleado"> | string
   status?: Prisma.StringFilter<"Empleado"> | string
   dailyRate?: Prisma.FloatNullableFilter<"Empleado"> | number | null
-  phone?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  fechaIngreso?: Prisma.DateTimeNullableFilter<"Empleado"> | Date | string | null
+  fincaId?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  notes?: Prisma.StringNullableFilter<"Empleado"> | string | null
   organizationId?: Prisma.StringFilter<"Empleado"> | string
   createdAt?: Prisma.DateTimeFilter<"Empleado"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Empleado"> | Date | string
+  finca?: Prisma.XOR<Prisma.FincaNullableScalarRelationFilter, Prisma.FincaWhereInput> | null
   organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>
 }, "id">
 
 export type EmpleadoOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  lastName?: Prisma.SortOrderInput | Prisma.SortOrder
+  documento?: Prisma.SortOrderInput | Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
+  phone?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
   dailyRate?: Prisma.SortOrderInput | Prisma.SortOrder
-  phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  fechaIngreso?: Prisma.SortOrderInput | Prisma.SortOrder
+  fincaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  notes?: Prisma.SortOrderInput | Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -303,10 +372,16 @@ export type EmpleadoScalarWhereWithAggregatesInput = {
   NOT?: Prisma.EmpleadoScalarWhereWithAggregatesInput | Prisma.EmpleadoScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Empleado"> | string
   name?: Prisma.StringWithAggregatesFilter<"Empleado"> | string
+  lastName?: Prisma.StringNullableWithAggregatesFilter<"Empleado"> | string | null
+  documento?: Prisma.StringNullableWithAggregatesFilter<"Empleado"> | string | null
+  email?: Prisma.StringNullableWithAggregatesFilter<"Empleado"> | string | null
+  phone?: Prisma.StringNullableWithAggregatesFilter<"Empleado"> | string | null
   role?: Prisma.StringWithAggregatesFilter<"Empleado"> | string
   status?: Prisma.StringWithAggregatesFilter<"Empleado"> | string
   dailyRate?: Prisma.FloatNullableWithAggregatesFilter<"Empleado"> | number | null
-  phone?: Prisma.StringNullableWithAggregatesFilter<"Empleado"> | string | null
+  fechaIngreso?: Prisma.DateTimeNullableWithAggregatesFilter<"Empleado"> | Date | string | null
+  fincaId?: Prisma.StringNullableWithAggregatesFilter<"Empleado"> | string | null
+  notes?: Prisma.StringNullableWithAggregatesFilter<"Empleado"> | string | null
   organizationId?: Prisma.StringWithAggregatesFilter<"Empleado"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Empleado"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Empleado"> | Date | string
@@ -315,22 +390,34 @@ export type EmpleadoScalarWhereWithAggregatesInput = {
 export type EmpleadoCreateInput = {
   id?: string
   name: string
+  lastName?: string | null
+  documento?: string | null
+  email?: string | null
+  phone?: string | null
   role: string
   status?: string
   dailyRate?: number | null
-  phone?: string | null
+  fechaIngreso?: Date | string | null
+  notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  finca?: Prisma.FincaCreateNestedOneWithoutEmpleadosInput
   organization: Prisma.OrganizationCreateNestedOneWithoutEmpleadosInput
 }
 
 export type EmpleadoUncheckedCreateInput = {
   id?: string
   name: string
+  lastName?: string | null
+  documento?: string | null
+  email?: string | null
+  phone?: string | null
   role: string
   status?: string
   dailyRate?: number | null
-  phone?: string | null
+  fechaIngreso?: Date | string | null
+  fincaId?: string | null
+  notes?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -339,22 +426,34 @@ export type EmpleadoUncheckedCreateInput = {
 export type EmpleadoUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finca?: Prisma.FincaUpdateOneWithoutEmpleadosNestedInput
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutEmpleadosNestedInput
 }
 
 export type EmpleadoUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -363,10 +462,16 @@ export type EmpleadoUncheckedUpdateInput = {
 export type EmpleadoCreateManyInput = {
   id?: string
   name: string
+  lastName?: string | null
+  documento?: string | null
+  email?: string | null
+  phone?: string | null
   role: string
   status?: string
   dailyRate?: number | null
-  phone?: string | null
+  fechaIngreso?: Date | string | null
+  fincaId?: string | null
+  notes?: string | null
   organizationId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -375,10 +480,15 @@ export type EmpleadoCreateManyInput = {
 export type EmpleadoUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -386,10 +496,16 @@ export type EmpleadoUpdateManyMutationInput = {
 export type EmpleadoUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -408,10 +524,16 @@ export type EmpleadoOrderByRelationAggregateInput = {
 export type EmpleadoCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  lastName?: Prisma.SortOrder
+  documento?: Prisma.SortOrder
+  email?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
   dailyRate?: Prisma.SortOrder
-  phone?: Prisma.SortOrder
+  fechaIngreso?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
+  notes?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -424,10 +546,16 @@ export type EmpleadoAvgOrderByAggregateInput = {
 export type EmpleadoMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  lastName?: Prisma.SortOrder
+  documento?: Prisma.SortOrder
+  email?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
   dailyRate?: Prisma.SortOrder
-  phone?: Prisma.SortOrder
+  fechaIngreso?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
+  notes?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -436,10 +564,16 @@ export type EmpleadoMaxOrderByAggregateInput = {
 export type EmpleadoMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  lastName?: Prisma.SortOrder
+  documento?: Prisma.SortOrder
+  email?: Prisma.SortOrder
+  phone?: Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
   dailyRate?: Prisma.SortOrder
-  phone?: Prisma.SortOrder
+  fechaIngreso?: Prisma.SortOrder
+  fincaId?: Prisma.SortOrder
+  notes?: Prisma.SortOrder
   organizationId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -491,24 +625,78 @@ export type EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput = {
   deleteMany?: Prisma.EmpleadoScalarWhereInput | Prisma.EmpleadoScalarWhereInput[]
 }
 
+export type EmpleadoCreateNestedManyWithoutFincaInput = {
+  create?: Prisma.XOR<Prisma.EmpleadoCreateWithoutFincaInput, Prisma.EmpleadoUncheckedCreateWithoutFincaInput> | Prisma.EmpleadoCreateWithoutFincaInput[] | Prisma.EmpleadoUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.EmpleadoCreateOrConnectWithoutFincaInput | Prisma.EmpleadoCreateOrConnectWithoutFincaInput[]
+  createMany?: Prisma.EmpleadoCreateManyFincaInputEnvelope
+  connect?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+}
+
+export type EmpleadoUncheckedCreateNestedManyWithoutFincaInput = {
+  create?: Prisma.XOR<Prisma.EmpleadoCreateWithoutFincaInput, Prisma.EmpleadoUncheckedCreateWithoutFincaInput> | Prisma.EmpleadoCreateWithoutFincaInput[] | Prisma.EmpleadoUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.EmpleadoCreateOrConnectWithoutFincaInput | Prisma.EmpleadoCreateOrConnectWithoutFincaInput[]
+  createMany?: Prisma.EmpleadoCreateManyFincaInputEnvelope
+  connect?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+}
+
+export type EmpleadoUpdateManyWithoutFincaNestedInput = {
+  create?: Prisma.XOR<Prisma.EmpleadoCreateWithoutFincaInput, Prisma.EmpleadoUncheckedCreateWithoutFincaInput> | Prisma.EmpleadoCreateWithoutFincaInput[] | Prisma.EmpleadoUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.EmpleadoCreateOrConnectWithoutFincaInput | Prisma.EmpleadoCreateOrConnectWithoutFincaInput[]
+  upsert?: Prisma.EmpleadoUpsertWithWhereUniqueWithoutFincaInput | Prisma.EmpleadoUpsertWithWhereUniqueWithoutFincaInput[]
+  createMany?: Prisma.EmpleadoCreateManyFincaInputEnvelope
+  set?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+  disconnect?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+  delete?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+  connect?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+  update?: Prisma.EmpleadoUpdateWithWhereUniqueWithoutFincaInput | Prisma.EmpleadoUpdateWithWhereUniqueWithoutFincaInput[]
+  updateMany?: Prisma.EmpleadoUpdateManyWithWhereWithoutFincaInput | Prisma.EmpleadoUpdateManyWithWhereWithoutFincaInput[]
+  deleteMany?: Prisma.EmpleadoScalarWhereInput | Prisma.EmpleadoScalarWhereInput[]
+}
+
+export type EmpleadoUncheckedUpdateManyWithoutFincaNestedInput = {
+  create?: Prisma.XOR<Prisma.EmpleadoCreateWithoutFincaInput, Prisma.EmpleadoUncheckedCreateWithoutFincaInput> | Prisma.EmpleadoCreateWithoutFincaInput[] | Prisma.EmpleadoUncheckedCreateWithoutFincaInput[]
+  connectOrCreate?: Prisma.EmpleadoCreateOrConnectWithoutFincaInput | Prisma.EmpleadoCreateOrConnectWithoutFincaInput[]
+  upsert?: Prisma.EmpleadoUpsertWithWhereUniqueWithoutFincaInput | Prisma.EmpleadoUpsertWithWhereUniqueWithoutFincaInput[]
+  createMany?: Prisma.EmpleadoCreateManyFincaInputEnvelope
+  set?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+  disconnect?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+  delete?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+  connect?: Prisma.EmpleadoWhereUniqueInput | Prisma.EmpleadoWhereUniqueInput[]
+  update?: Prisma.EmpleadoUpdateWithWhereUniqueWithoutFincaInput | Prisma.EmpleadoUpdateWithWhereUniqueWithoutFincaInput[]
+  updateMany?: Prisma.EmpleadoUpdateManyWithWhereWithoutFincaInput | Prisma.EmpleadoUpdateManyWithWhereWithoutFincaInput[]
+  deleteMany?: Prisma.EmpleadoScalarWhereInput | Prisma.EmpleadoScalarWhereInput[]
+}
+
 export type EmpleadoCreateWithoutOrganizationInput = {
   id?: string
   name: string
+  lastName?: string | null
+  documento?: string | null
+  email?: string | null
+  phone?: string | null
   role: string
   status?: string
   dailyRate?: number | null
-  phone?: string | null
+  fechaIngreso?: Date | string | null
+  notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  finca?: Prisma.FincaCreateNestedOneWithoutEmpleadosInput
 }
 
 export type EmpleadoUncheckedCreateWithoutOrganizationInput = {
   id?: string
   name: string
+  lastName?: string | null
+  documento?: string | null
+  email?: string | null
+  phone?: string | null
   role: string
   status?: string
   dailyRate?: number | null
-  phone?: string | null
+  fechaIngreso?: Date | string | null
+  fincaId?: string | null
+  notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -544,22 +732,93 @@ export type EmpleadoScalarWhereInput = {
   NOT?: Prisma.EmpleadoScalarWhereInput | Prisma.EmpleadoScalarWhereInput[]
   id?: Prisma.StringFilter<"Empleado"> | string
   name?: Prisma.StringFilter<"Empleado"> | string
+  lastName?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  documento?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  email?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  phone?: Prisma.StringNullableFilter<"Empleado"> | string | null
   role?: Prisma.StringFilter<"Empleado"> | string
   status?: Prisma.StringFilter<"Empleado"> | string
   dailyRate?: Prisma.FloatNullableFilter<"Empleado"> | number | null
-  phone?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  fechaIngreso?: Prisma.DateTimeNullableFilter<"Empleado"> | Date | string | null
+  fincaId?: Prisma.StringNullableFilter<"Empleado"> | string | null
+  notes?: Prisma.StringNullableFilter<"Empleado"> | string | null
   organizationId?: Prisma.StringFilter<"Empleado"> | string
   createdAt?: Prisma.DateTimeFilter<"Empleado"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Empleado"> | Date | string
 }
 
-export type EmpleadoCreateManyOrganizationInput = {
+export type EmpleadoCreateWithoutFincaInput = {
   id?: string
   name: string
+  lastName?: string | null
+  documento?: string | null
+  email?: string | null
+  phone?: string | null
   role: string
   status?: string
   dailyRate?: number | null
+  fechaIngreso?: Date | string | null
+  notes?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  organization: Prisma.OrganizationCreateNestedOneWithoutEmpleadosInput
+}
+
+export type EmpleadoUncheckedCreateWithoutFincaInput = {
+  id?: string
+  name: string
+  lastName?: string | null
+  documento?: string | null
+  email?: string | null
   phone?: string | null
+  role: string
+  status?: string
+  dailyRate?: number | null
+  fechaIngreso?: Date | string | null
+  notes?: string | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type EmpleadoCreateOrConnectWithoutFincaInput = {
+  where: Prisma.EmpleadoWhereUniqueInput
+  create: Prisma.XOR<Prisma.EmpleadoCreateWithoutFincaInput, Prisma.EmpleadoUncheckedCreateWithoutFincaInput>
+}
+
+export type EmpleadoCreateManyFincaInputEnvelope = {
+  data: Prisma.EmpleadoCreateManyFincaInput | Prisma.EmpleadoCreateManyFincaInput[]
+}
+
+export type EmpleadoUpsertWithWhereUniqueWithoutFincaInput = {
+  where: Prisma.EmpleadoWhereUniqueInput
+  update: Prisma.XOR<Prisma.EmpleadoUpdateWithoutFincaInput, Prisma.EmpleadoUncheckedUpdateWithoutFincaInput>
+  create: Prisma.XOR<Prisma.EmpleadoCreateWithoutFincaInput, Prisma.EmpleadoUncheckedCreateWithoutFincaInput>
+}
+
+export type EmpleadoUpdateWithWhereUniqueWithoutFincaInput = {
+  where: Prisma.EmpleadoWhereUniqueInput
+  data: Prisma.XOR<Prisma.EmpleadoUpdateWithoutFincaInput, Prisma.EmpleadoUncheckedUpdateWithoutFincaInput>
+}
+
+export type EmpleadoUpdateManyWithWhereWithoutFincaInput = {
+  where: Prisma.EmpleadoScalarWhereInput
+  data: Prisma.XOR<Prisma.EmpleadoUpdateManyMutationInput, Prisma.EmpleadoUncheckedUpdateManyWithoutFincaInput>
+}
+
+export type EmpleadoCreateManyOrganizationInput = {
+  id?: string
+  name: string
+  lastName?: string | null
+  documento?: string | null
+  email?: string | null
+  phone?: string | null
+  role: string
+  status?: string
+  dailyRate?: number | null
+  fechaIngreso?: Date | string | null
+  fincaId?: string | null
+  notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -567,21 +826,33 @@ export type EmpleadoCreateManyOrganizationInput = {
 export type EmpleadoUpdateWithoutOrganizationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finca?: Prisma.FincaUpdateOneWithoutEmpleadosNestedInput
 }
 
 export type EmpleadoUncheckedUpdateWithoutOrganizationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -589,10 +860,84 @@ export type EmpleadoUncheckedUpdateWithoutOrganizationInput = {
 export type EmpleadoUncheckedUpdateManyWithoutOrganizationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fincaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type EmpleadoCreateManyFincaInput = {
+  id?: string
+  name: string
+  lastName?: string | null
+  documento?: string | null
+  email?: string | null
+  phone?: string | null
+  role: string
+  status?: string
+  dailyRate?: number | null
+  fechaIngreso?: Date | string | null
+  notes?: string | null
+  organizationId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type EmpleadoUpdateWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.OrganizationUpdateOneRequiredWithoutEmpleadosNestedInput
+}
+
+export type EmpleadoUncheckedUpdateWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type EmpleadoUncheckedUpdateManyWithoutFincaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documento?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  dailyRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  fechaIngreso?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -602,77 +947,114 @@ export type EmpleadoUncheckedUpdateManyWithoutOrganizationInput = {
 export type EmpleadoSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  lastName?: boolean
+  documento?: boolean
+  email?: boolean
+  phone?: boolean
   role?: boolean
   status?: boolean
   dailyRate?: boolean
-  phone?: boolean
+  fechaIngreso?: boolean
+  fincaId?: boolean
+  notes?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Empleado$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["empleado"]>
 
 export type EmpleadoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  lastName?: boolean
+  documento?: boolean
+  email?: boolean
+  phone?: boolean
   role?: boolean
   status?: boolean
   dailyRate?: boolean
-  phone?: boolean
+  fechaIngreso?: boolean
+  fincaId?: boolean
+  notes?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Empleado$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["empleado"]>
 
 export type EmpleadoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  lastName?: boolean
+  documento?: boolean
+  email?: boolean
+  phone?: boolean
   role?: boolean
   status?: boolean
   dailyRate?: boolean
-  phone?: boolean
+  fechaIngreso?: boolean
+  fincaId?: boolean
+  notes?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  finca?: boolean | Prisma.Empleado$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["empleado"]>
 
 export type EmpleadoSelectScalar = {
   id?: boolean
   name?: boolean
+  lastName?: boolean
+  documento?: boolean
+  email?: boolean
+  phone?: boolean
   role?: boolean
   status?: boolean
   dailyRate?: boolean
-  phone?: boolean
+  fechaIngreso?: boolean
+  fincaId?: boolean
+  notes?: boolean
   organizationId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type EmpleadoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "role" | "status" | "dailyRate" | "phone" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["empleado"]>
+export type EmpleadoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "lastName" | "documento" | "email" | "phone" | "role" | "status" | "dailyRate" | "fechaIngreso" | "fincaId" | "notes" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["empleado"]>
 export type EmpleadoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Empleado$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 export type EmpleadoIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Empleado$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 export type EmpleadoIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  finca?: boolean | Prisma.Empleado$fincaArgs<ExtArgs>
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
 }
 
 export type $EmpleadoPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Empleado"
   objects: {
+    finca: Prisma.$FincaPayload<ExtArgs> | null
     organization: Prisma.$OrganizationPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
+    lastName: string | null
+    documento: string | null
+    email: string | null
+    phone: string | null
     role: string
     status: string
     dailyRate: number | null
-    phone: string | null
+    fechaIngreso: Date | null
+    fincaId: string | null
+    notes: string | null
     organizationId: string
     createdAt: Date
     updatedAt: Date
@@ -1070,6 +1452,7 @@ readonly fields: EmpleadoFieldRefs;
  */
 export interface Prisma__EmpleadoClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  finca<T extends Prisma.Empleado$fincaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Empleado$fincaArgs<ExtArgs>>): Prisma.Prisma__FincaClient<runtime.Types.Result.GetResult<Prisma.$FincaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   organization<T extends Prisma.OrganizationDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.OrganizationDefaultArgs<ExtArgs>>): Prisma.Prisma__OrganizationClient<runtime.Types.Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1102,10 +1485,16 @@ export interface Prisma__EmpleadoClient<T, Null = never, ExtArgs extends runtime
 export interface EmpleadoFieldRefs {
   readonly id: Prisma.FieldRef<"Empleado", 'String'>
   readonly name: Prisma.FieldRef<"Empleado", 'String'>
+  readonly lastName: Prisma.FieldRef<"Empleado", 'String'>
+  readonly documento: Prisma.FieldRef<"Empleado", 'String'>
+  readonly email: Prisma.FieldRef<"Empleado", 'String'>
+  readonly phone: Prisma.FieldRef<"Empleado", 'String'>
   readonly role: Prisma.FieldRef<"Empleado", 'String'>
   readonly status: Prisma.FieldRef<"Empleado", 'String'>
   readonly dailyRate: Prisma.FieldRef<"Empleado", 'Float'>
-  readonly phone: Prisma.FieldRef<"Empleado", 'String'>
+  readonly fechaIngreso: Prisma.FieldRef<"Empleado", 'DateTime'>
+  readonly fincaId: Prisma.FieldRef<"Empleado", 'String'>
+  readonly notes: Prisma.FieldRef<"Empleado", 'String'>
   readonly organizationId: Prisma.FieldRef<"Empleado", 'String'>
   readonly createdAt: Prisma.FieldRef<"Empleado", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Empleado", 'DateTime'>
@@ -1505,6 +1894,25 @@ export type EmpleadoDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many Empleados to delete.
    */
   limit?: number
+}
+
+/**
+ * Empleado.finca
+ */
+export type Empleado$fincaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Finca
+   */
+  select?: Prisma.FincaSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Finca
+   */
+  omit?: Prisma.FincaOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FincaInclude<ExtArgs> | null
+  where?: Prisma.FincaWhereInput
 }
 
 /**

@@ -270,19 +270,17 @@ export class ClimaService {
         alerts,
       };
     } catch (err) {
-      this.logger.warn(`Open-Meteo fallback for dashboard weather: ${err}`);
+      this.logger.error(`Error consultando clima real en Open-Meteo: ${err}`);
       return {
         location: 'Cesar, Colombia',
-        temperature: 31.5,
-        humidity: 65,
-        rainProbability: 20,
-        windSpeed: 12,
-        conditions: 'Parcialmente nublado',
-        forecast: [
-          { day: 'Hoy', temp: 32, conditions: 'Parcialmente nublado', rainProb: 20 },
-          { day: 'Mañana', temp: 33, conditions: 'Despejado', rainProb: 15 },
-        ],
+        temperature: null,
+        humidity: null,
+        rainProbability: null,
+        windSpeed: null,
+        conditions: 'Servicio meteorológico temporalmente no disponible',
+        forecast: [],
         alerts: [],
+        error: 'No se pudo obtener información meteorológica en tiempo real. Verifica la conexión a internet.',
       };
     }
   }

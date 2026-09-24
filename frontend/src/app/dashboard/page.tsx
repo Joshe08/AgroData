@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { fincasApi, finanzasApi, produccionesApi, inventarioApi } from '@/lib/api';
 import {
@@ -48,11 +49,32 @@ interface StatCardProps {
   icon: React.ReactNode;
   color: 'green' | 'blue' | 'amber' | 'red' | 'purple' | 'cyan';
   trend?: { value: number; positive: boolean };
+  onClick?: () => void;
 }
 
-function StatCard({ label, value, subtitle, icon, color, trend }: StatCardProps) {
+function StatCard({ label, value, subtitle, icon, color, trend, onClick }: StatCardProps) {
   return (
-    <div className={`card stat-card-${color}`} style={{ padding: '20px 24px' }}>
+    <div
+      onClick={onClick}
+      className={`card stat-card-${color}`}
+      style={{
+        padding: '20px 24px',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
+      }}
+      onMouseEnter={(e) => {
+        if (onClick) {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.15)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (onClick) {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'none';
+        }
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
         <div
           className={`stat-icon-${color}`}
@@ -89,6 +111,11 @@ function StatCard({ label, value, subtitle, icon, color, trend }: StatCardProps)
       <div style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>{label}</div>
       {subtitle && (
         <div style={{ fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 4 }}>{subtitle}</div>
+      )}
+      {onClick && (
+        <div style={{ fontSize: 11, color: 'var(--color-primary)', fontWeight: 600, marginTop: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
+          Ver detalle &rarr;
+        </div>
       )}
     </div>
   );
@@ -127,6 +154,7 @@ function formatCOP(value: number) {
 
 /** Dashboard para AGRONOMO: enfocado en producción y campo */
 function AgronomoDashboard({ data }: { data: DashboardData }) {
+  const router = useRouter();
   const { loading, fincas, producciones, alertasInventario, distribProds } = data;
 
   return (
@@ -138,14 +166,27 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
-          <StatCard label="Fincas a cargo" value={fincas} icon={<MapPin size={20} />} color="green" />
-          <StatCard label="Cultivos activos" value={producciones} icon={<Sprout size={20} />} color="blue" />
+          <StatCard
+            label="Fincas a cargo"
+            value={fincas}
+            icon={<MapPin size={20} />}
+            color="green"
+            onClick={() => router.push('/dashboard/fincas')}
+          />
+          <StatCard
+            label="Cultivos activos"
+            value={producciones}
+            icon={<Sprout size={20} />}
+            color="blue"
+            onClick={() => router.push('/dashboard/producciones')}
+          />
           <StatCard
             label="Alertas de insumos"
             value={alertasInventario}
             subtitle={alertasInventario > 0 ? 'Requieren atención' : 'Stock en orden'}
             icon={<Package size={20} />}
             color={alertasInventario > 0 ? 'red' : 'green'}
+            onClick={() => router.push('/dashboard/inventario')}
           />
         </div>
       )}
@@ -234,6 +275,7 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
 
 /** Dashboard para TRABAJADOR: operacional */
 function TrabajadorDashboard({ data }: { data: DashboardData }) {
+  const router = useRouter();
   const { loading, fincas, producciones, alertasInventario } = data;
 
   return (
@@ -244,14 +286,27 @@ function TrabajadorDashboard({ data }: { data: DashboardData }) {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
-          <StatCard label="Predios asignados" value={fincas} icon={<MapPin size={20} />} color="green" />
-          <StatCard label="Cultivos en marcha" value={producciones} icon={<Sprout size={20} />} color="blue" />
+          <StatCard
+            label="Predios asignados"
+            value={fincas}
+            icon={<MapPin size={20} />}
+            color="green"
+            onClick={() => router.push('/dashboard/fincas')}
+          />
+          <StatCard
+            label="Cultivos en marcha"
+            value={producciones}
+            icon={<Sprout size={20} />}
+            color="blue"
+            onClick={() => router.push('/dashboard/producciones')}
+          />
           <StatCard
             label="Alertas de stock"
             value={alertasInventario}
             subtitle={alertasInventario > 0 ? 'Informar al responsable' : 'Sin alertas'}
             icon={<Package size={20} />}
             color={alertasInventario > 0 ? 'red' : 'green'}
+            onClick={() => router.push('/dashboard/inventario')}
           />
         </div>
       )}
@@ -296,6 +351,7 @@ function TrabajadorDashboard({ data }: { data: DashboardData }) {
 
 /** Dashboard para CONTADOR: financiero */
 function ContadorDashboard({ data }: { data: DashboardData }) {
+  const router = useRouter();
   const { loading, ingresos, gastos, resumenFinanciero } = data;
   const balance = ingresos - gastos;
 
@@ -307,16 +363,37 @@ function ContadorDashboard({ data }: { data: DashboardData }) {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
-          <StatCard label="Ingresos totales" value={formatCOP(ingresos)} icon={<ArrowUpCircle size={20} />} color="green" trend={{ value: 8.2, positive: true }} />
-          <StatCard label="Gastos totales" value={formatCOP(gastos)} icon={<ArrowDownCircle size={20} />} color="red" />
+          <StatCard
+            label="Ingresos totales"
+            value={formatCOP(ingresos)}
+            icon={<ArrowUpCircle size={20} />}
+            color="green"
+            trend={{ value: 8.2, positive: true }}
+            onClick={() => router.push('/dashboard/finanzas')}
+          />
+          <StatCard
+            label="Gastos totales"
+            value={formatCOP(gastos)}
+            icon={<ArrowDownCircle size={20} />}
+            color="red"
+            onClick={() => router.push('/dashboard/finanzas')}
+          />
           <StatCard
             label="Balance neto"
             value={formatCOP(balance)}
             subtitle={balance >= 0 ? 'Resultado positivo' : 'Resultado negativo'}
             icon={<Scale size={20} />}
             color={balance >= 0 ? 'blue' : 'red'}
+            onClick={() => router.push('/dashboard/finanzas')}
           />
-          <StatCard label="Modulo financiero" value="Ver" subtitle="Ir al detalle completo" icon={<Coins size={20} />} color="amber" />
+          <StatCard
+            label="Modulo financiero"
+            value="Ver"
+            subtitle="Ir al detalle completo"
+            icon={<Coins size={20} />}
+            color="amber"
+            onClick={() => router.push('/dashboard/finanzas')}
+          />
         </div>
       )}
 
@@ -391,6 +468,7 @@ function ContadorDashboard({ data }: { data: DashboardData }) {
 
 /** Dashboard ejecutivo para PROPIETARIO / ADMIN / SUPERADMIN */
 function EjecutivoDashboard({ data }: { data: DashboardData }) {
+  const router = useRouter();
   const { loading, fincas, producciones, ingresos, gastos, alertasInventario, resumenFinanciero, distribProds, movimientosRecientes } = data;
 
   return (
@@ -402,10 +480,34 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
-          <StatCard label="Fincas Registradas" value={fincas} icon={<MapPin size={20} />} color="green" />
-          <StatCard label="Producciones Activas" value={producciones} icon={<Sprout size={20} />} color="blue" />
-          <StatCard label="Ingresos Totales" value={formatCOP(ingresos)} icon={<TrendingUp size={20} />} color="green" />
-          <StatCard label="Gastos Totales" value={formatCOP(gastos)} icon={<TrendingDown size={20} />} color="red" />
+          <StatCard
+            label="Fincas Registradas"
+            value={fincas}
+            icon={<MapPin size={20} />}
+            color="green"
+            onClick={() => router.push('/dashboard/fincas')}
+          />
+          <StatCard
+            label="Producciones Activas"
+            value={producciones}
+            icon={<Sprout size={20} />}
+            color="blue"
+            onClick={() => router.push('/dashboard/producciones')}
+          />
+          <StatCard
+            label="Ingresos Totales"
+            value={formatCOP(ingresos)}
+            icon={<TrendingUp size={20} />}
+            color="green"
+            onClick={() => router.push('/dashboard/finanzas')}
+          />
+          <StatCard
+            label="Gastos Totales"
+            value={formatCOP(gastos)}
+            icon={<TrendingDown size={20} />}
+            color="red"
+            onClick={() => router.push('/dashboard/finanzas')}
+          />
         </div>
       )}
 

@@ -1,22 +1,26 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { personalApi, fincasApi } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useToastStore } from '@/store/toastStore';
-import { Users, Plus, Edit3, Trash2, Search, X, Phone, Briefcase, MapPin, Eye, Calendar, DollarSign, FileText } from 'lucide-react';
+import { Users, Plus, Edit3, Trash2, Search, X, Phone, Briefcase, MapPin, Eye, Calendar, DollarSign, FileText, Mail, CreditCard } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 interface Personal {
   id: string | number;
   nombre: string;
+  apellido?: string;
+  documento?: string;
+  email?: string;
   cargo: string;
   salario?: number;
   telefono?: string;
   tipoContrato?: string;
   fechaIngreso?: string;
-  fincaId: string | number;
-  finca?: { id: string | number; nombre: string };
+  fincaId?: string | number | null;
+  finca?: { id: string | number; nombre: string } | null;
+  notes?: string;
 }
 
 interface Finca {
@@ -73,6 +77,8 @@ function DetallModal({
     </div>
   );
 
+  const fullName = [persona.nombre, persona.apellido].filter(Boolean).join(' ');
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
@@ -86,10 +92,10 @@ function DetallModal({
         {/* Avatar + nombre */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: '16px', background: 'rgba(16,185,129,0.06)', borderRadius: 12, border: '1px solid rgba(16,185,129,0.15)' }}>
           <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: 'white', flexShrink: 0 }}>
-            {persona.nombre.charAt(0).toUpperCase()}
+            {persona.nombre?.charAt(0)?.toUpperCase()}
           </div>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>{persona.nombre}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>{fullName}</div>
             <div style={{ fontSize: 13, color: 'var(--color-primary)', fontWeight: 600 }}>{persona.cargo}</div>
             <span className={`badge ${persona.tipoContrato === 'INDEFINIDO' ? 'badge-success' : 'badge-info'}`} style={{ fontSize: 11, marginTop: 4 }}>
               {CONTRATO_LABELS[persona.tipoContrato || ''] || persona.tipoContrato}
@@ -98,12 +104,25 @@ function DetallModal({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <Row icon={<MapPin size={15} />} label="Finca / Predio asignado" value={persona.finca?.nombre || `Finca #${persona.fincaId}`} />
+          {persona.documento && (
+            <Row icon={<CreditCard size={15} />} label="Documento de Identidad" value={persona.documento} />
+          )}
+          {persona.email && (
+            <Row icon={<Mail size={15} />} label="Correo Electrónico" value={persona.email} />
+          )}
+          <Row
+            icon={<MapPin size={15} />}
+            label="Finca / Predio asignado"
+            value={persona.finca?.nombre || (persona.fincaId ? `Finca #${persona.fincaId}` : 'Sin finca asignada')}
+          />
           <Row icon={<Phone size={15} />} label="Teléfono de contacto" value={persona.telefono || 'No registrado'} />
           <Row icon={<Calendar size={15} />} label="Fecha de ingreso" value={formatDate(persona.fechaIngreso)} />
           <Row icon={<FileText size={15} />} label="Modalidad de contrato" value={CONTRATO_LABELS[persona.tipoContrato || ''] || persona.tipoContrato || 'No especificado'} />
           {canSeeSalary && (
             <Row icon={<DollarSign size={15} />} label="Salario mensual (COP)" value={persona.salario ? formatCOP(persona.salario) : 'No especificado'} />
+          )}
+          {persona.notes && (
+            <Row icon={<FileText size={15} />} label="Observaciones" value={persona.notes} />
           )}
         </div>
 
@@ -135,14 +154,36 @@ function PersonalModal({
 }) {
   const [form, setForm] = useState({
     nombre: persona?.nombre || '',
+    apellido: persona?.apellido || '',
+    documento: persona?.documento || '',
+    email: persona?.email || '',
     cargo: persona?.cargo || 'Operario de campo / Jornalero',
     salario: persona?.salario?.toString() || '',
     telefono: persona?.telefono || '',
     tipoContrato: persona?.tipoContrato || 'TERMINO_FIJO',
     fechaIngreso: persona?.fechaIngreso?.split('T')[0] || new Date().toISOString().split('T')[0],
-    fincaId: persona?.fincaId?.toString() || fincas[0]?.id?.toString() || '',
+    fincaId: persona?.fincaId?.toString() || '',
+    notes: persona?.notes || '',
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (persona) {
+      setForm({
+        nombre: persona.nombre || '',
+        apellido: persona.apellido || '',
+        documento: persona.documento || '',
+        email: persona.email || '',
+        cargo: persona.cargo || 'Operario de campo / Jornalero',
+        salario: persona.salario?.toString() || '',
+        telefono: persona.telefono || '',
+        tipoContrato: persona.tipoContrato || 'TERMINO_FIJO',
+        fechaIngreso: persona.fechaIngreso?.split('T')[0] || new Date().toISOString().split('T')[0],
+        fincaId: persona.fincaId?.toString() || '',
+        notes: persona.notes || '',
+      });
+    }
+  }, [persona]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,18 +191,23 @@ function PersonalModal({
       useToastStore.getState().warning('El nombre del colaborador es obligatorio.');
       return;
     }
-    if (!form.fincaId) {
-      useToastStore.getState().warning('Debe asignar una finca o predio.');
-      return;
-    }
 
     setLoading(true);
     try {
       const p = {
-        ...form,
-        fincaId: form.fincaId,
+        name: form.nombre.trim(),
+        lastName: form.apellido.trim() || undefined,
+        documento: form.documento.trim() || undefined,
+        email: form.email.trim() || undefined,
+        cargo: form.cargo,
+        fincaId: form.fincaId || null,
         salario: form.salario ? parseFloat(form.salario) : undefined,
+        telefono: form.telefono.trim() || undefined,
+        tipoContrato: form.tipoContrato,
+        fechaIngreso: form.fechaIngreso || undefined,
+        notes: form.notes.trim() || undefined,
       };
+
       if (persona) {
         await personalApi.update(persona.id, p);
         useToastStore.getState().success('Empleado actualizado correctamente.');
@@ -171,8 +217,9 @@ function PersonalModal({
       }
       onSave();
       onClose();
-    } catch {
-      useToastStore.getState().error('Error al guardar los datos del empleado.');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al guardar los datos del empleado.';
+      useToastStore.getState().error(msg);
     } finally {
       setLoading(false);
     }
@@ -180,7 +227,7 @@ function PersonalModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <h2 className="font-display" style={{ fontSize: 20, fontWeight: 700 }}>
             {persona ? 'Editar Colaborador' : 'Nuevo Colaborador de Campo'}
@@ -192,16 +239,53 @@ function PersonalModal({
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ gridColumn: 'span 2' }}>
+            <div>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Nombre completo *
+                Nombres *
               </label>
               <input
                 className="input-field"
                 value={form.nombre}
                 onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-                placeholder="Nombre y apellidos"
+                placeholder="Ej: Juan Carlos"
                 required
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                Apellidos
+              </label>
+              <input
+                className="input-field"
+                value={form.apellido}
+                onChange={(e) => setForm((f) => ({ ...f, apellido: e.target.value }))}
+                placeholder="Ej: Pérez Rodríguez"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                Documento de Identidad (Cédula)
+              </label>
+              <input
+                className="input-field"
+                value={form.documento}
+                onChange={(e) => setForm((f) => ({ ...f, documento: e.target.value }))}
+                placeholder="Ej: 1098765432"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                Correo Electrónico
+              </label>
+              <input
+                type="email"
+                className="input-field"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="colaborador@correo.com"
               />
             </div>
 
@@ -226,15 +310,14 @@ function PersonalModal({
 
             <div>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Finca / Predio de labor *
+                Finca / Predio de labor
               </label>
               <select
                 className="input-field"
                 value={form.fincaId}
                 onChange={(e) => setForm((f) => ({ ...f, fincaId: e.target.value }))}
-                required
               >
-                <option value="">— Seleccionar predio —</option>
+                <option value="">— Sin finca asignada —</option>
                 {fincas.map((fi) => (
                   <option key={fi.id} value={fi.id}>{fi.nombre}</option>
                 ))}
@@ -286,7 +369,7 @@ function PersonalModal({
               </select>
             </div>
 
-            <div style={{ gridColumn: canSeeSalary ? 'span 1' : 'span 2' }}>
+            <div>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
                 Fecha de ingreso
               </label>
@@ -295,6 +378,19 @@ function PersonalModal({
                 type="date"
                 value={form.fechaIngreso}
                 onChange={(e) => setForm((f) => ({ ...f, fechaIngreso: e.target.value }))}
+              />
+            </div>
+
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                Observaciones / Notas
+              </label>
+              <textarea
+                className="input-field"
+                rows={2}
+                value={form.notes}
+                onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+                placeholder="Anotaciones sobre rendimiento, especialidad o turno..."
               />
             </div>
           </div>
@@ -326,6 +422,7 @@ export default function PersonalPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editPersona, setEditPersona] = useState<Personal | undefined>();
   const [detallePersona, setDetallePersona] = useState<Personal | undefined>();
+
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     id: string | number | null;
@@ -338,15 +435,22 @@ export default function PersonalPage() {
     loading: false,
   });
 
-  // RBAC: solo PROPIETARIO, ADMIN, SUPERADMIN, CONTADOR pueden ver salario
-  const canSeeSalary = ['PROPIETARIO', 'ADMIN', 'SUPERADMIN', 'CONTADOR'].includes(user?.rol ?? '');
+  const canSeeSalary = user?.rol === 'ADMIN' || user?.rol === 'PROPIETARIO' || user?.rol === 'SUPERADMIN' || user?.rol === 'CONTADOR';
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [pRes, fRes] = await Promise.all([personalApi.getAll(), fincasApi.getAll()]);
-      setPersonal(pRes.data || []);
-      setFincas(fRes.data || []);
+      const [personalRes, fincasRes] = await Promise.allSettled([
+        personalApi.getAll(),
+        fincasApi.getAll(),
+      ]);
+
+      if (personalRes.status === 'fulfilled') {
+        setPersonal(personalRes.value.data || []);
+      }
+      if (fincasRes.status === 'fulfilled') {
+        setFincas(fincasRes.value.data || []);
+      }
     } catch {
       useToastStore.getState().error('Error al cargar la lista de personal.');
     } finally {
@@ -388,10 +492,19 @@ export default function PersonalPage() {
   const cargosUnicos = Array.from(new Set(personal.map((p) => p.cargo).filter(Boolean)));
 
   const filtered = personal.filter((p) => {
+    const fullName = [p.nombre, p.apellido].filter(Boolean).join(' ').toLowerCase();
     const matchSearch =
-      p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      p.cargo.toLowerCase().includes(search.toLowerCase());
-    const matchFinca = filterFinca === 'ALL' || String(p.fincaId) === filterFinca || String(p.finca?.id) === filterFinca;
+      fullName.includes(search.toLowerCase()) ||
+      p.cargo.toLowerCase().includes(search.toLowerCase()) ||
+      (p.documento && p.documento.includes(search));
+
+    let matchFinca = true;
+    if (filterFinca === 'NONE') {
+      matchFinca = !p.fincaId && !p.finca;
+    } else if (filterFinca !== 'ALL') {
+      matchFinca = String(p.fincaId) === filterFinca || String(p.finca?.id) === filterFinca;
+    }
+
     const matchCargo = filterCargo === 'ALL' || p.cargo === filterCargo;
     return matchSearch && matchFinca && matchCargo;
   });
@@ -428,7 +541,7 @@ export default function PersonalPage() {
           <input
             className="input-field"
             style={{ paddingLeft: 36 }}
-            placeholder="Buscar por nombre o cargo..."
+            placeholder="Buscar por nombre, cédula o cargo..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -442,6 +555,7 @@ export default function PersonalPage() {
           onChange={(e) => setFilterFinca(e.target.value)}
         >
           <option value="ALL">Todas las fincas</option>
+          <option value="NONE">Sin finca asignada</option>
           {fincas.map((f) => (
             <option key={f.id} value={String(f.id)}>{f.nombre}</option>
           ))}
@@ -459,34 +573,25 @@ export default function PersonalPage() {
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
-
-        {/* Reset filtros */}
-        {(filterFinca !== 'ALL' || filterCargo !== 'ALL' || search) && (
-          <button
-            onClick={() => { setFilterFinca('ALL'); setFilterCargo('ALL'); setSearch(''); }}
-            style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 8, padding: '7px 12px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
-          >
-            <X size={13} /> Limpiar
-          </button>
-        )}
-
-        <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' }}>
-          {filtered.length} / {personal.length} colaboradores
-        </div>
       </div>
 
-      {/* Grid de Tarjetas */}
+      {/* Grid de Cards */}
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="skeleton" style={{ height: 200, borderRadius: 14 }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="skeleton" style={{ height: 180, borderRadius: 16 }} />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--color-text-subtle)' }}>
+        <div className="card" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-subtle)' }}>
           <Users size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
-          <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-muted)' }}>
-            {personal.length === 0 ? 'No hay colaboradores registrados' : 'Sin resultados para los filtros aplicados'}
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: 'var(--color-text)' }}>
+            No se encontraron colaboradores
+          </h3>
+          <p style={{ fontSize: 14, maxWidth: 400, margin: '0 auto' }}>
+            {search || filterFinca !== 'ALL' || filterCargo !== 'ALL'
+              ? 'No hay colaboradores que coincidan con los filtros de búsqueda aplicados.'
+              : 'Empieza a registrar al equipo de trabajo de tus fincas y predios.'}
           </p>
           {personal.length > 0 && (
             <button
@@ -499,86 +604,91 @@ export default function PersonalPage() {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-          {filtered.map((p) => (
-            <div key={p.id} className="card glass-hover" style={{ padding: '20px', cursor: 'pointer' }} onClick={() => setDetallePersona(p)}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: '50%',
-                    background: 'var(--gradient-primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: 'white',
-                    flexShrink: 0,
-                  }}
-                >
-                  {p.nombre.charAt(0).toUpperCase()}
+          {filtered.map((p) => {
+            const displayName = [p.nombre, p.apellido].filter(Boolean).join(' ');
+            const displayFinca = p.finca?.nombre || (p.fincaId ? `Finca #${p.fincaId}` : 'Sin finca asignada');
+
+            return (
+              <div key={p.id} className="card glass-hover" style={{ padding: '20px', cursor: 'pointer' }} onClick={() => setDetallePersona(p)}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      background: 'var(--gradient-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: 'white',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {p.nombre?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDetallePersona(p); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
+                      title="Ver ficha"
+                    >
+                      <Eye size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditPersona(p); setModalOpen(true); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
+                      title="Editar"
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(p); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}
+                      title="Eliminar"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setDetallePersona(p); }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
-                    title="Ver ficha"
-                  >
-                    <Eye size={14} />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setEditPersona(p); setModalOpen(true); }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
-                    title="Editar"
-                  >
-                    <Edit3 size={14} />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(p); }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}
-                    title="Eliminar"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+
+                <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4, color: 'var(--color-text)' }}>
+                  {displayName}
+                </h3>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <Briefcase size={13} color="var(--color-text-muted)" />
+                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{p.cargo}</span>
                 </div>
-              </div>
 
-              <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4, color: 'var(--color-text)' }}>
-                {p.nombre}
-              </h3>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <Briefcase size={13} color="var(--color-text-muted)" />
-                <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{p.cargo}</span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <MapPin size={13} color="var(--color-text-muted)" />
-                <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
-                  {p.finca?.nombre || 'Predio asignado'}
-                </span>
-              </div>
-
-              {p.telefono && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <Phone size={13} color="var(--color-text-muted)" />
-                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{p.telefono}</span>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--color-border)' }}>
-                <span className={`badge ${p.tipoContrato === 'INDEFINIDO' ? 'badge-success' : 'badge-info'}`} style={{ fontSize: 11 }}>
-                  {CONTRATO_LABELS[p.tipoContrato || ''] || p.tipoContrato?.replace('_', ' ')}
-                </span>
-                {canSeeSalary && p.salario ? (
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#4ade80' }}>
-                    {formatCOP(p.salario)}
+                  <MapPin size={13} color="var(--color-text-muted)" />
+                  <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
+                    {displayFinca}
                   </span>
-                ) : null}
+                </div>
+
+                {p.telefono && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <Phone size={13} color="var(--color-text-muted)" />
+                    <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{p.telefono}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--color-border)' }}>
+                  <span className={`badge ${p.tipoContrato === 'INDEFINIDO' ? 'badge-success' : 'badge-info'}`} style={{ fontSize: 11 }}>
+                    {CONTRATO_LABELS[p.tipoContrato || ''] || p.tipoContrato?.replace('_', ' ')}
+                  </span>
+                  {canSeeSalary && p.salario ? (
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#4ade80' }}>
+                      {formatCOP(p.salario)}
+                    </span>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
