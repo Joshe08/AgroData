@@ -1,0 +1,184 @@
+{
+  "name": "AgroData - Inventory Low Stock",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger-1",
+      "name": "Schedule Trigger (Every 1 Hour)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agrodata-inventory-alert",
+        "options": {}
+      },
+      "id": "webhook-trigger-1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/data/inventory-alerts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "organizationId",
+              "value": "={{ $json.body?.organizationId || $env.DEFAULT_ORG_ID || '19918424-c9bb-49d2-bf5e-3878edd08cc9' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-fetch-alerts",
+      "name": "Fetch Inventory Alerts from AgroData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 380]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.totalAlerts }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "if-has-alerts",
+      "name": "Has Low Stock Items?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [740, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.items;\nconst orgId = $input.first().json.organizationId;\nreturn items.map(item => ({\n  json: {\n    organizationId: orgId,\n    type: 'INVENTORY',\n    title: `Stock Bajo: ${item.name}`,\n    message: `El insumo ${item.name} tiene ${item.quantity} ${item.unit} restantes (mínimo: ${item.minAlertQuantity} ${item.unit}) en finca ${item.finca}.`,\n    priority: 'HIGH',\n    metadata: { itemId: item.id, quantity: item.quantity, min: item.minAlertQuantity }\n  }\n}));"
+      },
+      "id": "format-notifications",
+      "name": "Format Notifications",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "http-send-notify",
+      "name": "Send Notification to AgroData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (Every 1 Hour)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Inventory Alerts from AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Inventory Alerts from AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Inventory Alerts from AgroData": {
+      "main": [
+        [
+          {
+            "node": "Has Low Stock Items?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Low Stock Items?": {
+      "main": [
+        [
+          {
+            "node": "Format Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Notifications": {
+      "main": [
+        [
+          {
+            "node": "Send Notification to AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

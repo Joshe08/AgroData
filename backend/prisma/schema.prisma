@@ -37,6 +37,8 @@ model Organization {
   empleados            Empleado[]
   maquinarias          Maquinaria[]
   suspensionHistories  SuspensionHistory[]
+  notifications        Notification[]
+  automations          Automation[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 }
@@ -215,4 +217,54 @@ model Maquinaria {
   organization     Organization @relation(fields: [organizationId], references: [id])
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
+}
+
+model Notification {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  type           String       // WEATHER, INVENTORY, PRODUCTION, FINANCE, AI, SUBSCRIPTION, SYSTEM
+  title          String
+  message        String
+  priority       String       @default("NORMAL") // LOW, NORMAL, HIGH, CRITICAL
+  read           Boolean      @default(false)
+  source         String       @default("SYSTEM") // SYSTEM, N8N, AI
+  metadata       String?      // JSON string for extra data
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Automation {
+  id             String          @id @default(uuid())
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  type           String          // INVENTORY_ALERT, WEATHER_MONITOR, FINANCIAL_SUMMARY, PRODUCTION_REMINDER, AGROIA, SUBSCRIPTION_MONITOR
+  enabled        Boolean         @default(true)
+  frequency      String?         // HOURLY, DAILY, WEEKLY, MONTHLY, REALTIME
+  cronExpression String?
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+  lastStatus     String?         // PENDING, RUNNING, SUCCESS, FAILED
+  lastResult     String?         // JSON summary
+  config         String?         // JSON config for this automation
+  logs           AutomationLog[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model AutomationLog {
+  id           String     @id @default(uuid())
+  automationId String
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  status       String     // PENDING, RUNNING, SUCCESS, FAILED
+  startedAt    DateTime   @default(now())
+  finishedAt   DateTime?
+  durationMs   Int?
+  result       String?    // JSON result summary
+  error        String?
+  triggeredBy  String?    // CRON, WEBHOOK, MANUAL
+  createdAt    DateTime   @default(now())
 }

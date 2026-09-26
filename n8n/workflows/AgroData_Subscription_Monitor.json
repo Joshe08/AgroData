@@ -1,0 +1,155 @@
+{
+  "name": "AgroData - Subscription Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-sub-daily",
+      "name": "Daily at 8:30 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agrodata-subscription-monitor",
+        "options": {}
+      },
+      "id": "webhook-sub",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/data/subscription-status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "organizationId",
+              "value": "={{ $json.body?.organizationId || $env.DEFAULT_ORG_ID || '19918424-c9bb-49d2-bf5e-3878edd08cc9' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-sub-status",
+      "name": "Fetch Subscription Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "const sub = $input.first().json;\nconst orgId = sub.organizationId;\nconst plan = sub.subscription || 'FREE';\nconst status = sub.status || 'ACTIVE';\n\nif (status === 'SUSPENDED') {\n  return [{\n    json: {\n      organizationId: orgId,\n      type: 'SUBSCRIPTION',\n      title: 'Aviso de Cuenta Suspendida',\n      message: 'Tu organización se encuentra suspendida. Contacta con el SuperAdministrador para normalizar el servicio.',\n      priority: 'CRITICAL'\n    }\n  }];\n}\n\nif (plan === 'FREE') {\n  return [{\n    json: {\n      organizationId: orgId,\n      type: 'SUBSCRIPTION',\n      title: 'Plan Gratuito Activo',\n      message: 'Estás utilizando el Plan Gratuito de AgroData. Actualiza a PREMIUM para desbloquear almacenamiento ilimitado y automatizaciones avanzadas.',\n      priority: 'LOW'\n    }\n  }];\n}\n\nreturn [];"
+      },
+      "id": "evaluate-sub",
+      "name": "Evaluate Subscription Rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "send-sub-notification",
+      "name": "Send Notification to AgroData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [980, 380]
+    }
+  ],
+  "connections": {
+    "Daily at 8:30 AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Subscription Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Subscription Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Subscription Status": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Subscription Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Subscription Rules": {
+      "main": [
+        [
+          {
+            "node": "Send Notification to AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

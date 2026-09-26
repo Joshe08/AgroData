@@ -455,3 +455,19 @@ export const saasApi = {
   deleteUser: (id: string) => api.delete(`/saas/users/${id}`),
 };
 
+// Notifications
+export const notificationsApi = {
+  getAll: (unreadOnly = false) => api.get('/notifications', { params: unreadOnly ? { unread: 'true' } : {} }),
+  getUnreadCount: () => api.get('/notifications/count/unread'),
+  markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/read-all'),
+  delete: (id: string) => api.delete(`/notifications/${id}`),
+};
+
+// Automations (n8n Engine)
+export const automationsApi = {
+  getAll: () => api.get('/automations'),
+  getLogs: (id: string) => api.get(`/automations/${id}/logs`),
+  toggle: (id: string, enabled: boolean) => api.patch(`/automations/${id}/toggle`, { enabled }),
+  trigger: (id: string) => api.patch(`/automations/${id}/trigger`),
+};

@@ -14,6 +14,9 @@ import { MaquinariaModule } from './maquinaria/maquinaria.module';
 import { ClimaModule } from './clima/clima.module';
 import { AiModule } from './ai/ai.module';
 import { SaasModule } from './saas/saas.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { AutomationsModule } from './automations/automations.module';
+import { N8nModule } from './n8n/n8n.module';
 
 @Module({
   imports: [
@@ -32,6 +35,9 @@ import { SaasModule } from './saas/saas.module';
     ClimaModule,
     AiModule,
     SaasModule,
+    NotificationsModule,
+    AutomationsModule,
+    N8nModule,
   ],
   controllers: [AppController],
   providers: [AppService],

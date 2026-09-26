@@ -1,0 +1,155 @@
+{
+  "name": "AgroData - Production Reminders",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-daily-6am",
+      "name": "Daily at 6:00 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agrodata-production-reminder",
+        "options": {}
+      },
+      "id": "webhook-prod",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/data/production-reminders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "organizationId",
+              "value": "={{ $json.body?.organizationId || $env.DEFAULT_ORG_ID || '19918424-c9bb-49d2-bf5e-3878edd08cc9' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-productions",
+      "name": "Fetch Production Data from AgroData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst productions = data.productions || [];\nconst orgId = data.organizationId;\nconst notifications = [];\n\nfor (const p of productions) {\n  if (p.harvestSoon) {\n    const term = p.isLivestock ? 'Finalización de ciclo / control' : 'Cosecha estimada';\n    notifications.push({\n      json: {\n        organizationId: orgId,\n        type: 'PRODUCTION',\n        title: `Próxima ${term}: ${p.name}`,\n        message: `La producción ${p.name} en lote ${p.lote} (${p.finca}) tiene fecha programada para dentro de ${p.daysUntilEnd} días. Planificar logística y personal.`,\n        priority: p.daysUntilEnd <= 3 ? 'HIGH' : 'NORMAL',\n        metadata: { productionId: p.id, daysUntilEnd: p.daysUntilEnd, type: p.type }\n      }\n    });\n  }\n}\n\nreturn notifications;"
+      },
+      "id": "evaluate-production-reminders",
+      "name": "Filter and Format Reminders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "send-production-notification",
+      "name": "Send Notification to AgroData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [980, 380]
+    }
+  ],
+  "connections": {
+    "Daily at 6:00 AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Production Data from AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Production Data from AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Production Data from AgroData": {
+      "main": [
+        [
+          {
+            "node": "Filter and Format Reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter and Format Reminders": {
+      "main": [
+        [
+          {
+            "node": "Send Notification to AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

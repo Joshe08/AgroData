@@ -253,6 +253,8 @@ export type OrganizationWhereInput = {
   empleados?: Prisma.EmpleadoListRelationFilter
   maquinarias?: Prisma.MaquinariaListRelationFilter
   suspensionHistories?: Prisma.SuspensionHistoryListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
+  automations?: Prisma.AutomationListRelationFilter
 }
 
 export type OrganizationOrderByWithRelationInput = {
@@ -276,6 +278,8 @@ export type OrganizationOrderByWithRelationInput = {
   empleados?: Prisma.EmpleadoOrderByRelationAggregateInput
   maquinarias?: Prisma.MaquinariaOrderByRelationAggregateInput
   suspensionHistories?: Prisma.SuspensionHistoryOrderByRelationAggregateInput
+  notifications?: Prisma.NotificationOrderByRelationAggregateInput
+  automations?: Prisma.AutomationOrderByRelationAggregateInput
 }
 
 export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -302,6 +306,8 @@ export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
   empleados?: Prisma.EmpleadoListRelationFilter
   maquinarias?: Prisma.MaquinariaListRelationFilter
   suspensionHistories?: Prisma.SuspensionHistoryListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
+  automations?: Prisma.AutomationListRelationFilter
 }, "id">
 
 export type OrganizationOrderByWithAggregationInput = {
@@ -363,6 +369,8 @@ export type OrganizationCreateInput = {
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateInput = {
@@ -386,6 +394,8 @@ export type OrganizationUncheckedCreateInput = {
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUpdateInput = {
@@ -409,6 +419,8 @@ export type OrganizationUpdateInput = {
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateInput = {
@@ -432,6 +444,8 @@ export type OrganizationUncheckedUpdateInput = {
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateManyInput = {
@@ -649,6 +663,34 @@ export type OrganizationUpdateOneRequiredWithoutMaquinariasNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutMaquinariasInput, Prisma.OrganizationUpdateWithoutMaquinariasInput>, Prisma.OrganizationUncheckedUpdateWithoutMaquinariasInput>
 }
 
+export type OrganizationCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutNotificationsInput, Prisma.OrganizationUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+}
+
+export type OrganizationUpdateOneRequiredWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutNotificationsInput, Prisma.OrganizationUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.OrganizationUpsertWithoutNotificationsInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutNotificationsInput, Prisma.OrganizationUpdateWithoutNotificationsInput>, Prisma.OrganizationUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type OrganizationCreateNestedOneWithoutAutomationsInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutAutomationsInput, Prisma.OrganizationUncheckedCreateWithoutAutomationsInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutAutomationsInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+}
+
+export type OrganizationUpdateOneRequiredWithoutAutomationsNestedInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutAutomationsInput, Prisma.OrganizationUncheckedCreateWithoutAutomationsInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutAutomationsInput
+  upsert?: Prisma.OrganizationUpsertWithoutAutomationsInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutAutomationsInput, Prisma.OrganizationUpdateWithoutAutomationsInput>, Prisma.OrganizationUncheckedUpdateWithoutAutomationsInput>
+}
+
 export type OrganizationCreateWithoutSuspensionHistoriesInput = {
   id?: string
   name: string
@@ -669,6 +711,8 @@ export type OrganizationCreateWithoutSuspensionHistoriesInput = {
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutSuspensionHistoriesInput = {
@@ -691,6 +735,8 @@ export type OrganizationUncheckedCreateWithoutSuspensionHistoriesInput = {
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutSuspensionHistoriesInput = {
@@ -729,6 +775,8 @@ export type OrganizationUpdateWithoutSuspensionHistoriesInput = {
   finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutSuspensionHistoriesInput = {
@@ -751,6 +799,8 @@ export type OrganizationUncheckedUpdateWithoutSuspensionHistoriesInput = {
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutUsersInput = {
@@ -773,6 +823,8 @@ export type OrganizationCreateWithoutUsersInput = {
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutUsersInput = {
@@ -795,6 +847,8 @@ export type OrganizationUncheckedCreateWithoutUsersInput = {
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutUsersInput = {
@@ -833,6 +887,8 @@ export type OrganizationUpdateWithoutUsersInput = {
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutUsersInput = {
@@ -855,6 +911,8 @@ export type OrganizationUncheckedUpdateWithoutUsersInput = {
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutFincasInput = {
@@ -877,6 +935,8 @@ export type OrganizationCreateWithoutFincasInput = {
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutFincasInput = {
@@ -899,6 +959,8 @@ export type OrganizationUncheckedCreateWithoutFincasInput = {
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutFincasInput = {
@@ -937,6 +999,8 @@ export type OrganizationUpdateWithoutFincasInput = {
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutFincasInput = {
@@ -959,6 +1023,8 @@ export type OrganizationUncheckedUpdateWithoutFincasInput = {
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutInventariosInput = {
@@ -981,6 +1047,8 @@ export type OrganizationCreateWithoutInventariosInput = {
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutInventariosInput = {
@@ -1003,6 +1071,8 @@ export type OrganizationUncheckedCreateWithoutInventariosInput = {
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutInventariosInput = {
@@ -1041,6 +1111,8 @@ export type OrganizationUpdateWithoutInventariosInput = {
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutInventariosInput = {
@@ -1063,6 +1135,8 @@ export type OrganizationUncheckedUpdateWithoutInventariosInput = {
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutFinanzasInput = {
@@ -1085,6 +1159,8 @@ export type OrganizationCreateWithoutFinanzasInput = {
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutFinanzasInput = {
@@ -1107,6 +1183,8 @@ export type OrganizationUncheckedCreateWithoutFinanzasInput = {
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutFinanzasInput = {
@@ -1145,6 +1223,8 @@ export type OrganizationUpdateWithoutFinanzasInput = {
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutFinanzasInput = {
@@ -1167,6 +1247,8 @@ export type OrganizationUncheckedUpdateWithoutFinanzasInput = {
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutEmpleadosInput = {
@@ -1189,6 +1271,8 @@ export type OrganizationCreateWithoutEmpleadosInput = {
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutEmpleadosInput = {
@@ -1211,6 +1295,8 @@ export type OrganizationUncheckedCreateWithoutEmpleadosInput = {
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
   maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutEmpleadosInput = {
@@ -1249,6 +1335,8 @@ export type OrganizationUpdateWithoutEmpleadosInput = {
   finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutEmpleadosInput = {
@@ -1271,6 +1359,8 @@ export type OrganizationUncheckedUpdateWithoutEmpleadosInput = {
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
   maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutMaquinariasInput = {
@@ -1293,6 +1383,8 @@ export type OrganizationCreateWithoutMaquinariasInput = {
   finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutMaquinariasInput = {
@@ -1315,6 +1407,8 @@ export type OrganizationUncheckedCreateWithoutMaquinariasInput = {
   finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
   empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutMaquinariasInput = {
@@ -1353,6 +1447,8 @@ export type OrganizationUpdateWithoutMaquinariasInput = {
   finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutMaquinariasInput = {
@@ -1375,6 +1471,232 @@ export type OrganizationUncheckedUpdateWithoutMaquinariasInput = {
   finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
   empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
   suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationCreateWithoutNotificationsInput = {
+  id?: string
+  name: string
+  nit?: string | null
+  orgType?: string | null
+  subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
+  fincas?: Prisma.FincaCreateNestedManyWithoutOrganizationInput
+  inventarios?: Prisma.InventarioCreateNestedManyWithoutOrganizationInput
+  finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
+  empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
+  maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationUncheckedCreateWithoutNotificationsInput = {
+  id?: string
+  name: string
+  nit?: string | null
+  orgType?: string | null
+  subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
+  fincas?: Prisma.FincaUncheckedCreateNestedManyWithoutOrganizationInput
+  inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutOrganizationInput
+  finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
+  empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
+  maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
+  automations?: Prisma.AutomationUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.OrganizationWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutNotificationsInput, Prisma.OrganizationUncheckedCreateWithoutNotificationsInput>
+}
+
+export type OrganizationUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.OrganizationUpdateWithoutNotificationsInput, Prisma.OrganizationUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutNotificationsInput, Prisma.OrganizationUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.OrganizationWhereInput
+}
+
+export type OrganizationUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.OrganizationWhereInput
+  data: Prisma.XOR<Prisma.OrganizationUpdateWithoutNotificationsInput, Prisma.OrganizationUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type OrganizationUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
+  fincas?: Prisma.FincaUpdateManyWithoutOrganizationNestedInput
+  inventarios?: Prisma.InventarioUpdateManyWithoutOrganizationNestedInput
+  finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
+  empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
+  maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
+  fincas?: Prisma.FincaUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutOrganizationNestedInput
+  finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
+  empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
+  maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
+  automations?: Prisma.AutomationUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationCreateWithoutAutomationsInput = {
+  id?: string
+  name: string
+  nit?: string | null
+  orgType?: string | null
+  subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
+  fincas?: Prisma.FincaCreateNestedManyWithoutOrganizationInput
+  inventarios?: Prisma.InventarioCreateNestedManyWithoutOrganizationInput
+  finanzas?: Prisma.FinanzaCreateNestedManyWithoutOrganizationInput
+  empleados?: Prisma.EmpleadoCreateNestedManyWithoutOrganizationInput
+  maquinarias?: Prisma.MaquinariaCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationUncheckedCreateWithoutAutomationsInput = {
+  id?: string
+  name: string
+  nit?: string | null
+  orgType?: string | null
+  subscription?: string
+  status?: string
+  suspendedAt?: Date | string | null
+  suspendedReason?: string | null
+  reactivatedAt?: Date | string | null
+  phone?: string | null
+  address?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
+  fincas?: Prisma.FincaUncheckedCreateNestedManyWithoutOrganizationInput
+  inventarios?: Prisma.InventarioUncheckedCreateNestedManyWithoutOrganizationInput
+  finanzas?: Prisma.FinanzaUncheckedCreateNestedManyWithoutOrganizationInput
+  empleados?: Prisma.EmpleadoUncheckedCreateNestedManyWithoutOrganizationInput
+  maquinarias?: Prisma.MaquinariaUncheckedCreateNestedManyWithoutOrganizationInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationCreateOrConnectWithoutAutomationsInput = {
+  where: Prisma.OrganizationWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutAutomationsInput, Prisma.OrganizationUncheckedCreateWithoutAutomationsInput>
+}
+
+export type OrganizationUpsertWithoutAutomationsInput = {
+  update: Prisma.XOR<Prisma.OrganizationUpdateWithoutAutomationsInput, Prisma.OrganizationUncheckedUpdateWithoutAutomationsInput>
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutAutomationsInput, Prisma.OrganizationUncheckedCreateWithoutAutomationsInput>
+  where?: Prisma.OrganizationWhereInput
+}
+
+export type OrganizationUpdateToOneWithWhereWithoutAutomationsInput = {
+  where?: Prisma.OrganizationWhereInput
+  data: Prisma.XOR<Prisma.OrganizationUpdateWithoutAutomationsInput, Prisma.OrganizationUncheckedUpdateWithoutAutomationsInput>
+}
+
+export type OrganizationUpdateWithoutAutomationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
+  fincas?: Prisma.FincaUpdateManyWithoutOrganizationNestedInput
+  inventarios?: Prisma.InventarioUpdateManyWithoutOrganizationNestedInput
+  finanzas?: Prisma.FinanzaUpdateManyWithoutOrganizationNestedInput
+  empleados?: Prisma.EmpleadoUpdateManyWithoutOrganizationNestedInput
+  maquinarias?: Prisma.MaquinariaUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationUncheckedUpdateWithoutAutomationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  nit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscription?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  suspendedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
+  fincas?: Prisma.FincaUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventarios?: Prisma.InventarioUncheckedUpdateManyWithoutOrganizationNestedInput
+  finanzas?: Prisma.FinanzaUncheckedUpdateManyWithoutOrganizationNestedInput
+  empleados?: Prisma.EmpleadoUncheckedUpdateManyWithoutOrganizationNestedInput
+  maquinarias?: Prisma.MaquinariaUncheckedUpdateManyWithoutOrganizationNestedInput
+  suspensionHistories?: Prisma.SuspensionHistoryUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 
@@ -1390,6 +1712,8 @@ export type OrganizationCountOutputType = {
   empleados: number
   maquinarias: number
   suspensionHistories: number
+  notifications: number
+  automations: number
 }
 
 export type OrganizationCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1400,6 +1724,8 @@ export type OrganizationCountOutputTypeSelect<ExtArgs extends runtime.Types.Exte
   empleados?: boolean | OrganizationCountOutputTypeCountEmpleadosArgs
   maquinarias?: boolean | OrganizationCountOutputTypeCountMaquinariasArgs
   suspensionHistories?: boolean | OrganizationCountOutputTypeCountSuspensionHistoriesArgs
+  notifications?: boolean | OrganizationCountOutputTypeCountNotificationsArgs
+  automations?: boolean | OrganizationCountOutputTypeCountAutomationsArgs
 }
 
 /**
@@ -1461,6 +1787,20 @@ export type OrganizationCountOutputTypeCountSuspensionHistoriesArgs<ExtArgs exte
   where?: Prisma.SuspensionHistoryWhereInput
 }
 
+/**
+ * OrganizationCountOutputType without action
+ */
+export type OrganizationCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationWhereInput
+}
+
+/**
+ * OrganizationCountOutputType without action
+ */
+export type OrganizationCountOutputTypeCountAutomationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AutomationWhereInput
+}
+
 
 export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1483,6 +1823,8 @@ export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.Internal
   empleados?: boolean | Prisma.Organization$empleadosArgs<ExtArgs>
   maquinarias?: boolean | Prisma.Organization$maquinariasArgs<ExtArgs>
   suspensionHistories?: boolean | Prisma.Organization$suspensionHistoriesArgs<ExtArgs>
+  notifications?: boolean | Prisma.Organization$notificationsArgs<ExtArgs>
+  automations?: boolean | Prisma.Organization$automationsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["organization"]>
 
@@ -1543,6 +1885,8 @@ export type OrganizationInclude<ExtArgs extends runtime.Types.Extensions.Interna
   empleados?: boolean | Prisma.Organization$empleadosArgs<ExtArgs>
   maquinarias?: boolean | Prisma.Organization$maquinariasArgs<ExtArgs>
   suspensionHistories?: boolean | Prisma.Organization$suspensionHistoriesArgs<ExtArgs>
+  notifications?: boolean | Prisma.Organization$notificationsArgs<ExtArgs>
+  automations?: boolean | Prisma.Organization$automationsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1558,6 +1902,8 @@ export type $OrganizationPayload<ExtArgs extends runtime.Types.Extensions.Intern
     empleados: Prisma.$EmpleadoPayload<ExtArgs>[]
     maquinarias: Prisma.$MaquinariaPayload<ExtArgs>[]
     suspensionHistories: Prisma.$SuspensionHistoryPayload<ExtArgs>[]
+    notifications: Prisma.$NotificationPayload<ExtArgs>[]
+    automations: Prisma.$AutomationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1974,6 +2320,8 @@ export interface Prisma__OrganizationClient<T, Null = never, ExtArgs extends run
   empleados<T extends Prisma.Organization$empleadosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$empleadosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmpleadoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   maquinarias<T extends Prisma.Organization$maquinariasArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$maquinariasArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MaquinariaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   suspensionHistories<T extends Prisma.Organization$suspensionHistoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$suspensionHistoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SuspensionHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifications<T extends Prisma.Organization$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  automations<T extends Prisma.Organization$automationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$automationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2572,6 +2920,54 @@ export type Organization$suspensionHistoriesArgs<ExtArgs extends runtime.Types.E
   take?: number
   skip?: number
   distinct?: Prisma.SuspensionHistoryScalarFieldEnum | Prisma.SuspensionHistoryScalarFieldEnum[]
+}
+
+/**
+ * Organization.notifications
+ */
+export type Organization$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Notification
+   */
+  select?: Prisma.NotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Notification
+   */
+  omit?: Prisma.NotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationInclude<ExtArgs> | null
+  where?: Prisma.NotificationWhereInput
+  orderBy?: Prisma.NotificationOrderByWithRelationInput | Prisma.NotificationOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
+}
+
+/**
+ * Organization.automations
+ */
+export type Organization$automationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Automation
+   */
+  select?: Prisma.AutomationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Automation
+   */
+  omit?: Prisma.AutomationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AutomationInclude<ExtArgs> | null
+  where?: Prisma.AutomationWhereInput
+  orderBy?: Prisma.AutomationOrderByWithRelationInput | Prisma.AutomationOrderByWithRelationInput[]
+  cursor?: Prisma.AutomationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AutomationScalarFieldEnum | Prisma.AutomationScalarFieldEnum[]
 }
 
 /**

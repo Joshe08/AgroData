@@ -1,0 +1,155 @@
+{
+  "name": "AgroData - Financial Summary",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "cron-monday",
+      "name": "Every Monday at 8:00 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agrodata-financial-summary",
+        "options": {}
+      },
+      "id": "webhook-finance",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/data/financial-summary",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "organizationId",
+              "value": "={{ $json.body?.organizationId || $env.DEFAULT_ORG_ID || '19918424-c9bb-49d2-bf5e-3878edd08cc9' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-finances",
+      "name": "Fetch Financial Data from AgroData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst orgId = data.organizationId;\nconst weekly = data.weekly || { income: 0, expenses: 0, balance: 0 };\nconst monthly = data.monthly || { income: 0, expenses: 0, balance: 0 };\n\nconst formatMoney = (n) => '$' + Number(n).toLocaleString('es-CO') + ' COP';\n\nconst msg = `Resumen semanal: Ingresos ${formatMoney(weekly.income)}, Gastos ${formatMoney(weekly.expenses)}, Balance neto: ${formatMoney(weekly.balance)}. Acumulado mensual: ${formatMoney(monthly.balance)}.`;\n\nreturn [{\n  json: {\n    organizationId: orgId,\n    type: 'FINANCE',\n    title: 'Resumen Financiero Semanal',\n    message: msg,\n    priority: 'NORMAL',\n    metadata: { weekly, monthly }\n  }\n}];"
+      },
+      "id": "format-financial-summary",
+      "name": "Format Financial Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "send-financial-notification",
+      "name": "Send Notification to AgroData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [980, 380]
+    }
+  ],
+  "connections": {
+    "Every Monday at 8:00 AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Financial Data from AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Financial Data from AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Financial Data from AgroData": {
+      "main": [
+        [
+          {
+            "node": "Format Financial Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Financial Report": {
+      "main": [
+        [
+          {
+            "node": "Send Notification to AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "name": "AgroData - Weather Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-weather",
+      "name": "Daily at 7:00 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agrodata-weather-alert",
+        "options": {}
+      },
+      "id": "webhook-weather",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/data/weather-monitor",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "organizationId",
+              "value": "={{ $json.body?.organizationId || $env.DEFAULT_ORG_ID || '19918424-c9bb-49d2-bf5e-3878edd08cc9' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-fincas",
+      "name": "Fetch Fincas Coordinates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fincas = $input.first().json.fincas || [];\nconst orgId = $input.first().json.organizationId;\nreturn fincas.map(f => ({\n  json: {\n    orgId,\n    fincaId: f.id,\n    fincaName: f.name,\n    location: f.location,\n    lat: f.latitude || 10.4631,\n    lon: f.longitude || -73.2532\n  }\n}));"
+      },
+      "id": "split-fincas",
+      "name": "Split Fincas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 380]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.open-meteo.com/v1/forecast?latitude={{ $json.lat }}&longitude={{ $json.lon }}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&daily=precipitation_probability_max,temperature_2m_max&timezone=auto",
+        "options": {}
+      },
+      "id": "fetch-open-meteo",
+      "name": "Query Open-Meteo Real Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [940, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "const weather = $input.first().json;\nconst cur = weather.current || {};\nconst daily = weather.daily || {};\nconst fincaName = $('Split Fincas').item.json.fincaName;\nconst orgId = $('Split Fincas').item.json.orgId;\n\nconst temp = cur.temperature_2m || 0;\nconst rain = cur.precipitation || 0;\nconst probRain = (daily.precipitation_probability_max && daily.precipitation_probability_max[0]) || 0;\nconst wind = cur.wind_speed_10m || 0;\n\nlet alertTitle = null;\nlet alertMsg = null;\nlet priority = 'NORMAL';\n\nif (rain > 15 || probRain > 80) {\n  alertTitle = `Alerta de Lluvia Intensa: ${fincaName}`;\n  alertMsg = `Probabilidad de lluvia del ${probRain}% con acumulado previsto superior a 15mm. Suspender fertilizaciones foliares.`;\n  priority = 'HIGH';\n} else if (temp > 37) {\n  alertTitle = `Alerta de Calor Extremo: ${fincaName}`;\n  alertMsg = `Temperatura proyectada de ${temp}°C. Asegurar hidratación del ganado y riego preventivo.`;\n  priority = 'HIGH';\n} else if (wind > 45) {\n  alertTitle = `Alerta de Vientos Fuertes: ${fincaName}`;\n  alertMsg = `Ráfagas de viento de ${wind} km/h detectadas. Precaución en estructuras y cultivos altos.`;\n  priority = 'HIGH';\n}\n\nif (alertTitle) {\n  return [{\n    json: {\n      organizationId: orgId,\n      type: 'WEATHER',\n      title: alertTitle,\n      message: alertMsg,\n      priority,\n      metadata: { finca: fincaName, temp, rain, wind }\n    }\n  }];\n}\nreturn [];"
+      },
+      "id": "evaluate-weather-conditions",
+      "name": "Evaluate Conditions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1160, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "send-weather-notification",
+      "name": "Send Weather Alert to AgroData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1380, 380]
+    }
+  ],
+  "connections": {
+    "Daily at 7:00 AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Fincas Coordinates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Fincas Coordinates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Fincas Coordinates": {
+      "main": [
+        [
+          {
+            "node": "Split Fincas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Fincas": {
+      "main": [
+        [
+          {
+            "node": "Query Open-Meteo Real Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Open-Meteo Real Data": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Conditions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Conditions": {
+      "main": [
+        [
+          {
+            "node": "Send Weather Alert to AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

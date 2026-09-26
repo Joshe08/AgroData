@@ -61,7 +61,10 @@ export const ModelName = {
   Inventario: 'Inventario',
   Finanza: 'Finanza',
   Empleado: 'Empleado',
-  Maquinaria: 'Maquinaria'
+  Maquinaria: 'Maquinaria',
+  Notification: 'Notification',
+  Automation: 'Automation',
+  AutomationLog: 'AutomationLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -277,6 +280,61 @@ export const MaquinariaScalarFieldEnum = {
 } as const
 
 export type MaquinariaScalarFieldEnum = (typeof MaquinariaScalarFieldEnum)[keyof typeof MaquinariaScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  userId: 'userId',
+  type: 'type',
+  title: 'title',
+  message: 'message',
+  priority: 'priority',
+  read: 'read',
+  source: 'source',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
+export const AutomationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  name: 'name',
+  description: 'description',
+  type: 'type',
+  enabled: 'enabled',
+  frequency: 'frequency',
+  cronExpression: 'cronExpression',
+  lastRunAt: 'lastRunAt',
+  nextRunAt: 'nextRunAt',
+  lastStatus: 'lastStatus',
+  lastResult: 'lastResult',
+  config: 'config',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AutomationScalarFieldEnum = (typeof AutomationScalarFieldEnum)[keyof typeof AutomationScalarFieldEnum]
+
+
+export const AutomationLogScalarFieldEnum = {
+  id: 'id',
+  automationId: 'automationId',
+  status: 'status',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  durationMs: 'durationMs',
+  result: 'result',
+  error: 'error',
+  triggeredBy: 'triggeredBy',
+  createdAt: 'createdAt'
+} as const
+
+export type AutomationLogScalarFieldEnum = (typeof AutomationLogScalarFieldEnum)[keyof typeof AutomationLogScalarFieldEnum]
 
 
 export const SortOrder = {

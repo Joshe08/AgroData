@@ -94,3 +94,18 @@ export type Empleado = Prisma.EmpleadoModel
  * 
  */
 export type Maquinaria = Prisma.MaquinariaModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel
+/**
+ * Model Automation
+ * 
+ */
+export type Automation = Prisma.AutomationModel
+/**
+ * Model AutomationLog
+ * 
+ */
+export type AutomationLog = Prisma.AutomationLogModel

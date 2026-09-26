@@ -1,0 +1,155 @@
+{
+  "name": "AgroData - AgroIA Insights",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "cron-ai-monday",
+      "name": "Every Monday at 9:00 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agrodata-agroia-insights",
+        "options": {}
+      },
+      "id": "webhook-ai",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/data/ai-context",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "organizationId",
+              "value": "={{ $json.body?.organizationId || $env.DEFAULT_ORG_ID || '19918424-c9bb-49d2-bf5e-3878edd08cc9' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-ai-context",
+      "name": "Fetch Organization Context",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $input.first().json;\nconst orgId = ctx.organization.id;\nconst orgName = ctx.organization.name;\n\nconst alerts = ctx.lowStockAlerts.length > 0 \n  ? `Atención: hay ${ctx.lowStockAlerts.length} insumos con existencias mínimas (${ctx.lowStockAlerts.join(', ')}).` \n  : 'Inventario con niveles adecuados.';\n\nconst productions = ctx.activeProductions.length > 0\n  ? `Producciones activas en seguimiento: ${ctx.activeProductions.join(', ')}.`\n  : 'No hay producciones activas registradas actualmente.';\n\nconst balance = `Balance financiero acumulado: $${Number(ctx.financialBalance.netBalance).toLocaleString('es-CO')} COP.`;\n\nconst insightMessage = `Recomendación agronómica semanal para ${orgName}: ${productions} ${alerts} ${balance} Revisa el módulo AgroIA para consultas personalizadas.`;\n\nreturn [{\n  json: {\n    organizationId: orgId,\n    type: 'AI',\n    title: 'Informe Semanal de AgroIA',\n    message: insightMessage,\n    priority: ctx.lowStockAlerts.length > 0 ? 'HIGH' : 'NORMAL',\n    metadata: { generatedAt: new Date().toISOString() }\n  }\n}];"
+      },
+      "id": "synthesize-insights",
+      "name": "Synthesize Insights",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AGRODATA_BACKEND_URL || 'http://host.docker.internal:3001' }}/webhooks/n8n/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'agrodata_n8n_secret_2024' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "send-ai-notification",
+      "name": "Send AI Insight to AgroData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [980, 380]
+    }
+  ],
+  "connections": {
+    "Every Monday at 9:00 AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Organization Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Organization Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Organization Context": {
+      "main": [
+        [
+          {
+            "node": "Synthesize Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesize Insights": {
+      "main": [
+        [
+          {
+            "node": "Send AI Insight to AgroData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
