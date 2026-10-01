@@ -23,9 +23,7 @@ import {
   FileBarChart,
   UserCircle,
   X,
-  Cpu,
 } from 'lucide-react';
-import NotificationCenter from '@/components/ui/NotificationCenter';
 
 const baseNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -37,7 +35,6 @@ const baseNavItems = [
   { href: '/dashboard/maquinaria', label: 'Maquinaria', icon: Wrench },
   { href: '/dashboard/clima', label: 'Clima', icon: CloudSun },
   { href: '/dashboard/ai', label: 'AgroIA', icon: Bot },
-  { href: '/dashboard/automatizaciones', label: 'Automatizaciones', icon: Cpu },
   { href: '/dashboard/reportes', label: 'Reportes', icon: FileBarChart },
   { href: '/dashboard/colaboradores', label: 'Organización', icon: Shield },
 ];
@@ -92,7 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return true;
     }
     if (userRole === 'AGRONOMO') {
-      return ['/dashboard', '/dashboard/fincas', '/dashboard/producciones', '/dashboard/inventario', '/dashboard/clima', '/dashboard/ai', '/dashboard/automatizaciones', '/dashboard/reportes'].includes(item.href);
+      return ['/dashboard', '/dashboard/fincas', '/dashboard/producciones', '/dashboard/inventario', '/dashboard/clima', '/dashboard/ai', '/dashboard/reportes'].includes(item.href);
     }
     if (userRole === 'TRABAJADOR') {
       return ['/dashboard', '/dashboard/producciones', '/dashboard/inventario', '/dashboard/maquinaria', '/dashboard/clima'].includes(item.href);
@@ -101,7 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return ['/dashboard', '/dashboard/finanzas', '/dashboard/reportes'].includes(item.href);
     }
     if (userRole === 'ADMIN_PRODUCCION') {
-      return ['/dashboard', '/dashboard/fincas', '/dashboard/producciones', '/dashboard/inventario', '/dashboard/personal', '/dashboard/maquinaria', '/dashboard/clima', '/dashboard/ai', '/dashboard/automatizaciones', '/dashboard/reportes'].includes(item.href);
+      return ['/dashboard', '/dashboard/fincas', '/dashboard/producciones', '/dashboard/inventario', '/dashboard/personal', '/dashboard/maquinaria', '/dashboard/clima', '/dashboard/ai', '/dashboard/reportes'].includes(item.href);
     }
     return ['/dashboard', '/dashboard/clima'].includes(item.href);
   });
@@ -286,7 +283,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }} className="desktop-header-org">
               {user.organizationName || 'AgroData'}
             </span>
-            <NotificationCenter />
           </div>
         </header>
 
