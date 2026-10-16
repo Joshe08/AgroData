@@ -726,7 +726,7 @@ interface KpiItem {
 
       {/* PRINT-ONLY FOOTER */}
       <div className="print-only" style={{ display: 'none', marginTop: 30, textAlign: 'center', fontSize: 10, color: '#777', borderTop: '1px solid #ccc', paddingTop: 8 }}>
-        AgroData SaaS · Plataforma de Gestión Agropecuaria Integral · Documento generado automáticamente
+        AgroData Cesar · Plataforma de Gestión Agropecuaria Integral · Documento generado automáticamente
       </div>
 
       {/* CSS Rules for Professional Printing */}

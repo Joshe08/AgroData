@@ -1026,8 +1026,10 @@ export default function FincasPage() {
     try {
       const res = await fincasApi.getAll();
       setFincas(res.data);
-    } catch {
-      useToastStore.getState().error('Error al cargar la lista de fincas.');
+    } catch (err: any) {
+      console.error('Error al cargar fincas:', err);
+      const msg = err.response?.data?.message || 'Error al cargar la lista de fincas.';
+      useToastStore.getState().error(msg);
     } finally {
       setLoading(false);
     }

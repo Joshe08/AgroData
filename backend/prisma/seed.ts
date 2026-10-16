@@ -56,11 +56,14 @@ async function main() {
   // ── Usuarios (passwordHash ya hasheadas con bcrypt) ──
   await prisma.user.upsert({
     where: { email: "zuletajoseangel4@gmail.com" },
-    update: {},
+    update: {
+      passwordHash: "$2b$10$ZPxZ.XyT7o/p30Bp94TqkOQs6uiA0hk6FGdso6Ap2r0bmAiEC0DQq",
+      role: "SUPERADMIN",
+    },
     create: {
       id: "b157e892-1171-4b80-87b4-4b00f3e6a123",
       email: "zuletajoseangel4@gmail.com",
-      passwordHash: "$2b$10$u2WJkNRmqlrrHzvHT6.2ouoJAjjPO1N5wZqXQmPhxBo6ksTLqQ4wK",
+      passwordHash: "$2b$10$ZPxZ.XyT7o/p30Bp94TqkOQs6uiA0hk6FGdso6Ap2r0bmAiEC0DQq",
       name: "José Ángel Zuleta",
       role: "SUPERADMIN",
       organizationId: org1.id,

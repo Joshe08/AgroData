@@ -101,8 +101,9 @@ function ItemModal({
       }
       onSave();
       onClose();
-    } catch {
-      useToastStore.getState().error('Error al guardar el insumo.');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al guardar el insumo en el inventario.';
+      useToastStore.getState().error(msg);
     } finally {
       setLoading(false);
     }

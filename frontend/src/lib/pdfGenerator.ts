@@ -118,7 +118,7 @@ export const generatePDFReport = (options: PDFReportOptions) => {
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
       doc.text(
-        `AgroData SaaS - Plataforma de Gestión Agropecuaria | Página ${doc.internal.pages.length - 1}`,
+        `AgroData Cesar - Plataforma de Gestión Agropecuaria | Página ${doc.internal.pages.length - 1}`,
         pageWidth / 2,
         pageHeight - 10,
         { align: 'center' }

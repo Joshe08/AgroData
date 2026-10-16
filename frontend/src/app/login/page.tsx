@@ -137,7 +137,7 @@ export default function LoginPage() {
           </div>
           <div>
             <div className="font-display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>
-              AgroData <span style={{ color: 'var(--color-primary)' }}>SaaS</span>
+              AgroData <span style={{ color: 'var(--color-primary)' }}>Cesar</span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
               Inteligencia y Gestión Agropecuaria
@@ -163,7 +163,7 @@ export default function LoginPage() {
             }}
           >
             <ShieldCheck size={14} />
-            Plataforma Multitenant Empresarial
+            Plataforma Integral del Campo
           </div>
 
           <h1

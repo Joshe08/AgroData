@@ -300,8 +300,9 @@ function ProduccionModal({
 
       onSave();
       onClose();
-    } catch {
-      useToastStore.getState().error('Error al guardar la producción. Verifica los datos.');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al guardar la producción. Verifica los datos requeridos.';
+      useToastStore.getState().error(msg);
     } finally {
       setLoading(false);
     }
@@ -1234,8 +1235,17 @@ export default function ProduccionesPage() {
       if (fincasRes.status === 'fulfilled') {
         setFincas(Array.isArray(fincasRes.value.data) ? fincasRes.value.data : []);
       }
-      if (prodsRes.status === 'rejected' && fincasRes.status === 'rejected') {
-        useToastStore.getState().error('No se pudo sincronizar con el servidor de producciones.');
+      if (prodsRes.status === 'rejected') {
+        const err = prodsRes.reason;
+        console.error('Error al cargar producciones:', err);
+        // Only show toast if it was a real failure (not an empty list)
+        if (err?.response?.status && err.response.status !== 404) {
+          useToastStore.getState().error('No se pudieron cargar los ciclos de producción.');
+        }
+      }
+      if (fincasRes.status === 'rejected') {
+        const err = fincasRes.reason;
+        console.error('Error al cargar fincas para producciones:', err);
       }
     } catch (err) {
       console.error('Error al cargar datos de producciones:', err);
