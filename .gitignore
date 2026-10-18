@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 */node_modules/
 
@@ -18,10 +18,9 @@ backend/.env
 frontend/.env.local
 
 # Databases & local logs
-*.db
 *.db-journal
 *.log
-backend/dev.db
+!backend/dev.db
 
 # IDE & Editor files
 .vs/
