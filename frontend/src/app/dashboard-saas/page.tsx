@@ -28,6 +28,12 @@ import {
   LogOut,
   Phone,
   MapPin,
+  Copy,
+  Send,
+  ExternalLink,
+  ShieldCheck,
+  Mail,
+  MessageSquare,
 } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
@@ -141,12 +147,28 @@ export default function SaasAdminPage() {
     orgType: 'EMPRESA',
     nit: '',
     subscription: 'FREE',
+    status: 'ACTIVE',
     phone: '',
     address: '',
     ownerEmail: '',
     ownerName: '',
     ownerPassword: '',
   });
+
+  // Modal de Validación y Entrega de Credenciales
+  const [createdAccountModal, setCreatedAccountModal] = useState<{
+    isOpen: boolean;
+    type: 'org' | 'user';
+    orgName: string;
+    orgType?: string;
+    status: string;
+    nit?: string;
+    phone?: string;
+    userName?: string;
+    userEmail?: string;
+    temporaryPassword?: string;
+    role?: string;
+  } | null>(null);
 
   // Edit Org Form
   const [editOrgForm, setEditOrgForm] = useState({
@@ -217,15 +239,36 @@ export default function SaasAdminPage() {
       useToastStore.getState().error('El NIT es obligatorio para Empresas y Cooperativas.');
       return;
     }
+    const tempPassword = orgForm.ownerPassword?.trim() || (orgForm.ownerEmail ? 'Agro2026*' : '');
     try {
-      await saasApi.createOrganization(orgForm);
-      useToastStore.getState().success(`Organización "${orgForm.name}" creada exitosamente.`);
+      await saasApi.createOrganization({
+        ...orgForm,
+        ownerPassword: tempPassword || undefined,
+      });
+      useToastStore.getState().success(`Organización "${orgForm.name}" registrada exitosamente.`);
       setShowOrgModal(false);
+
+      // Desplegar modal de verificación de cuenta y entrega de credenciales
+      setCreatedAccountModal({
+        isOpen: true,
+        type: 'org',
+        orgName: orgForm.name,
+        orgType: orgForm.orgType,
+        status: orgForm.status || 'ACTIVE',
+        nit: orgForm.nit,
+        phone: orgForm.phone,
+        userName: orgForm.ownerName || 'Propietario Principal',
+        userEmail: orgForm.ownerEmail,
+        temporaryPassword: tempPassword,
+        role: 'PROPIETARIO',
+      });
+
       setOrgForm({
         name: '',
         orgType: 'EMPRESA',
         nit: '',
         subscription: 'FREE',
+        status: 'ACTIVE',
         phone: '',
         address: '',
         ownerEmail: '',
@@ -377,16 +420,44 @@ export default function SaasAdminPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    const tempPassword = userForm.password?.trim() || 'Agro2026*';
+    const targetOrg = stats?.organizaciones.find((o) => o.id === userForm.organizationId);
     try {
-      await saasApi.createUser(userForm);
+      await saasApi.createUser({
+        ...userForm,
+        password: tempPassword,
+      });
       useToastStore.getState().success(`Usuario "${userForm.name}" creado con rol ${userForm.role}.`);
       setShowUserModal(false);
+
+      setCreatedAccountModal({
+        isOpen: true,
+        type: 'user',
+        orgName: targetOrg?.nombre || 'Organización',
+        status: 'ACTIVE',
+        userName: userForm.name,
+        userEmail: userForm.email,
+        temporaryPassword: tempPassword,
+        role: userForm.role,
+      });
+
       setUserForm({ name: '', email: '', password: '', role: 'PROPIETARIO', organizationId: '' });
       loadData();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Error al crear el usuario.';
       useToastStore.getState().error(msg);
       setError(msg);
+    }
+  };
+
+  const handleActivatePendingOrg = async (id: string, name: string) => {
+    try {
+      await saasApi.updateOrganization(id, { status: 'ACTIVE' });
+      useToastStore.getState().success(`Organización "${name}" validada y activada con éxito.`);
+      loadData();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al activar la organización.';
+      useToastStore.getState().error(msg);
     }
   };
 
@@ -885,7 +956,17 @@ export default function SaasAdminPage() {
                               <div style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>{org.fincas} fincas</div>
                             </td>
                             <td style={{ padding: '14px' }}>
-                              {isSuspended ? (
+                              {org.status === 'PENDING' ? (
+                                <button
+                                  onClick={() => handleActivatePendingOrg(org.id, org.nombre)}
+                                  className="btn-secondary"
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', fontSize: 12, color: '#fbbf24', borderColor: 'rgba(245,158,11,0.4)' }}
+                                  title="Validar y Activar Empresa (Concede acceso formal)"
+                                >
+                                  <CheckCircle size={14} />
+                                  <span>Validar</span>
+                                </button>
+                              ) : isSuspended ? (
                                 <button
                                   onClick={() => handleReactivateOrg(org.id, org.nombre)}
                                   className="btn-secondary"
@@ -1157,6 +1238,13 @@ export default function SaasAdminPage() {
             </div>
 
             <form onSubmit={handleCreateOrg} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.25)', fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5, display: 'flex', gap: 10 }}>
+                <ShieldCheck size={20} color="#818cf8" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <strong style={{ color: '#818cf8' }}>Validación de Registro:</strong> Al guardar la empresa, podrás definir si queda <strong>Activa</strong> o <strong>Pendiente de Validación</strong>. El sistema te mostrará de inmediato las credenciales creadas y un mensaje directo para validarlo con el usuario por WhatsApp o Correo.
+                </div>
+              </div>
+
               <div>
                 <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Tipo de Organización *</label>
                 <select
@@ -1184,21 +1272,22 @@ export default function SaasAdminPage() {
                 />
               </div>
 
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                  {orgForm.orgType === 'PERSONA_NATURAL' ? 'Cédula / Documento (Opcional)' : 'NIT *'}
+                </label>
+                <input
+                  type="text"
+                  required={orgForm.orgType !== 'PERSONA_NATURAL'}
+                  placeholder={orgForm.orgType === 'PERSONA_NATURAL' ? 'Ej: 1098765432' : '900.123.456-7'}
+                  className="input-field"
+                  style={{ marginTop: 6 }}
+                  value={orgForm.nit}
+                  onChange={(e) => setOrgForm({ ...orgForm, nit: e.target.value })}
+                />
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                    {orgForm.orgType === 'PERSONA_NATURAL' ? 'Cédula / Documento (Opcional)' : 'NIT *'}
-                  </label>
-                  <input
-                    type="text"
-                    required={orgForm.orgType !== 'PERSONA_NATURAL'}
-                    placeholder={orgForm.orgType === 'PERSONA_NATURAL' ? 'Ej: 1098765432' : '900.123.456-7'}
-                    className="input-field"
-                    style={{ marginTop: 6 }}
-                    value={orgForm.nit}
-                    onChange={(e) => setOrgForm({ ...orgForm, nit: e.target.value })}
-                  />
-                </div>
                 <div>
                   <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Plan de Suscripción</label>
                   <select
@@ -1210,6 +1299,18 @@ export default function SaasAdminPage() {
                     <option value="FREE">Plan FREE (1 Finca, 2 Colaboradores)</option>
                     <option value="PREMIUM">Plan PREMIUM (5 Fincas, 10 Colaboradores)</option>
                     <option value="ENTERPRISE">Plan ENTERPRISE (Ilimitado)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Estado de Validación Inicial</label>
+                  <select
+                    className="input-field"
+                    style={{ marginTop: 6 }}
+                    value={orgForm.status}
+                    onChange={(e) => setOrgForm({ ...orgForm, status: e.target.value })}
+                  >
+                    <option value="ACTIVE">🟢 Activa (Acceso Inmediato)</option>
+                    <option value="PENDING">🟡 Pendiente de Validación (Revisión)</option>
                   </select>
                 </div>
               </div>
@@ -1641,6 +1742,216 @@ export default function SaasAdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: COMPROBANTE DE REGISTRO, VALIDACIÓN Y ENTREGA DE CREDENCIALES */}
+      {createdAccountModal && createdAccountModal.isOpen && (
+        <div className="modal-overlay" onClick={() => setCreatedAccountModal(null)}>
+          <div className="modal-content" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <ShieldCheck size={24} color="#10b981" />
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
+                    Comprobante de Registro y Validación
+                  </h2>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0 }}>
+                    {createdAccountModal.type === 'org' ? 'Empresa y usuario inicial registrados' : 'Nuevo usuario dado de alta'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCreatedAccountModal(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Banner de Estado de Verificación */}
+            <div
+              style={{
+                padding: '14px 16px',
+                borderRadius: 12,
+                background: createdAccountModal.status === 'PENDING' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+                border: createdAccountModal.status === 'PENDING' ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+                marginBottom: 16,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span
+                  style={{
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    background: createdAccountModal.status === 'PENDING' ? '#fbbf24' : '#10b981',
+                    color: '#000',
+                  }}
+                >
+                  {createdAccountModal.status === 'PENDING' ? '🟡 PENDIENTE DE VALIDACIÓN' : '🟢 ACTIVA Y VERIFICADA'}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text)' }}>
+                  {createdAccountModal.status === 'PENDING' ? 'Revisión documental requerida' : 'Acceso operativo inmediato'}
+                </span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.5 }}>
+                {createdAccountModal.status === 'PENDING'
+                  ? 'La organización quedó registrada en modo pendiente. El productor puede ser notificado para que valide su Cédula/RUT y una vez validado podrás activarlo con 1 clic en la tabla.'
+                  : 'La cuenta ha sido habilitada para ingresar al sistema de inmediato con las credenciales que se detallan a continuación.'}
+              </p>
+            </div>
+
+            {/* Resumen de Credenciales */}
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 12,
+                padding: '16px',
+                marginBottom: 16,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>Organización / Empresa:</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{createdAccountModal.orgName}</span>
+              </div>
+              {createdAccountModal.userEmail && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: 8 }}>
+                  <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>Usuario Asignado:</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+                    {createdAccountModal.userName} ({createdAccountModal.role || 'PROPIETARIO'})
+                  </span>
+                </div>
+              )}
+              {createdAccountModal.userEmail && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)', paddingBottom: 8 }}>
+                  <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>Correo de Acceso:</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#818cf8', fontFamily: 'monospace' }}>
+                    {createdAccountModal.userEmail}
+                  </span>
+                </div>
+              )}
+              {createdAccountModal.temporaryPassword && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: 8 }}>
+                  <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>Contraseña Temporal:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: 4, color: '#34d399', fontWeight: 700, fontSize: 13 }}>
+                      {createdAccountModal.temporaryPassword}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (createdAccountModal?.temporaryPassword) {
+                          navigator.clipboard.writeText(createdAccountModal.temporaryPassword);
+                          useToastStore.getState().success('Contraseña copiada al portapapeles');
+                        }
+                      }}
+                      className="btn-secondary"
+                      style={{ padding: '3px 8px', fontSize: 11 }}
+                      title="Copiar contraseña"
+                    >
+                      <Copy size={12} />
+                    </button>
+                  </div>
+                </div>
+              )}
+              {createdAccountModal.phone && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 2 }}>
+                  <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>Teléfono Registrado:</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{createdAccountModal.phone}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Mensaje de Invitación / Validación Formateado */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)' }}>
+                  Mensaje de notificación para el usuario:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = `🌾 AgroData Cesar - Notificación de Acceso\n\n¡Hola ${createdAccountModal.userName}!\nSe ha habilitado tu acceso a la plataforma AgroData para la organización *${createdAccountModal.orgName}*.\n\n🌐 Enlace de Acceso: ${window.location.origin}/login\n📧 Correo: ${createdAccountModal.userEmail}\n🔑 Contraseña temporal: ${createdAccountModal.temporaryPassword}\n📋 Estado de cuenta: ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo y Verificado'}\n\nPor tu seguridad, te recomendamos cambiar la contraseña en tu primer inicio de sesión.`;
+                    navigator.clipboard.writeText(text);
+                    useToastStore.getState().success('Mensaje completo copiado al portapapeles.');
+                  }}
+                  className="btn-secondary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', fontSize: 11, color: '#818cf8' }}
+                >
+                  <Copy size={12} />
+                  <span>Copiar Mensaje</span>
+                </button>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(0, 0, 0, 0.25)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  fontSize: 12,
+                  color: 'var(--color-text-muted)',
+                  lineHeight: 1.6,
+                  fontFamily: 'monospace',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {`🌾 AgroData Cesar - Notificación de Acceso\n¡Hola ${createdAccountModal.userName}!\nSe ha habilitado tu cuenta para "${createdAccountModal.orgName}".\n🌐 Acceso: ${typeof window !== 'undefined' ? window.location.origin : ''}/login\n📧 Correo: ${createdAccountModal.userEmail || '—'}\n🔑 Contraseña: ${createdAccountModal.temporaryPassword || '—'}\n📋 Estado: ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo'}`}
+              </div>
+            </div>
+
+            {/* Botones de Notificación Rápida */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {createdAccountModal.phone && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cleanPhone = createdAccountModal.phone?.replace(/[^0-9]/g, '') || '';
+                      const fullPhone = cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`;
+                      const text = `🌾 *AgroData Cesar - Notificación de Acceso*\n\n¡Hola ${createdAccountModal.userName}!\nSe ha habilitado tu acceso a la plataforma AgroData para la organización *${createdAccountModal.orgName}*.\n\n🌐 *Enlace:* ${window.location.origin}/login\n📧 *Correo:* ${createdAccountModal.userEmail}\n🔑 *Contraseña:* ${createdAccountModal.temporaryPassword}\n📋 *Estado:* ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo y Verificado'}`;
+                      window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(text)}`, '_blank');
+                    }}
+                    className="btn-secondary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#34d399', borderColor: 'rgba(16,185,129,0.4)' }}
+                  >
+                    <MessageSquare size={14} />
+                    <span>Enviar WhatsApp</span>
+                  </button>
+                )}
+                {createdAccountModal.userEmail && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const subject = `Acceso a AgroData Cesar - ${createdAccountModal.orgName}`;
+                      const body = `Hola ${createdAccountModal.userName},\n\nSe ha habilitado tu acceso a la plataforma AgroData Cesar para la empresa ${createdAccountModal.orgName}.\n\nEnlace de ingreso: ${window.location.origin}/login\nCorreo: ${createdAccountModal.userEmail}\nContraseña temporal: ${createdAccountModal.temporaryPassword}\nEstado: ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo'}\n\nSaludos cordiales,\nEquipo AgroData`;
+                      window.location.href = `mailto:${createdAccountModal.userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    }}
+                    className="btn-secondary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#60a5fa', borderColor: 'rgba(59,130,246,0.4)' }}
+                  >
+                    <Mail size={14} />
+                    <span>Enviar Correo</span>
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCreatedAccountModal(null)}
+                className="btn-primary"
+                style={{ background: '#6366f1' }}
+              >
+                Entendido / Finalizar
+              </button>
+            </div>
           </div>
         </div>
       )}

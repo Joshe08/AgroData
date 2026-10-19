@@ -432,6 +432,7 @@ export const saasApi = {
     orgType?: string;
     nit?: string;
     subscription?: string;
+    status?: string;
     phone?: string;
     address?: string;
     ownerEmail?: string;
