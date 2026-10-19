@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -55,8 +55,15 @@ export class InventarioService {
   }
 
   async update(id: string, orgId: string, data: any) {
-    return this.prisma.inventario.updateMany({
+    const existing = await this.prisma.inventario.findFirst({
       where: { id, organizationId: orgId },
+    });
+    if (!existing) {
+      throw new NotFoundException('Elemento de inventario no encontrado o no pertenece a tu organización.');
+    }
+
+    return this.prisma.inventario.update({
+      where: { id },
       data: {
         name: data.name,
         category: data.category,
@@ -66,6 +73,11 @@ export class InventarioService {
         proveedor: data.proveedor !== undefined ? (data.proveedor ? String(data.proveedor).trim() : null) : undefined,
         costo: data.costo !== undefined ? (data.costo !== null && data.costo !== '' ? parseFloat(data.costo) : null) : undefined,
         fincaId: data.fincaId !== undefined ? (data.fincaId && String(data.fincaId).trim() !== '' ? String(data.fincaId) : null) : undefined,
+      },
+      include: {
+        finca: {
+          select: { id: true, name: true, location: true },
+        },
       },
     });
   }

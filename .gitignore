@@ -20,6 +20,7 @@ frontend/.env.local
 # Databases & local logs
 *.db-journal
 *.log
+*.bak*
 !backend/dev.db
 
 # IDE & Editor files

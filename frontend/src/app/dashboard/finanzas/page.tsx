@@ -143,7 +143,7 @@ function TransaccionModal({
               </button>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="form-grid-2">
             <div>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>Categoría *</label>
               <select className="input-field" value={form.categoria} onChange={(e) => setForm(f => ({ ...f, categoria: e.target.value }))} required>
@@ -404,7 +404,7 @@ export default function FinanzasPage() {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 28 }}>
+      <div className="dashboard-kpi-grid">
         {/* Total Ingresos */}
         <div className="card stat-card-green" style={{ padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -413,7 +413,7 @@ export default function FinanzasPage() {
               <TrendingUp size={18} color="#4ade80" />
             </div>
           </div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#4ade80', marginBottom: 4 }}>{formatCOP(resumen.totalIngresos)}</div>
+          <div style={{ fontSize: 'clamp(20px, 2.4vw, 24px)', fontWeight: 700, color: '#4ade80', marginBottom: 4, wordBreak: 'break-word' }}>{formatCOP(resumen.totalIngresos)}</div>
           <div style={{ fontSize: 12, color: 'var(--color-text-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
             <ArrowUpRight size={14} color="#4ade80" />
             <span>{resumen.countIngresos} registros de ingreso</span>
@@ -428,7 +428,7 @@ export default function FinanzasPage() {
               <TrendingDown size={18} color="#f87171" />
             </div>
           </div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#f87171', marginBottom: 4 }}>{formatCOP(resumen.totalGastos)}</div>
+          <div style={{ fontSize: 'clamp(20px, 2.4vw, 24px)', fontWeight: 700, color: '#f87171', marginBottom: 4, wordBreak: 'break-word' }}>{formatCOP(resumen.totalGastos)}</div>
           <div style={{ fontSize: 12, color: 'var(--color-text-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
             <ArrowDownRight size={14} color="#f87171" />
             <span>{resumen.countGastos} registros de gasto</span>
@@ -443,7 +443,7 @@ export default function FinanzasPage() {
               <DollarSign size={18} color={resumen.balance >= 0 ? '#38bdf8' : '#fbbf24'} />
             </div>
           </div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: resumen.balance >= 0 ? '#4ade80' : '#f87171', marginBottom: 4 }}>
+          <div style={{ fontSize: 'clamp(20px, 2.4vw, 24px)', fontWeight: 700, color: resumen.balance >= 0 ? '#4ade80' : '#f87171', marginBottom: 4, wordBreak: 'break-word' }}>
             {formatCOP(resumen.balance)}
           </div>
           <div style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
@@ -469,7 +469,7 @@ export default function FinanzasPage() {
       </div>
 
       {/* Filters */}
-      <div className="card" style={{ padding: '16px 20px', marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+      <div className="card responsive-filter-bar" style={{ padding: '16px 20px', marginBottom: 24 }}>
         <div style={{ flex: 1, minWidth: 200 }}>
           <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>Buscar</label>
           <div style={{ position: 'relative' }}>
@@ -807,54 +807,56 @@ export default function FinanzasPage() {
               <p>No hay transacciones registradas</p>
             </div>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Tipo</th>
-                  <th>Categoría</th>
-                  <th>Descripción</th>
-                  <th>Finca</th>
-                  <th>Fecha</th>
-                  <th style={{ textAlign: 'right' }}>Monto</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((t) => (
-                  <tr key={t.id}>
-                    <td>
-                      <span className={`badge ${t.tipo === 'INGRESO' ? 'badge-success' : 'badge-danger'}`}>
-                        {t.tipo === 'INGRESO' ? '↑' : '↓'} {t.tipo}
-                      </span>
-                    </td>
-                    <td style={{ fontWeight: 500 }}>{t.categoria}</td>
-                    <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{t.descripcion || '-'}</td>
-                    <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{t.finca?.nombre || (t.fincaId ? `Finca #${t.fincaId}` : '-')}</td>
-                    <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{format(new Date(t.fecha), 'd MMM yyyy', { locale: es })}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 700, color: t.tipo === 'INGRESO' ? '#4ade80' : '#f87171' }}>
-                      {formatCOP(t.monto)}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-                        <button
-                          onClick={() => {
-                            setEditingTransaccion(t);
-                            setModalOpen(true);
-                          }}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#818cf8', padding: 6, borderRadius: 8 }}
-                          title="Editar Transacción"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                        <button onClick={() => handleDelete(t)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }} title="Eliminar Transacción">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Tipo</th>
+                    <th>Categoría</th>
+                    <th>Descripción</th>
+                    <th>Finca</th>
+                    <th>Fecha</th>
+                    <th style={{ textAlign: 'right' }}>Monto</th>
+                    <th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filtered.map((t) => (
+                    <tr key={t.id}>
+                      <td>
+                        <span className={`badge ${t.tipo === 'INGRESO' ? 'badge-success' : 'badge-danger'}`}>
+                          {t.tipo === 'INGRESO' ? '↑' : '↓'} {t.tipo}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 500 }}>{t.categoria}</td>
+                      <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{t.descripcion || '-'}</td>
+                      <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{t.finca?.nombre || (t.fincaId ? `Finca #${t.fincaId}` : '-')}</td>
+                      <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{format(new Date(t.fecha), 'd MMM yyyy', { locale: es })}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, color: t.tipo === 'INGRESO' ? '#4ade80' : '#f87171' }}>
+                        {formatCOP(t.monto)}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                          <button
+                            onClick={() => {
+                              setEditingTransaccion(t);
+                              setModalOpen(true);
+                            }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#818cf8', padding: 6, borderRadius: 8 }}
+                            title="Editar Transacción"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          <button onClick={() => handleDelete(t)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }} title="Eliminar Transacción">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

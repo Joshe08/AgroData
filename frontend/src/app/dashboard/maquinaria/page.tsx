@@ -610,7 +610,7 @@ export default function MaquinariaPage() {
       </div>
 
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div className="responsive-cards-grid">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="skeleton" style={{ height: 180, borderRadius: 14 }} />
           ))}
@@ -623,7 +623,7 @@ export default function MaquinariaPage() {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div className="responsive-cards-grid">
           {filtered.map((m) => {
             const badge = ESTADO_BADGE[m.estado] || ESTADO_BADGE['OPERATIVO'];
             const displayFinca = m.finca?.nombre || (m.fincaId ? `Finca #${m.fincaId}` : 'Sin finca asignada');

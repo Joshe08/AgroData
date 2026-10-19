@@ -1210,7 +1210,7 @@ export default function FincasPage() {
         <>
           {/* Fincas Grid */}
           {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+            <div className="responsive-cards-grid">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="skeleton" style={{ height: 220, borderRadius: 16 }} />
               ))}
@@ -1232,13 +1232,7 @@ export default function FincasPage() {
           </p>
         </div>
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: 18,
-          }}
-        >
+        <div className="responsive-cards-grid">
           {filtered.map((finca) => {
             const isLotesOpen = selectedFincaForLotes === finca.id;
             return (

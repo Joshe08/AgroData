@@ -283,11 +283,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }} className="desktop-header-org">
               {user.organizationName || 'AgroData'}
             </span>
+            <Link
+              href="/dashboard/perfil"
+              className="mobile-header-avatar"
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: '50%',
+                background: 'var(--gradient-primary)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 13,
+                fontWeight: 700,
+                color: 'white',
+                textDecoration: 'none',
+              }}
+              title="Mi Perfil"
+            >
+              {user.nombre?.charAt(0)?.toUpperCase()}
+            </Link>
           </div>
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <main className="dashboard-main-content">
           {children}
         </main>
       </div>

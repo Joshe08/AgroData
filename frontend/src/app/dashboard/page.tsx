@@ -58,7 +58,7 @@ function StatCard({ label, value, subtitle, icon, color, trend, onClick }: StatC
       onClick={onClick}
       className={`card stat-card-${color}`}
       style={{
-        padding: '20px 24px',
+        padding: '18px 20px',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
       }}
@@ -75,12 +75,12 @@ function StatCard({ label, value, subtitle, icon, color, trend, onClick }: StatC
         }
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
         <div
           className={`stat-icon-${color}`}
           style={{
-            width: 44,
-            height: 44,
+            width: 42,
+            height: 42,
             borderRadius: 12,
             display: 'flex',
             alignItems: 'center',
@@ -105,7 +105,17 @@ function StatCard({ label, value, subtitle, icon, color, trend, onClick }: StatC
           </div>
         )}
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>
+      <div
+        className="font-display"
+        style={{
+          fontSize: 'clamp(20px, 2.4vw, 26px)',
+          fontWeight: 700,
+          color: 'var(--color-text)',
+          marginBottom: 4,
+          wordBreak: 'break-word',
+          lineHeight: 1.2,
+        }}
+      >
         {value}
       </div>
       <div style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>{label}</div>
@@ -161,11 +171,11 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
     <>
       {/* KPI Cards */}
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <div className="dashboard-kpi-grid">
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton" style={{ height: 140, borderRadius: 16 }} />)}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <div className="dashboard-kpi-grid">
           <StatCard
             label="Fincas a cargo"
             value={fincas}
@@ -192,7 +202,7 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
       )}
 
       {/* Distribución de cultivos */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 28 }}>
+      <div className="dashboard-charts-grid-even">
         <div className="card" style={{ padding: '24px' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Tipos de Cultivo</h3>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Distribución por especie</p>
@@ -281,11 +291,11 @@ function TrabajadorDashboard({ data }: { data: DashboardData }) {
   return (
     <>
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <div className="dashboard-kpi-grid">
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton" style={{ height: 140, borderRadius: 16 }} />)}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <div className="dashboard-kpi-grid">
           <StatCard
             label="Predios asignados"
             value={fincas}
@@ -358,11 +368,11 @@ function ContadorDashboard({ data }: { data: DashboardData }) {
   return (
     <>
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <div className="dashboard-kpi-grid">
           {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 140, borderRadius: 16 }} />)}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <div className="dashboard-kpi-grid">
           <StatCard
             label="Ingresos totales"
             value={formatCOP(ingresos)}
@@ -398,8 +408,8 @@ function ContadorDashboard({ data }: { data: DashboardData }) {
       )}
 
       {/* Financial Chart */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, marginBottom: 28 }}>
-        <div className="card" style={{ padding: '24px', gridColumn: 'span 2' }}>
+      <div className="dashboard-charts-grid">
+        <div className="card" style={{ padding: '24px' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Flujo de Caja</h3>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Ultimos 6 meses — Ingresos vs Gastos</p>
           {loading ? (
@@ -475,11 +485,11 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
     <>
       {/* 1. RESUMEN: 4 INDICADORES ESENCIALES */}
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <div className="dashboard-kpi-grid">
           {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 130, borderRadius: 16 }} />)}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <div className="dashboard-kpi-grid">
           <StatCard
             label="Fincas Registradas"
             value={fincas}
@@ -512,10 +522,10 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
       )}
 
       {/* 2. GRÁFICAS: INGRESOS VS GASTOS & ACTIVIDAD PRODUCTIVA */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginBottom: 28 }}>
+      <div className="dashboard-charts-grid">
         
         {/* Ingresos vs Gastos (Gráfica Principal Comparativa) */}
-        <div className="card" style={{ padding: '24px', gridColumn: 'span 2' }}>
+        <div className="card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Ingresos vs Gastos</h3>
@@ -705,31 +715,24 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
             {movimientosRecientes.map((m) => (
               <div
                 key={m.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  borderRadius: 10,
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid var(--color-border)',
-                  fontSize: 13,
-                }}
+                className="recent-activity-row"
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span className={`badge ${m.tipo === 'INGRESO' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 11 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <span className={`badge ${m.tipo === 'INGRESO' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 11, flexShrink: 0 }}>
                     {m.tipo === 'INGRESO' ? '↑ Ingreso' : '↓ Gasto'}
                   </span>
-                  <div>
-                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{m.titulo}</span>
-                    <span style={{ color: 'var(--color-text-muted)', marginLeft: 8, fontSize: 12 }}>{m.detalle}</span>
+                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.titulo}</div>
+                    {m.detalle && (
+                      <div style={{ color: 'var(--color-text-muted)', fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.detalle}</div>
+                    )}
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div className="recent-activity-meta">
                   <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
                     {m.fecha?.split('T')[0]}
                   </span>
-                  <span style={{ fontWeight: 700, color: m.tipo === 'INGRESO' ? '#4ade80' : '#f87171' }}>
+                  <span style={{ fontWeight: 700, color: m.tipo === 'INGRESO' ? '#4ade80' : '#f87171', fontSize: 14 }}>
                     {formatCOP(m.monto)}
                   </span>
                 </div>

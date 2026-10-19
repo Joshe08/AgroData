@@ -389,16 +389,17 @@ export default function ColaboradoresPage() {
         <>
           {/* Desktop table */}
           <div className="card colabs-table-wrapper" style={{ overflow: 'hidden', padding: 0 }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Correo Electrónico</th>
-                  <th>Rol</th>
-                  <th>Registro</th>
-                  {isOwnerOrAdmin && <th style={{ width: 100 }}>Acciones</th>}
-                </tr>
-              </thead>
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Correo Electrónico</th>
+                    <th>Rol</th>
+                    <th>Registro</th>
+                    {isOwnerOrAdmin && <th style={{ width: 100 }}>Acciones</th>}
+                  </tr>
+                </thead>
               <tbody>
                 {filtered.map((colab) => (
                   <tr key={colab.id}>
@@ -461,6 +462,7 @@ export default function ColaboradoresPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Mobile cards */}

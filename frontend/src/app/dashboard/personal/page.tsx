@@ -577,7 +577,7 @@ export default function PersonalPage() {
 
       {/* Grid de Cards */}
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div className="responsive-cards-grid">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="skeleton" style={{ height: 180, borderRadius: 16 }} />
           ))}
@@ -603,7 +603,7 @@ export default function PersonalPage() {
           )}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div className="responsive-cards-grid">
           {filtered.map((p) => {
             const displayName = [p.nombre, p.apellido].filter(Boolean).join(' ');
             const displayFinca = p.finca?.nombre || (p.fincaId ? `Finca #${p.fincaId}` : 'Sin finca asignada');

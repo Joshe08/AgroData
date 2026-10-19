@@ -33,7 +33,21 @@ interface Finca {
 
 export default function ReportesPage() {
   const { user } = useAuthStore();
-  const [reportType, setReportType] = useState<ReportCategory>('produccion');
+  const userRole = user?.rol || 'TRABAJADOR';
+  const isSalaryPrivileged = userRole === 'PROPIETARIO' || userRole === 'ADMIN' || userRole === 'SUPERADMIN' || userRole === 'CONTADOR';
+
+  const allCategoryTabs = [
+    { id: 'produccion' as ReportCategory, label: 'Producción', desc: 'Cultivos, ganado y cosechas', icon: <Sprout size={18} color="#fbbf24" />, roles: ['PROPIETARIO', 'ADMIN', 'SUPERADMIN', 'AGRONOMO', 'ADMIN_PRODUCCION'] },
+    { id: 'finanzas' as ReportCategory, label: 'Finanzas', desc: 'Ingresos, costos y balances', icon: <DollarSign size={18} color="#34d399" />, roles: ['PROPIETARIO', 'ADMIN', 'SUPERADMIN', 'CONTADOR'] },
+    { id: 'inventario' as ReportCategory, label: 'Inventario', desc: 'Insumos y alertas de stock', icon: <Package size={18} color="#60a5fa" />, roles: ['PROPIETARIO', 'ADMIN', 'SUPERADMIN', 'AGRONOMO', 'ADMIN_PRODUCCION', 'CONTADOR'] },
+    { id: 'fincas' as ReportCategory, label: 'Fincas y Predios', desc: 'Hectáreas y parcelas', icon: <MapPin size={18} color="#a78bfa" />, roles: ['PROPIETARIO', 'ADMIN', 'SUPERADMIN', 'AGRONOMO', 'ADMIN_PRODUCCION'] },
+    { id: 'personal' as ReportCategory, label: 'Personal', desc: 'Mano de obra y nómina', icon: <Users size={18} color="#f472b6" />, roles: ['PROPIETARIO', 'ADMIN', 'SUPERADMIN', 'ADMIN_PRODUCCION', 'CONTADOR'] },
+  ];
+
+  const availableTabs = allCategoryTabs.filter(t => t.roles.includes(userRole));
+  const defaultTab = availableTabs[0]?.id || 'produccion';
+
+  const [reportType, setReportType] = useState<ReportCategory>(defaultTab);
   const [fincas, setFincas] = useState<Finca[]>([]);
   const [selectedFinca, setSelectedFinca] = useState<string>('ALL');
   const [period, setPeriod] = useState<PeriodOption>('TODO');
@@ -178,13 +192,23 @@ interface KpiItem {
     }
     if (reportType === 'personal') {
       const totalPersonal = filteredData.length;
-      const totalNomina = filteredData.reduce((acc, p) => acc + (p.salario || p.dailyRate || 0), 0);
-      const promedio = totalPersonal > 0 ? totalNomina / totalPersonal : 0;
-      return [
-        { label: 'Total Colaboradores', val: totalPersonal, note: 'Personal activo' },
-        { label: 'Nómina Mensual', val: formatCOP(totalNomina), note: 'Presupuesto mano de obra' },
-        { label: 'Salario Promedio', val: formatCOP(promedio), note: 'Por trabajador/mes' },
-      ];
+      if (isSalaryPrivileged) {
+        const totalNomina = filteredData.reduce((acc, p) => acc + (p.salario || p.dailyRate || 0), 0);
+        const promedio = totalPersonal > 0 ? totalNomina / totalPersonal : 0;
+        return [
+          { label: 'Total Colaboradores', val: totalPersonal, note: 'Personal activo' },
+          { label: 'Nómina Mensual', val: formatCOP(totalNomina), note: 'Presupuesto mano de obra' },
+          { label: 'Salario Promedio', val: formatCOP(promedio), note: 'Por trabajador/mes' },
+        ];
+      } else {
+        const conFinca = filteredData.filter((p) => p.fincaId || p.finca).length;
+        const contratos = new Set(filteredData.map((p) => p.tipoContrato || 'TERMINO_FIJO')).size;
+        return [
+          { label: 'Total Colaboradores', val: totalPersonal, note: 'Personal activo' },
+          { label: 'Asignados a Predio', val: conFinca, note: 'Con finca designada' },
+          { label: 'Modalidades Contrato', val: contratos, note: 'Tipos contractuales' },
+        ];
+      }
     }
     return [];
   }, [reportType, filteredData]);
@@ -242,16 +266,25 @@ interface KpiItem {
         f.lotes?.length || 0,
       ]);
     } else if (reportType === 'personal') {
-      headers = ['ID', 'Nombre Colaborador', 'Cargo / Función', 'Finca Asignada', 'Salario Mensual (COP)', 'Modalidad Contrato', 'Teléfono'];
-      rows = filteredData.map((p) => [
-        p.id,
-        p.nombre || p.name,
-        p.cargo || p.role,
-        p.finca?.nombre || `Finca #${p.fincaId}`,
-        p.salario || p.dailyRate || 0,
-        p.tipoContrato || p.status || 'TERMINO_FIJO',
-        p.telefono || p.phone || 'N/A',
-      ]);
+      headers = isSalaryPrivileged
+        ? ['ID', 'Nombre Colaborador', 'Cargo / Función', 'Finca Asignada', 'Salario Mensual (COP)', 'Modalidad Contrato', 'Teléfono']
+        : ['ID', 'Nombre Colaborador', 'Cargo / Función', 'Finca Asignada', 'Modalidad Contrato', 'Teléfono'];
+      rows = filteredData.map((p) => {
+        const base = [
+          p.id,
+          p.nombre || p.name,
+          p.cargo || p.role,
+          p.finca?.nombre || `Finca #${p.fincaId}`,
+        ];
+        if (isSalaryPrivileged) {
+          base.push(p.salario || p.dailyRate || 0);
+        }
+        base.push(
+          p.tipoContrato || p.status || 'TERMINO_FIJO',
+          p.telefono || p.phone || 'N/A'
+        );
+        return base;
+      });
     }
 
     return { headers, rows };
@@ -286,7 +319,7 @@ interface KpiItem {
       else if (reportType === 'produccion') modulo = buildProduccionesModulo(filteredData);
       else if (reportType === 'inventario') modulo = buildInventarioModulo(filteredData);
       else if (reportType === 'finanzas') modulo = buildFinanzasModulo(filteredData);
-      else modulo = buildPersonalModulo(filteredData);
+      else modulo = buildPersonalModulo(filteredData, isSalaryPrivileged);
 
       generateExcelReport({
         organizationName: orgName,
@@ -370,13 +403,7 @@ interface KpiItem {
 
       {/* Category Tabs - Hidden on print */}
       <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12, marginBottom: 24 }}>
-        {[
-          { id: 'produccion', label: 'Producción', desc: 'Cultivos, ganado y cosechas', icon: <Sprout size={18} color="#fbbf24" /> },
-          { id: 'finanzas', label: 'Finanzas', desc: 'Ingresos, costos y balances', icon: <DollarSign size={18} color="#34d399" /> },
-          { id: 'inventario', label: 'Inventario', desc: 'Insumos y alertas de stock', icon: <Package size={18} color="#60a5fa" /> },
-          { id: 'fincas', label: 'Fincas y Predios', desc: 'Hectáreas y parcelas', icon: <MapPin size={18} color="#a78bfa" /> },
-          { id: 'personal', label: 'Personal', desc: 'Mano de obra y nómina', icon: <Users size={18} color="#f472b6" /> },
-        ].map((tab) => {
+        {availableTabs.map((tab) => {
           const active = reportType === tab.id;
           return (
             <div
@@ -497,15 +524,7 @@ interface KpiItem {
       </div>
 
       {/* KPI Cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 16,
-          marginBottom: 24,
-        }}
-        className="kpi-grid"
-      >
+      <div className="dashboard-kpi-grid kpi-grid">
         {kpis.map((kpi, idx) => (
           <div
             key={idx}
@@ -700,7 +719,7 @@ interface KpiItem {
                       <th>Predio Asignado</th>
                       <th>Contrato</th>
                       <th>Teléfono</th>
-                      <th style={{ textAlign: 'right' }}>Salario Mensual</th>
+                      {isSalaryPrivileged && <th style={{ textAlign: 'right' }}>Salario Mensual</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -711,9 +730,11 @@ interface KpiItem {
                         <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{p.finca?.nombre || `Finca #${p.fincaId}`}</td>
                         <td style={{ fontSize: 12 }}>{p.tipoContrato || p.status || 'TERMINO_FIJO'}</td>
                         <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{p.telefono || p.phone || '-'}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 700, color: '#4ade80' }}>
-                          {p.salario || p.dailyRate ? formatCOP(p.salario || p.dailyRate) : '-'}
-                        </td>
+                        {isSalaryPrivileged && (
+                          <td style={{ textAlign: 'right', fontWeight: 700, color: '#4ade80' }}>
+                            {p.salario || p.dailyRate ? formatCOP(p.salario || p.dailyRate) : '-'}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
