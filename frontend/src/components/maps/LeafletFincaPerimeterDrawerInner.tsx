@@ -92,6 +92,9 @@ export default function LeafletFincaPerimeterDrawerInner({
   const polygonLayerRef = useRef<L.Polygon | null>(null);
   const polylineLayerRef = useRef<L.Polyline | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  // Ref que siempre tiene los puntos actuales sin pasar por closure de useEffect
+  const pointsRef = useRef<{ lat: number; lng: number }[]>([]);
+  const onPointsChangeRef = useRef(onPointsChange);
 
   // Modo de interacción: 'pan' (arrastrar mapa libremente) o 'draw' (clic añade vértices)
   const [drawMode, setDrawMode] = useState<'pan' | 'draw'>('pan');
@@ -107,13 +110,21 @@ export default function LeafletFincaPerimeterDrawerInner({
   const [liveAreaHa, setLiveAreaHa] = useState<number>(() => calculatePolygonAreaHa(points));
   const [mapType, setMapType] = useState<'satellite' | 'streets'>('satellite');
 
+  // Mantener refs sincronizadas
+  useEffect(() => {
+    pointsRef.current = points;
+  }, [points]);
+  useEffect(() => {
+    onPointsChangeRef.current = onPointsChange;
+  }, [onPointsChange]);
+
   // Inicializar Leaflet con soporte de arrastre total
   useEffect(() => {
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
-    const startLat = points.length > 0 ? points[0].lat : centerLat;
-    const startLng = points.length > 0 ? points[0].lng : centerLng;
+    const startLat = pointsRef.current.length > 0 ? pointsRef.current[0].lat : centerLat;
+    const startLng = pointsRef.current.length > 0 ? pointsRef.current[0].lng : centerLng;
 
     const map = L.map(mapContainerRef.current, {
       center: [startLat, startLng],
@@ -144,8 +155,8 @@ export default function LeafletFincaPerimeterDrawerInner({
     mapInstanceRef.current = map;
 
     // Centrar suavemente
-    if (points.length >= 3) {
-      const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng]));
+    if (pointsRef.current.length >= 3) {
+      const bounds = L.latLngBounds(pointsRef.current.map((p) => [p.lat, p.lng]));
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
     }
 
@@ -194,7 +205,7 @@ export default function LeafletFincaPerimeterDrawerInner({
         const next = [...prev, newPt];
         const newArea = calculatePolygonAreaHa(next);
         setLiveAreaHa(newArea);
-        onPointsChange(next, newArea);
+        onPointsChangeRef.current(next, newArea);
         return next;
       });
     };
@@ -203,7 +214,7 @@ export default function LeafletFincaPerimeterDrawerInner({
     return () => {
       map.off('click', handleClick);
     };
-  }, [drawMode, onPointsChange]);
+  }, [drawMode]);
 
   // Alternar capa base (satélite / calles)
   useEffect(() => {
@@ -237,13 +248,82 @@ export default function LeafletFincaPerimeterDrawerInner({
     map.invalidateSize();
   }, [mapType]);
 
-  // Redibujar vértices arrastrables y polígono con interactive: false para permitir arrastre del mapa
+  // ─── Actualizar polígono/polilínea sin recrear markers ───────────────────────
+  // Se ejecuta en cada cambio de `points` pero solo actualiza la geometría del
+  // polígono existente. Los markers solo se recrean cuando cambia el NÚMERO de puntos.
+  const markersRef = useRef<L.Marker[]>([]);
+  const prevLengthRef = useRef<number>(-1);
+
   useEffect(() => {
     const map = mapInstanceRef.current;
     const group = pointsLayerGroupRef.current;
     if (!map || !group) return;
 
-    group.clearLayers();
+    const len = points.length;
+    const prevLen = prevLengthRef.current;
+
+    // ── Solo reconstruir markers si cambió la cantidad de puntos ──
+    if (len !== prevLen) {
+      prevLengthRef.current = len;
+      group.clearLayers();
+      markersRef.current = [];
+
+      points.forEach((pt, idx) => {
+        const marker = L.marker([pt.lat, pt.lng], {
+          icon: createDraggableVertexIcon(idx + 1),
+          draggable: true,
+          autoPan: true,
+        });
+
+        marker.bindTooltip(
+          `<div style="font-family: Inter, sans-serif; font-size: 11px; padding: 2px 4px;">
+            <strong>Vértice ${idx + 1}</strong>: Arrastra para mover
+          </div>`,
+          { direction: 'top', opacity: 0.95 }
+        );
+
+        // Durante el arrastre: actualiza el polígono visualmente usando ref
+        marker.on('drag', () => {
+          const latLng = marker.getLatLng();
+          const current = pointsRef.current.map((p, i) =>
+            i === idx ? { lat: latLng.lat, lng: latLng.lng } : p
+          );
+          if (polygonLayerRef.current && current.length >= 3) {
+            polygonLayerRef.current.setLatLngs(current.map((p) => [p.lat, p.lng] as [number, number]));
+            setLiveAreaHa(calculatePolygonAreaHa(current));
+          } else if (polylineLayerRef.current && current.length === 2) {
+            polylineLayerRef.current.setLatLngs(current.map((p) => [p.lat, p.lng] as [number, number]));
+          }
+        });
+
+        // Al soltar: confirma la posición final en el estado
+        marker.on('dragend', () => {
+          const latLng = marker.getLatLng();
+          setPoints((prev) => {
+            const updated = [...prev];
+            updated[idx] = {
+              lat: parseFloat(latLng.lat.toFixed(6)),
+              lng: parseFloat(latLng.lng.toFixed(6)),
+            };
+            const newArea = calculatePolygonAreaHa(updated);
+            setLiveAreaHa(newArea);
+            onPointsChangeRef.current(updated, newArea);
+            return updated;
+          });
+        });
+
+        marker.addTo(group);
+        markersRef.current.push(marker);
+      });
+    } else {
+      // Número de puntos igual → solo actualizar posición de markers existentes
+      points.forEach((pt, idx) => {
+        const m = markersRef.current[idx];
+        if (m) m.setLatLng([pt.lat, pt.lng]);
+      });
+    }
+
+    // ── Actualizar polígono / polilínea ──
     if (polygonLayerRef.current) {
       map.removeLayer(polygonLayerRef.current);
       polygonLayerRef.current = null;
@@ -253,50 +333,7 @@ export default function LeafletFincaPerimeterDrawerInner({
       polylineLayerRef.current = null;
     }
 
-    // Dibujar marcadores de vértices ARRASTRABLES
-    points.forEach((pt, idx) => {
-      const marker = L.marker([pt.lat, pt.lng], {
-        icon: createDraggableVertexIcon(idx + 1),
-        draggable: true,
-        autoPan: true,
-      });
-
-      marker.bindTooltip(
-        `<div style="font-family: Inter, sans-serif; font-size: 11px; padding: 2px 4px;">
-          <strong>Vértice ${idx + 1}</strong>: Arrastra para mover
-        </div>`,
-        { direction: 'top', opacity: 0.95 }
-      );
-
-      marker.on('drag', () => {
-        const latLng = marker.getLatLng();
-        const currentPoints = points.map((p, i) => (i === idx ? { lat: latLng.lat, lng: latLng.lng } : p));
-        if (polygonLayerRef.current && currentPoints.length >= 3) {
-          polygonLayerRef.current.setLatLngs(currentPoints.map((p) => [p.lat, p.lng] as [number, number]));
-          const currentArea = calculatePolygonAreaHa(currentPoints);
-          setLiveAreaHa(currentArea);
-        }
-      });
-
-      marker.on('dragend', () => {
-        const latLng = marker.getLatLng();
-        setPoints((prev) => {
-          const updated = [...prev];
-          updated[idx] = {
-            lat: parseFloat(latLng.lat.toFixed(6)),
-            lng: parseFloat(latLng.lng.toFixed(6)),
-          };
-          const newArea = calculatePolygonAreaHa(updated);
-          setLiveAreaHa(newArea);
-          onPointsChange(updated, newArea);
-          return updated;
-        });
-      });
-
-      marker.addTo(group);
-    });
-
-    // interactive: false permite que el usuario haga clic y arrastre el mapa a través del polígono
+    // interactive: false permite arrastrar el mapa a través del polígono
     if (points.length >= 3) {
       const polyCoords = points.map((p) => [p.lat, p.lng] as [number, number]);
       const polygon = L.polygon(polyCoords, {
@@ -321,9 +358,8 @@ export default function LeafletFincaPerimeterDrawerInner({
       polylineLayerRef.current = line;
     }
 
-    const area = calculatePolygonAreaHa(points);
-    setLiveAreaHa(area);
-  }, [points, onPointsChange]);
+    setLiveAreaHa(calculatePolygonAreaHa(points));
+  }, [points]);
 
   const handleUndo = () => {
     setPoints((prev) => {
