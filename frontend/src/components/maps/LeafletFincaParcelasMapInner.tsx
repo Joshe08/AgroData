@@ -295,7 +295,6 @@ export default function LeafletFincaParcelasMapInner({
       center: initialCenter,
       zoom: 15,
       zoomControl: false,
-      preferCanvas: true,
     });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);

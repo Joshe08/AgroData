@@ -59,7 +59,6 @@ export default function LeafletFincasMapInner({
       zoom: 9,
       zoomControl: false,
       scrollWheelZoom: false,
-      preferCanvas: true,
     });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -138,8 +137,16 @@ export default function LeafletFincasMapInner({
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
-      map.remove();
-      mapInstanceRef.current = null;
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.stop();
+          mapInstanceRef.current.off();
+          mapInstanceRef.current.remove();
+        } catch {
+          // Teardown seguro
+        }
+        mapInstanceRef.current = null;
+      }
     };
   }, [fincas]);
 

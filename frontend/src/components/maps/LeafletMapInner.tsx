@@ -188,8 +188,16 @@ export default function LeafletMapInner({
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
-      map.remove();
-      mapInstanceRef.current = null;
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.stop();
+          mapInstanceRef.current.off();
+          mapInstanceRef.current.remove();
+        } catch {
+          // Teardown seguro
+        }
+        mapInstanceRef.current = null;
+      }
     };
   }, []);
 

@@ -119,7 +119,6 @@ export default function LeafletFincaPerimeterDrawerInner({
       center: [startLat, startLng],
       zoom: 15,
       zoomControl: false,
-      preferCanvas: true,
       dragging: true,
       scrollWheelZoom: true,
     });
