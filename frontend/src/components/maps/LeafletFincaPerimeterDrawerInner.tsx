@@ -201,13 +201,13 @@ export default function LeafletFincaPerimeterDrawerInner({
         lat: parseFloat(e.latlng.lat.toFixed(6)),
         lng: parseFloat(e.latlng.lng.toFixed(6)),
       };
-      setPoints((prev) => {
-        const next = [...prev, newPt];
-        const newArea = calculatePolygonAreaHa(next);
-        setLiveAreaHa(newArea);
-        onPointsChangeRef.current(next, newArea);
-        return next;
-      });
+      // Calcular fuera del updater para evitar setState-dentro-de-render
+      const next = [...pointsRef.current, newPt];
+      const newArea = calculatePolygonAreaHa(next);
+      setPoints(next);
+      setLiveAreaHa(newArea);
+      // Diferir callback externo al siguiente tick (evita el error de React)
+      setTimeout(() => onPointsChangeRef.current(next, newArea), 0);
     };
 
     map.on('click', handleClick);
@@ -299,17 +299,17 @@ export default function LeafletFincaPerimeterDrawerInner({
         // Al soltar: confirma la posición final en el estado
         marker.on('dragend', () => {
           const latLng = marker.getLatLng();
-          setPoints((prev) => {
-            const updated = [...prev];
-            updated[idx] = {
-              lat: parseFloat(latLng.lat.toFixed(6)),
-              lng: parseFloat(latLng.lng.toFixed(6)),
-            };
-            const newArea = calculatePolygonAreaHa(updated);
-            setLiveAreaHa(newArea);
-            onPointsChangeRef.current(updated, newArea);
-            return updated;
-          });
+          // Calcular fuera del updater para evitar setState-dentro-de-render
+          const updated = [...pointsRef.current];
+          updated[idx] = {
+            lat: parseFloat(latLng.lat.toFixed(6)),
+            lng: parseFloat(latLng.lng.toFixed(6)),
+          };
+          const newArea = calculatePolygonAreaHa(updated);
+          setPoints(updated);
+          setLiveAreaHa(newArea);
+          // Diferir callback externo al siguiente tick
+          setTimeout(() => onPointsChangeRef.current(updated, newArea), 0);
         });
 
         marker.addTo(group);
@@ -362,13 +362,11 @@ export default function LeafletFincaPerimeterDrawerInner({
   }, [points]);
 
   const handleUndo = () => {
-    setPoints((prev) => {
-      const next = prev.slice(0, -1);
-      const newArea = calculatePolygonAreaHa(next);
-      setLiveAreaHa(newArea);
-      onPointsChange(next, newArea);
-      return next;
-    });
+    const next = pointsRef.current.slice(0, -1);
+    const newArea = calculatePolygonAreaHa(next);
+    setPoints(next);
+    setLiveAreaHa(newArea);
+    setTimeout(() => onPointsChangeRef.current(next, newArea), 0);
   };
 
   const handleClear = () => {
