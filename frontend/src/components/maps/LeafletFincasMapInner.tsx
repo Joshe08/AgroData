@@ -3,32 +3,25 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Layers, MapPin, Navigation, Eye } from 'lucide-react';
-
-export interface FincaMapItem {
-  id: string | number;
-  nombre: string;
-  ubicacion: string;
-  hectareas: number;
-  latitude?: number | null;
-  longitude?: number | null;
-  lotes?: any[];
-}
+import { Layers } from 'lucide-react';
+import { Finca } from '@/store/fincasStore';
 
 export interface FincasMapOverviewProps {
-  fincas: FincaMapItem[];
-  onSelectFinca?: (finca: FincaMapItem) => void;
+  fincas: Finca[];
+  onSelectFinca?: (finca: Finca) => void;
   height?: string;
 }
 
-const createFincaMarkerIcon = (label: string, color = '#16a34a') => {
+const createFincaMarkerIcon = (label: string, color = '#10b981') => {
+  const safeLabel = label.length > 18 ? label.slice(0, 16) + '...' : label;
+
   return L.divIcon({
     className: 'custom-finca-marker',
     html: `
-      <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));">
-        <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid ${color}; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; color: #ffffff; white-space: nowrap; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-          <span style="width: 6px; height: 6px; border-radius: 50%; background: ${color};"></span>
-          ${label}
+      <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));">
+        <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid ${color}; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; color: #ffffff; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; box-sizing: border-box;" title="${label}">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: ${color}; flex-shrink: 0;"></span>
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${safeLabel}</span>
         </div>
         <svg width="32" height="38" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M18 0C8.05888 0 0 8.05888 0 18C0 28.5 18 44 18 44C18 44 36 28.5 36 18C36 8.05888 27.9411 0 18 0Z" fill="${color}"/>
@@ -37,8 +30,8 @@ const createFincaMarkerIcon = (label: string, color = '#16a34a') => {
         </svg>
       </div>
     `,
-    iconSize: [120, 64],
-    iconAnchor: [60, 64],
+    iconSize: [140, 64],
+    iconAnchor: [70, 64],
     popupAnchor: [0, -60],
   });
 };
@@ -53,11 +46,6 @@ export default function LeafletFincasMapInner({
   const [mapType, setMapType] = useState<'streets' | 'satellite'>('satellite');
   const tileLayerRef = useRef<L.TileLayer | null>(null);
 
-  const streetTiles = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const satelliteTiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-  const satelliteLabels = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
-  const labelsLayerRef = useRef<L.TileLayer | null>(null);
-
   const fincasWithCoords = fincas.filter(
     (f) => f.latitude != null && f.longitude != null && !isNaN(Number(f.latitude)) && !isNaN(Number(f.longitude))
   );
@@ -66,21 +54,25 @@ export default function LeafletFincasMapInner({
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
-    // Center in Cesar default
     const map = L.map(mapContainerRef.current, {
       center: [10.4631, -73.2532],
       zoom: 9,
       zoomControl: false,
       scrollWheelZoom: false,
+      preferCanvas: true,
     });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    const initialTiles = L.tileLayer(mapType === 'satellite' ? satelliteTiles : streetTiles, {
-      attribution: '&copy; OpenStreetMap / Esri',
-      maxZoom: 19,
+    // Google Hybrid libre de 404s y parches
+    const satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      subdomains: ['0', '1', '2', '3'],
+      maxZoom: 20,
+      maxNativeZoom: 19,
+      keepBuffer: 6,
+      attribution: '&copy; Google Maps / Imagery',
     }).addTo(map);
-    tileLayerRef.current = initialTiles;
+    tileLayerRef.current = satLayer;
 
     const markersGroup = L.featureGroup();
 
@@ -94,11 +86,11 @@ export default function LeafletFincasMapInner({
 
       const lotesCount = Array.isArray(finca.lotes) ? finca.lotes.length : 0;
       const popupContent = document.createElement('div');
-      popupContent.style.cssText = 'padding: 8px 6px; font-family: Inter, sans-serif; min-width: 210px;';
+      popupContent.style.cssText = 'padding: 8px 6px; font-family: Inter, sans-serif; min-width: 190px; max-width: 240px; box-sizing: border-box; word-break: break-word;';
       popupContent.innerHTML = `
         <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">${finca.nombre}</div>
         <div style="font-size: 12px; color: #475569; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-          📍 ${finca.ubicacion || 'Departamento del Cesar'}
+          <span>Ubicación:</span> <strong>${finca.ubicacion || 'Departamento del Cesar'}</strong>
         </div>
         <div style="font-size: 11px; color: #64748b; margin-bottom: 8px; font-family: monospace;">
           GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}
@@ -129,41 +121,66 @@ export default function LeafletFincasMapInner({
 
     mapInstanceRef.current = map;
 
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
+    // RESIZEOBSERVER contra parches
+    const ro = new ResizeObserver(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    });
+    ro.observe(mapContainerRef.current);
+
+    const t1 = setTimeout(() => map.invalidateSize(), 60);
+    const t2 = setTimeout(() => map.invalidateSize(), 200);
+    const t3 = setTimeout(() => map.invalidateSize(), 500);
 
     return () => {
+      ro.disconnect();
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
       map.remove();
       mapInstanceRef.current = null;
     };
   }, [fincas]);
 
   useEffect(() => {
-    if (!mapInstanceRef.current || !tileLayerRef.current) return;
-    tileLayerRef.current.setUrl(mapType === 'satellite' ? satelliteTiles : streetTiles);
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+      tileLayerRef.current = null;
+    }
 
     if (mapType === 'satellite') {
-      if (!labelsLayerRef.current) {
-        labelsLayerRef.current = L.tileLayer(satelliteLabels, { maxZoom: 19 });
-      }
-      if (!mapInstanceRef.current.hasLayer(labelsLayerRef.current)) {
-        labelsLayerRef.current.addTo(mapInstanceRef.current);
-      }
+      const satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        subdomains: ['0', '1', '2', '3'],
+        maxZoom: 20,
+        maxNativeZoom: 19,
+        keepBuffer: 6,
+        attribution: '&copy; Google Maps / Imagery',
+      }).addTo(map);
+      tileLayerRef.current = satLayer;
     } else {
-      if (labelsLayerRef.current && mapInstanceRef.current.hasLayer(labelsLayerRef.current)) {
-        mapInstanceRef.current.removeLayer(labelsLayerRef.current);
-      }
+      const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        maxNativeZoom: 18,
+        keepBuffer: 6,
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(map);
+      tileLayerRef.current = streetLayer;
     }
+
+    map.invalidateSize();
   }, [mapType]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', borderRadius: 14, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+    <div style={{ position: 'relative', width: '100%', borderRadius: 14, overflow: 'hidden', border: '1px solid var(--color-border)', background: '#0b1120' }}>
       {/* Layer Toggle */}
       <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 1000 }}>
         <button
           type="button"
-          onClick={() => setMapType(m => m === 'streets' ? 'satellite' : 'streets')}
+          onClick={() => setMapType((m) => (m === 'streets' ? 'satellite' : 'streets'))}
           style={{
             height: 38,
             padding: '0 12px',
@@ -181,38 +198,12 @@ export default function LeafletFincasMapInner({
             boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
           }}
         >
-          <Layers size={15} />
-          <span>{mapType === 'satellite' ? 'Vista Satélite' : 'Vista Mapa'}</span>
+          <Layers size={14} />
+          <span>{mapType === 'satellite' ? 'Satélite' : 'Mapa Calles'}</span>
         </button>
       </div>
 
-      {/* Map */}
-      <div ref={mapContainerRef} style={{ width: '100%', height, background: '#1e293b' }} />
-
-      {/* Bottom Summary Badge */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 12,
-          left: 12,
-          zIndex: 1000,
-          background: 'rgba(15, 23, 42, 0.9)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: 8,
-          padding: '6px 14px',
-          fontSize: 12,
-          color: 'var(--color-text)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <MapPin size={14} color="#4ade80" />
-        <span>
-          <strong>{fincasWithCoords.length}</strong> de <strong>{fincas.length}</strong> fincas geolocalizadas en el Cesar
-        </span>
-      </div>
+      <div ref={mapContainerRef} style={{ width: '100%', height, background: '#0b1120' }} />
     </div>
   );
 }

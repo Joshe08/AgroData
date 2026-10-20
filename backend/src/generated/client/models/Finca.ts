@@ -46,6 +46,7 @@ export type FincaMinAggregateOutputType = {
   description: string | null
   latitude: number | null
   longitude: number | null
+  coordenadas: string | null
   tipoExplotacion: string | null
   estado: string | null
   tipoSuelo: string | null
@@ -70,6 +71,7 @@ export type FincaMaxAggregateOutputType = {
   description: string | null
   latitude: number | null
   longitude: number | null
+  coordenadas: string | null
   tipoExplotacion: string | null
   estado: string | null
   tipoSuelo: string | null
@@ -94,6 +96,7 @@ export type FincaCountAggregateOutputType = {
   description: number
   latitude: number
   longitude: number
+  coordenadas: number
   tipoExplotacion: number
   estado: number
   tipoSuelo: number
@@ -132,6 +135,7 @@ export type FincaMinAggregateInputType = {
   description?: true
   latitude?: true
   longitude?: true
+  coordenadas?: true
   tipoExplotacion?: true
   estado?: true
   tipoSuelo?: true
@@ -156,6 +160,7 @@ export type FincaMaxAggregateInputType = {
   description?: true
   latitude?: true
   longitude?: true
+  coordenadas?: true
   tipoExplotacion?: true
   estado?: true
   tipoSuelo?: true
@@ -180,6 +185,7 @@ export type FincaCountAggregateInputType = {
   description?: true
   latitude?: true
   longitude?: true
+  coordenadas?: true
   tipoExplotacion?: true
   estado?: true
   tipoSuelo?: true
@@ -291,6 +297,7 @@ export type FincaGroupByOutputType = {
   description: string | null
   latitude: number | null
   longitude: number | null
+  coordenadas: string | null
   tipoExplotacion: string | null
   estado: string | null
   tipoSuelo: string | null
@@ -338,6 +345,7 @@ export type FincaWhereInput = {
   description?: Prisma.StringNullableFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
+  coordenadas?: Prisma.StringNullableFilter<"Finca"> | string | null
   tipoExplotacion?: Prisma.StringNullableFilter<"Finca"> | string | null
   estado?: Prisma.StringNullableFilter<"Finca"> | string | null
   tipoSuelo?: Prisma.StringNullableFilter<"Finca"> | string | null
@@ -368,6 +376,7 @@ export type FincaOrderByWithRelationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  coordenadas?: Prisma.SortOrderInput | Prisma.SortOrder
   tipoExplotacion?: Prisma.SortOrderInput | Prisma.SortOrder
   estado?: Prisma.SortOrderInput | Prisma.SortOrder
   tipoSuelo?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -401,6 +410,7 @@ export type FincaWhereUniqueInput = Prisma.AtLeast<{
   description?: Prisma.StringNullableFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
+  coordenadas?: Prisma.StringNullableFilter<"Finca"> | string | null
   tipoExplotacion?: Prisma.StringNullableFilter<"Finca"> | string | null
   estado?: Prisma.StringNullableFilter<"Finca"> | string | null
   tipoSuelo?: Prisma.StringNullableFilter<"Finca"> | string | null
@@ -431,6 +441,7 @@ export type FincaOrderByWithAggregationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  coordenadas?: Prisma.SortOrderInput | Prisma.SortOrder
   tipoExplotacion?: Prisma.SortOrderInput | Prisma.SortOrder
   estado?: Prisma.SortOrderInput | Prisma.SortOrder
   tipoSuelo?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -463,6 +474,7 @@ export type FincaScalarWhereWithAggregatesInput = {
   description?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableWithAggregatesFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableWithAggregatesFilter<"Finca"> | number | null
+  coordenadas?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
   tipoExplotacion?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
   estado?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
   tipoSuelo?: Prisma.StringNullableWithAggregatesFilter<"Finca"> | string | null
@@ -487,6 +499,7 @@ export type FincaCreateInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -516,6 +529,7 @@ export type FincaUncheckedCreateInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -545,6 +559,7 @@ export type FincaUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -574,6 +589,7 @@ export type FincaUncheckedUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -603,6 +619,7 @@ export type FincaCreateManyInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -627,6 +644,7 @@ export type FincaUpdateManyMutationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -650,6 +668,7 @@ export type FincaUncheckedUpdateManyInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -684,6 +703,7 @@ export type FincaCountOrderByAggregateInput = {
   description?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
+  coordenadas?: Prisma.SortOrder
   tipoExplotacion?: Prisma.SortOrder
   estado?: Prisma.SortOrder
   tipoSuelo?: Prisma.SortOrder
@@ -714,6 +734,7 @@ export type FincaMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
+  coordenadas?: Prisma.SortOrder
   tipoExplotacion?: Prisma.SortOrder
   estado?: Prisma.SortOrder
   tipoSuelo?: Prisma.SortOrder
@@ -738,6 +759,7 @@ export type FincaMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
+  coordenadas?: Prisma.SortOrder
   tipoExplotacion?: Prisma.SortOrder
   estado?: Prisma.SortOrder
   tipoSuelo?: Prisma.SortOrder
@@ -914,6 +936,7 @@ export type FincaCreateWithoutOrganizationInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -942,6 +965,7 @@ export type FincaUncheckedCreateWithoutOrganizationInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -998,6 +1022,7 @@ export type FincaScalarWhereInput = {
   description?: Prisma.StringNullableFilter<"Finca"> | string | null
   latitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Finca"> | number | null
+  coordenadas?: Prisma.StringNullableFilter<"Finca"> | string | null
   tipoExplotacion?: Prisma.StringNullableFilter<"Finca"> | string | null
   estado?: Prisma.StringNullableFilter<"Finca"> | string | null
   tipoSuelo?: Prisma.StringNullableFilter<"Finca"> | string | null
@@ -1022,6 +1047,7 @@ export type FincaCreateWithoutLotesInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1050,6 +1076,7 @@ export type FincaUncheckedCreateWithoutLotesInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1094,6 +1121,7 @@ export type FincaUpdateWithoutLotesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1122,6 +1150,7 @@ export type FincaUncheckedUpdateWithoutLotesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1150,6 +1179,7 @@ export type FincaCreateWithoutInventariosInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1178,6 +1208,7 @@ export type FincaUncheckedCreateWithoutInventariosInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1222,6 +1253,7 @@ export type FincaUpdateWithoutInventariosInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1250,6 +1282,7 @@ export type FincaUncheckedUpdateWithoutInventariosInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1278,6 +1311,7 @@ export type FincaCreateWithoutFinanzasInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1306,6 +1340,7 @@ export type FincaUncheckedCreateWithoutFinanzasInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1350,6 +1385,7 @@ export type FincaUpdateWithoutFinanzasInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1378,6 +1414,7 @@ export type FincaUncheckedUpdateWithoutFinanzasInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1406,6 +1443,7 @@ export type FincaCreateWithoutEmpleadosInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1434,6 +1472,7 @@ export type FincaUncheckedCreateWithoutEmpleadosInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1478,6 +1517,7 @@ export type FincaUpdateWithoutEmpleadosInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1506,6 +1546,7 @@ export type FincaUncheckedUpdateWithoutEmpleadosInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1534,6 +1575,7 @@ export type FincaCreateWithoutMaquinariasInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1562,6 +1604,7 @@ export type FincaUncheckedCreateWithoutMaquinariasInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1606,6 +1649,7 @@ export type FincaUpdateWithoutMaquinariasInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1634,6 +1678,7 @@ export type FincaUncheckedUpdateWithoutMaquinariasInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1662,6 +1707,7 @@ export type FincaCreateManyOrganizationInput = {
   description?: string | null
   latitude?: number | null
   longitude?: number | null
+  coordenadas?: string | null
   tipoExplotacion?: string | null
   estado?: string | null
   tipoSuelo?: string | null
@@ -1685,6 +1731,7 @@ export type FincaUpdateWithoutOrganizationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1713,6 +1760,7 @@ export type FincaUncheckedUpdateWithoutOrganizationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1741,6 +1789,7 @@ export type FincaUncheckedUpdateManyWithoutOrganizationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoExplotacion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   estado?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tipoSuelo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1831,6 +1880,7 @@ export type FincaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   description?: boolean
   latitude?: boolean
   longitude?: boolean
+  coordenadas?: boolean
   tipoExplotacion?: boolean
   estado?: boolean
   tipoSuelo?: boolean
@@ -1862,6 +1912,7 @@ export type FincaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   description?: boolean
   latitude?: boolean
   longitude?: boolean
+  coordenadas?: boolean
   tipoExplotacion?: boolean
   estado?: boolean
   tipoSuelo?: boolean
@@ -1887,6 +1938,7 @@ export type FincaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   description?: boolean
   latitude?: boolean
   longitude?: boolean
+  coordenadas?: boolean
   tipoExplotacion?: boolean
   estado?: boolean
   tipoSuelo?: boolean
@@ -1912,6 +1964,7 @@ export type FincaSelectScalar = {
   description?: boolean
   latitude?: boolean
   longitude?: boolean
+  coordenadas?: boolean
   tipoExplotacion?: boolean
   estado?: boolean
   tipoSuelo?: boolean
@@ -1928,7 +1981,7 @@ export type FincaSelectScalar = {
   updatedAt?: boolean
 }
 
-export type FincaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "location" | "area" | "description" | "latitude" | "longitude" | "tipoExplotacion" | "estado" | "tipoSuelo" | "fuenteAgua" | "sistemaRiego" | "tipoAcceso" | "departamento" | "municipio" | "vereda" | "referenciaAcceso" | "actividades" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["finca"]>
+export type FincaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "location" | "area" | "description" | "latitude" | "longitude" | "coordenadas" | "tipoExplotacion" | "estado" | "tipoSuelo" | "fuenteAgua" | "sistemaRiego" | "tipoAcceso" | "departamento" | "municipio" | "vereda" | "referenciaAcceso" | "actividades" | "organizationId" | "createdAt" | "updatedAt", ExtArgs["result"]["finca"]>
 export type FincaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>
   lotes?: boolean | Prisma.Finca$lotesArgs<ExtArgs>
@@ -1963,6 +2016,7 @@ export type $FincaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     description: string | null
     latitude: number | null
     longitude: number | null
+    coordenadas: string | null
     tipoExplotacion: string | null
     estado: string | null
     tipoSuelo: string | null
@@ -2413,6 +2467,7 @@ export interface FincaFieldRefs {
   readonly description: Prisma.FieldRef<"Finca", 'String'>
   readonly latitude: Prisma.FieldRef<"Finca", 'Float'>
   readonly longitude: Prisma.FieldRef<"Finca", 'Float'>
+  readonly coordenadas: Prisma.FieldRef<"Finca", 'String'>
   readonly tipoExplotacion: Prisma.FieldRef<"Finca", 'String'>
   readonly estado: Prisma.FieldRef<"Finca", 'String'>
   readonly tipoSuelo: Prisma.FieldRef<"Finca", 'String'>

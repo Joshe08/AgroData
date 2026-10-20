@@ -54,7 +54,7 @@ export default function LeafletMapInner({
   const [isMapActive, setIsMapActive] = useState(false);
 
   const streetTiles = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const satelliteTiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+  const satelliteTiles = 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
   const satelliteLabels = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
 
@@ -170,11 +170,24 @@ export default function LeafletMapInner({
 
     mapInstanceRef.current = map;
 
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
+    const ro = new ResizeObserver(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    });
+    if (mapContainerRef.current) {
+      ro.observe(mapContainerRef.current);
+    }
+
+    const t1 = setTimeout(() => map.invalidateSize(), 60);
+    const t2 = setTimeout(() => map.invalidateSize(), 200);
+    const t3 = setTimeout(() => map.invalidateSize(), 500);
 
     return () => {
+      ro.disconnect();
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
       map.remove();
       mapInstanceRef.current = null;
     };

@@ -546,4 +546,19 @@ body {
   }
 }
 
+/* Leaflet Anti-Patching & Smooth Tile Rendering */
+.leaflet-container {
+  background-color: #0b1120 !important;
+  font-family: inherit;
+  outline: none;
+}
+
+.leaflet-tile {
+  filter: inherit;
+}
+
+.leaflet-tile-container img {
+  box-shadow: none !important;
+}
+
 

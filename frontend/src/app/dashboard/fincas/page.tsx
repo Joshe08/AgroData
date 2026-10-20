@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { fincasApi } from '@/lib/api';
 import { useFincasStore, Finca, Lote } from '@/store/fincasStore';
 import { useToastStore } from '@/store/toastStore';
@@ -19,11 +19,18 @@ import {
   ChevronRight,
   ChevronDown,
   LayoutGrid,
-  Map as MapIcon,
   Eye,
+  Sprout,
+  Droplets,
+  AlertTriangle,
+  CheckCircle2,
+  SlidersHorizontal,
+  Info,
+  Lightbulb,
 } from 'lucide-react';
 import MapPicker from '@/components/maps/MapPicker';
-import FincasMapOverview from '@/components/maps/FincasMapOverview';
+import FincaParcelasMap from '@/components/maps/FincaParcelasMap';
+import FincaPerimeterDrawer from '@/components/maps/FincaPerimeterDrawer';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
 const TIPOS_EXPLOTACION = [
@@ -70,6 +77,59 @@ const ACTIVIDADES_OPCIONES = [
   { id: 'APICULTURA', label: 'Apicultura' },
 ];
 
+const ESTADOS_LOTE = [
+  { value: 'ACTIVO', label: 'En Producción / Cultivo Activo', color: '#22c55e' },
+  { value: 'PASTOREO', label: 'Pastoreo Rotacional / Ganadería', color: '#f97316' },
+  { value: 'PREPARACION', label: 'En Preparación de Suelo / Siembra', color: '#eab308' },
+  { value: 'DESCANSO', label: 'En Descanso / Barbecho', color: '#a8a29e' },
+  { value: 'RIEGO', label: 'Riego Intensivo / Acuícola', color: '#0ea5e9' },
+  { value: 'RESERVA', label: 'Reserva Forestal / Ronda Hídrica', color: '#166534' },
+];
+
+const TIPOS_SUELO_DETALLE = [
+  { value: 'Franco', label: 'Franco (Equilibrado: 40% Arena, 40% Limo, 20% Arcilla)' },
+  { value: 'Arcilloso', label: 'Arcilloso (Alta retención de agua, riesgo de encharcamiento)' },
+  { value: 'Arenoso', label: 'Arenoso (Drenaje rápido, requiere fertirriego frecuente)' },
+  { value: 'Franco-Arcilloso', label: 'Franco-Arcilloso (Ideal para pasturas y cereales)' },
+  { value: 'Franco-Arenoso', label: 'Franco-Arenoso (Muy común en valles del Cesar)' },
+  { value: 'Limoso', label: 'Limoso (Suelo fértil aluvial)' },
+];
+
+// Función de diagnóstico agronómico edáfico y de manejo
+function getAgronomicDiagnostics(lote: Partial<Lote>) {
+  const ph = lote.ph != null && !isNaN(Number(lote.ph)) ? Number(lote.ph) : null;
+  const soil = lote.tipoSuelo || 'Franco';
+  const status = lote.status || 'ACTIVO';
+
+  let phBadge = { text: 'pH Sin Medir', color: '#64748b', desc: 'Se sugiere realizar análisis químico de suelo.' };
+  if (ph != null) {
+    if (ph < 5.2) {
+      phBadge = { text: `pH ${ph.toFixed(1)} (Fuertemente Ácido)`, color: '#ef4444', desc: 'Riesgo de bloqueo de Fósforo y toxicidad de Aluminio. Se recomienda encalado con Cal Dolomítica (1.5 - 2 t/ha).' };
+    } else if (ph < 5.8) {
+      phBadge = { text: `pH ${ph.toFixed(1)} (Moderadamente Ácido)`, color: '#f59e0b', desc: 'Acidez moderada típica de suelos tropicales. Aplicar materia orgánica y roca fosfórica.' };
+    } else if (ph <= 7.3) {
+      phBadge = { text: `pH ${ph.toFixed(1)} (Rango Óptimo)`, color: '#22c55e', desc: 'Máxima asimilación de Nitrógeno, Fósforo, Potasio y micronutrientes para los cultivos.' };
+    } else {
+      phBadge = { text: `pH ${ph.toFixed(1)} (Alcalino / Calcáreo)`, color: '#3b82f6', desc: 'Posible clorosis férrica o déficit de Zinc. Considerar enmiendas con yeso agrícola o azufre.' };
+    }
+  }
+
+  let soilDesc = 'Suelo equilibrado con buena retención de humedad y capacidad de intercambio catiónico.';
+  if (soil.includes('Arenoso')) {
+    soilDesc = 'Alta tasa de infiltración y bajo contenido de materia orgánica. Requiere riegos cortos y fertilización fraccionada.';
+  } else if (soil.includes('Arcilloso')) {
+    soilDesc = 'Alta retención hídrica pero susceptible a compactación por pisoteo de maquinaria o ganado en época húmeda.';
+  }
+
+  let pastureTip = null;
+  if (status === 'PASTOREO') {
+    const ugm = lote.capacidadCarga || 1.5;
+    pastureTip = `Capacidad estimada: ${ugm} UGM/ha. Se sugiere rotación con periodo de ocupación de 2 a 3 días y descanso de 25 a 35 días para recuperación de pasturas (Mombaza / Brachiaria).`;
+  }
+
+  return { phBadge, soilDesc, pastureTip };
+}
+
 function FincaModal({
   finca,
   onClose,
@@ -82,6 +142,34 @@ function FincaModal({
   const [loading, setLoading] = useState(false);
   const [capturingGps, setCapturingGps] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showPerimeterDrawer, setShowPerimeterDrawer] = useState(false);
+
+  // Puntos perimetrales iniciales si existen
+  const initialPerimeter = useMemo(() => {
+    if (!finca?.coordenadas) return [];
+    if (Array.isArray(finca.coordenadas)) {
+      return finca.coordenadas.map((c: any) => ({
+        lat: Array.isArray(c) ? c[0] : c.lat,
+        lng: Array.isArray(c) ? c[1] : c.lng,
+      }));
+    }
+    if (typeof finca.coordenadas === 'string') {
+      try {
+        const p = JSON.parse(finca.coordenadas);
+        if (Array.isArray(p)) {
+          return p.map((c: any) => ({
+            lat: Array.isArray(c) ? c[0] : c.lat,
+            lng: Array.isArray(c) ? c[1] : c.lng,
+          }));
+        }
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }, [finca?.coordenadas]);
+
+  const [perimeterPoints, setPerimeterPoints] = useState<{ lat: number; lng: number }[]>(initialPerimeter);
 
   // Form state
   const [form, setForm] = useState({
@@ -102,9 +190,6 @@ function FincaModal({
     sistemaRiego: finca?.sistemaRiego || 'Secano (lluvia natural)',
     tipoAcceso: finca?.tipoAcceso || 'Carretera destapada (afirmado)',
     actividades: finca?.actividades && finca.actividades.length > 0 ? finca.actividades : ['AGRICULTURA'],
-    capacidadCabezas: '',
-    alturaMsnm: '',
-    numeroEstanques: '',
   });
 
   useEffect(() => {
@@ -144,9 +229,6 @@ function FincaModal({
         sistemaRiego: finca.sistemaRiego || 'Secano (lluvia natural)',
         tipoAcceso: finca.tipoAcceso || 'Carretera destapada (afirmado)',
         actividades: finca.actividades && finca.actividades.length > 0 ? finca.actividades : ['AGRICULTURA'],
-        capacidadCabezas: '',
-        alturaMsnm: '',
-        numeroEstanques: '',
       });
     }
   }, [finca]);
@@ -204,6 +286,7 @@ function FincaModal({
         area: parseFloat(form.hectareas),
         latitude: form.latitude ? parseFloat(form.latitude) : undefined,
         longitude: form.longitude ? parseFloat(form.longitude) : undefined,
+        coordenadas: perimeterPoints.length >= 3 ? perimeterPoints : undefined,
         descripcion: form.descripcion || undefined,
         tipoExplotacion: form.tipoExplotacion,
         estado: form.estado,
@@ -240,7 +323,7 @@ function FincaModal({
       <div
         className="modal-content"
         style={{
-          maxWidth: 680,
+          maxWidth: 720,
           width: '94vw',
           maxHeight: '92vh',
           display: 'flex',
@@ -267,7 +350,7 @@ function FincaModal({
               {finca ? 'Editar Predio / Finca' : 'Registrar Nueva Finca'}
             </h2>
             <p style={{ color: 'var(--color-text-muted)', fontSize: 13, marginTop: 4, margin: 0 }}>
-              Información de la finca, ubicación geográfica en mapa y características
+              Información de la finca, linderos geográficos y características agronómicas
             </p>
           </div>
           <button
@@ -294,392 +377,276 @@ function FincaModal({
             padding: '20px 24px',
             display: 'flex',
             flexDirection: 'column',
-            gap: 22,
+            gap: 20,
           }}
         >
-          {/* ====================================================== */}
-          {/* SECCIÓN 1: INFORMACIÓN DE LA FINCA                     */}
-          {/* ====================================================== */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-              <FileText size={16} color="var(--color-primary)" />
-              <span style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-primary)' }}>
-                1. Información de la Finca
-              </span>
-            </div>
+          {/* Identificación */}
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', display: 'block', marginBottom: 6 }}>
+              Nombre de la Finca o Hacienda *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Ej: Hacienda Nápoles, Finca El Porvenir"
+              className="input-field"
+              value={form.nombre}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+            />
+          </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Nombre del predio / finca *
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', display: 'block', marginBottom: 6 }}>
+                Área Total (Hectáreas) *
               </label>
               <input
-                className="input-field"
-                value={form.nombre}
-                onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-                placeholder="Ej: Hacienda El Paraíso, Finca San José"
+                type="number"
+                step="0.1"
+                min="0.1"
                 required
+                placeholder="Ej: 50"
+                className="input-field"
+                value={form.hectareas}
+                onChange={(e) => setForm({ ...form, hectareas: e.target.value })}
               />
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                  Tipo de explotación
-                </label>
-                <select
-                  className="input-field"
-                  value={form.tipoExplotacion}
-                  onChange={(e) => setForm((f) => ({ ...f, tipoExplotacion: e.target.value }))}
-                >
-                  {TIPOS_EXPLOTACION.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                  Estado operativo
-                </label>
-                <select
-                  className="input-field"
-                  value={form.estado}
-                  onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value }))}
-                >
-                  <option value="ACTIVA">En producción / Activa</option>
-                  <option value="TRANSICION">En adecuación / Transición</option>
-                  <option value="DESCANSO">En descanso / Barbecho</option>
-                </select>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                  Área total del predio *
-                </label>
-                <input
-                  className="input-field"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={form.hectareas}
-                  onChange={(e) => setForm((f) => ({ ...f, hectareas: e.target.value }))}
-                  placeholder="Ej: 45.5"
-                  required
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                  Unidad
-                </label>
-                <select
-                  className="input-field"
-                  value={form.unidadMedida}
-                  onChange={(e) => setForm((f) => ({ ...f, unidadMedida: e.target.value }))}
-                >
-                  <option value="Hectáreas">Hectáreas (ha)</option>
-                  <option value="Fanegadas">Fanegadas</option>
-                  <option value="Metros2">Metros² (m²)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Ubicación textual */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                  Departamento
-                </label>
-                <input
-                  className="input-field"
-                  value={form.departamento}
-                  onChange={(e) => setForm((f) => ({ ...f, departamento: e.target.value }))}
-                  placeholder="Ej: Cesar"
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                  Municipio
-                </label>
-                <input
-                  className="input-field"
-                  value={form.municipio}
-                  onChange={(e) => setForm((f) => ({ ...f, municipio: e.target.value }))}
-                  placeholder="Ej: Valledupar"
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                  Vereda o Corregimiento
-                </label>
-                <input
-                  className="input-field"
-                  value={form.vereda}
-                  onChange={(e) => setForm((f) => ({ ...f, vereda: e.target.value }))}
-                  placeholder="Ej: Vereda El Salguero"
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                  Referencia de acceso
-                </label>
-                <input
-                  className="input-field"
-                  value={form.referenciaAcceso}
-                  onChange={(e) => setForm((f) => ({ ...f, referenciaAcceso: e.target.value }))}
-                  placeholder="Ej: Km 8 vía puente Salguero"
-                />
-              </div>
-            </div>
-
             <div>
-              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Descripción general o notas
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', display: 'block', marginBottom: 6 }}>
+                Tipo de Explotación Principal
               </label>
-              <textarea
+              <select
                 className="input-field"
-                value={form.descripcion}
-                onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
-                placeholder="Breve reseña de la finca, linderos o vocación productiva..."
-                rows={2}
-                style={{ resize: 'vertical' }}
+                value={form.tipoExplotacion}
+                onChange={(e) => setForm({ ...form, tipoExplotacion: e.target.value })}
+              >
+                {TIPOS_EXPLOTACION.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Ubicación Política */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Departamento</label>
+              <input
+                type="text"
+                className="input-field"
+                value={form.departamento}
+                onChange={(e) => setForm({ ...form, departamento: e.target.value })}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Municipio</label>
+              <input
+                type="text"
+                className="input-field"
+                value={form.municipio}
+                onChange={(e) => setForm({ ...form, municipio: e.target.value })}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Corregimiento / Vereda</label>
+              <input
+                type="text"
+                placeholder="Ej: Aguas Blancas"
+                className="input-field"
+                value={form.vereda}
+                onChange={(e) => setForm({ ...form, vereda: e.target.value })}
               />
             </div>
           </div>
 
-          {/* ====================================================== */}
-          {/* SECCIÓN 2: UBICACIÓN GEOGRÁFICA                        */}
-          {/* ====================================================== */}
-          <div
-            style={{
-              padding: 16,
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 14,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <MapPin size={16} color="#38bdf8" />
-                <span style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#38bdf8' }}>
-                  2. Ubicación Geográfica
-                </span>
-              </div>
-              <span style={{ fontSize: 12, color: 'var(--color-text-subtle)' }}>
-                Haz clic en el mapa o busca para ubicar el predio
-              </span>
-            </div>
-
-            {/* Contenedor estricto del mapa con aislamiento de stacking context */}
-            <div
-              style={{
-                position: 'relative',
-                width: '100%',
-                height: '270px',
-                borderRadius: 12,
-                overflow: 'hidden',
-                isolation: 'isolate',
-                border: '1px solid var(--color-border)',
-                zIndex: 1,
-              }}
-            >
-              <MapPicker
-                latitude={form.latitude ? parseFloat(form.latitude) : null}
-                longitude={form.longitude ? parseFloat(form.longitude) : null}
-                height="270px"
-                onChange={({ latitude, longitude, address }) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    latitude: String(latitude),
-                    longitude: String(longitude),
-                    ...(address && !prev.municipio ? { municipio: address } : {}),
-                  }));
-                }}
-              />
-            </div>
-
-            {/* Confirmar Ubicación & Coordenadas GPS */}
-            <div
-              style={{
-                padding: '12px 14px',
-                background: 'rgba(15, 23, 42, 0.4)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: 10,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <div>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', display: 'block' }}>Latitud</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: form.latitude ? '#4ade80' : 'var(--color-text-muted)' }}>
-                    {form.latitude ? Number(form.latitude).toFixed(6) : 'Sin fijar'}
-                  </span>
+          {/* SECCIÓN: DELIMITACIÓN GEOGRÁFICA MANUAL POR PUNTOS */}
+          <div style={{ border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: 12, padding: '16px', background: 'rgba(16, 185, 129, 0.04)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#34d399', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Compass size={16} />
+                  <span>Zona Geográfica de la Finca (Trazado Satelital por Puntos)</span>
                 </div>
-                <div>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', display: 'block' }}>Longitud</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: form.longitude ? '#4ade80' : 'var(--color-text-muted)' }}>
-                    {form.longitude ? Number(form.longitude).toFixed(6) : 'Sin fijar'}
-                  </span>
+                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                  Marca los vértices del predio haciendo clic sobre el mapa para delimitar su perímetro real.
                 </div>
               </div>
 
               <button
                 type="button"
+                onClick={() => setShowPerimeterDrawer(!showPerimeterDrawer)}
+                className="btn-secondary"
+                style={{ fontSize: 11, padding: '4px 10px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+              >
+                {showPerimeterDrawer ? 'Ocultar Trazador' : perimeterPoints.length >= 3 ? `Ver Perímetro (${perimeterPoints.length} vértices)` : 'Abrir Trazador de Puntos'}
+              </button>
+            </div>
+
+            {showPerimeterDrawer ? (
+              <div style={{ marginTop: 10 }}>
+                <FincaPerimeterDrawer
+                  initialPoints={perimeterPoints}
+                  centerLat={form.latitude ? parseFloat(form.latitude) : 10.4631}
+                  centerLng={form.longitude ? parseFloat(form.longitude) : -73.2532}
+                  targetHectareas={form.hectareas ? parseFloat(form.hectareas) : 10}
+                  onPointsChange={(pts, computedArea) => {
+                    setPerimeterPoints(pts);
+                    if (pts.length >= 3 && computedArea > 0) {
+                      setForm((prev) => ({ ...prev, hectareas: String(computedArea) }));
+                      const sumLat = pts.reduce((s, p) => s + p.lat, 0);
+                      const sumLng = pts.reduce((s, p) => s + p.lng, 0);
+                      setForm((prev) => ({
+                        ...prev,
+                        latitude: (sumLat / pts.length).toFixed(6),
+                        longitude: (sumLng / pts.length).toFixed(6),
+                      }));
+                    } else if (pts.length > 0 && (!form.latitude || !form.longitude)) {
+                      setForm((prev) => ({
+                        ...prev,
+                        latitude: String(pts[0].lat),
+                        longitude: String(pts[0].lng),
+                      }));
+                    }
+                  }}
+                  height="340px"
+                />
+              </div>
+            ) : (
+              <div style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {perimeterPoints.length >= 3 ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#10b981', fontWeight: 600 }}>
+                    <CheckCircle2 size={14} /> Linderos delimitados con {perimeterPoints.length} puntos ({form.hectareas || '0'} ha).
+                  </span>
+                ) : (
+                  <span>Aún no has trazado los vértices manuales del predio. Pulsa &quot;Abrir Trazador de Puntos&quot; para marcarlos en el mapa satelital.</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Coordenadas GPS Sede */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+                Coordenadas GPS de la Sede (Latitud / Longitud)
+              </label>
+              <button
+                type="button"
                 onClick={handleCaptureGps}
                 disabled={capturingGps}
                 className="btn-secondary"
-                style={{
-                  fontSize: 12,
-                  padding: '6px 12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  borderColor: 'rgba(56, 189, 248, 0.3)',
-                }}
+                style={{ padding: '4px 10px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6, color: '#38bdf8' }}
               >
-                <Compass size={14} color="#38bdf8" />
-                {capturingGps ? 'Obteniendo GPS...' : 'Confirmar con GPS en Campo'}
+                <Compass size={13} />
+                <span>{capturingGps ? 'Capturando...' : 'GPS Actual'}</span>
               </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <input
+                type="number"
+                step="0.000001"
+                placeholder="Latitud (ej: 10.4631)"
+                className="input-field"
+                value={form.latitude}
+                onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+              />
+              <input
+                type="number"
+                step="0.000001"
+                placeholder="Longitud (ej: -73.2532)"
+                className="input-field"
+                value={form.longitude}
+                onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+              />
             </div>
           </div>
 
-          {/* ====================================================== */}
-          {/* SECCIÓN 3: CARACTERÍSTICAS AGROPECUARIAS (Expandible)   */}
-          {/* ====================================================== */}
-          <div style={{ border: '1px solid var(--color-border)', borderRadius: 12, overflow: 'hidden' }}>
+          {/* Opciones avanzadas */}
+          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 14 }}>
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                background: 'rgba(255,255,255,0.02)',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                color: 'var(--color-text)',
-                fontSize: 13,
-                fontWeight: 600,
-              }}
+              style={{ background: 'none', border: 'none', color: '#818cf8', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Layers size={15} color="var(--color-primary)" />
-                <span>3. Características de Terreno y Actividades (Opcional)</span>
-              </div>
-              <ChevronDown
-                size={16}
-                style={{
-                  transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)',
-                  transition: 'transform 0.2s',
-                  color: 'var(--color-text-muted)',
-                }}
-              />
+              <SlidersHorizontal size={14} />
+              <span>{showAdvanced ? 'Ocultar características edáficas e hídricas' : 'Ver características de suelo, agua y actividades'}</span>
             </button>
 
             {showAdvanced && (
-              <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14, borderTop: '1px solid var(--color-border)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>
-                      Tipo de suelo
-                    </label>
+                    <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Suelo Predominante</label>
                     <select
                       className="input-field"
                       value={form.tipoSuelo}
-                      onChange={(e) => setForm((f) => ({ ...f, tipoSuelo: e.target.value }))}
+                      onChange={(e) => setForm({ ...form, tipoSuelo: e.target.value })}
                     >
-                      <option value="Franco">Franco (equilibrado)</option>
-                      <option value="Franco-arcilloso">Franco-arcilloso</option>
-                      <option value="Franco-arenoso">Franco-arenoso</option>
+                      <option value="Franco">Franco</option>
                       <option value="Arcilloso">Arcilloso</option>
                       <option value="Arenoso">Arenoso</option>
-                      <option value="Limoso">Limoso</option>
+                      <option value="Franco-Arcilloso">Franco-Arcilloso</option>
+                      <option value="Franco-Arenoso">Franco-Arenoso</option>
                     </select>
                   </div>
-
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>
-                      Fuente de agua
-                    </label>
+                    <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Fuente de Agua</label>
                     <select
                       className="input-field"
                       value={form.fuenteAgua}
-                      onChange={(e) => setForm((f) => ({ ...f, fuenteAgua: e.target.value }))}
+                      onChange={(e) => setForm({ ...form, fuenteAgua: e.target.value })}
                     >
-                      {FUENTES_AGUA.map((fa) => (
-                        <option key={fa} value={fa}>{fa}</option>
-                      ))}
+                      {FUENTES_AGUA.map((f) => <option key={f} value={f}>{f}</option>)}
                     </select>
                   </div>
+                </div>
 
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>
-                      Sistema de riego
-                    </label>
+                    <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Sistema de Riego</label>
                     <select
                       className="input-field"
                       value={form.sistemaRiego}
-                      onChange={(e) => setForm((f) => ({ ...f, sistemaRiego: e.target.value }))}
+                      onChange={(e) => setForm({ ...form, sistemaRiego: e.target.value })}
                     >
-                      {SISTEMAS_RIEGO.map((sr) => (
-                        <option key={sr} value={sr}>{sr}</option>
-                      ))}
+                      {SISTEMAS_RIEGO.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Tipo de Acceso Vial</label>
+                    <select
+                      className="input-field"
+                      value={form.tipoAcceso}
+                      onChange={(e) => setForm({ ...form, tipoAcceso: e.target.value })}
+                    >
+                      {TIPOS_ACCESO.map((a) => <option key={a} value={a}>{a}</option>)}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 8, fontWeight: 500 }}>
-                    Actividades productivas desarrolladas:
-                  </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 8 }}>
+                  <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 6 }}>Actividades Productivas</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {ACTIVIDADES_OPCIONES.map((act) => {
-                      const isChecked = form.actividades.includes(act.id);
+                      const isSel = form.actividades.includes(act.id);
                       return (
-                        <div
+                        <button
                           key={act.id}
+                          type="button"
                           onClick={() => toggleActividad(act.id)}
                           style={{
-                            padding: '8px 10px',
-                            borderRadius: 8,
-                            border: isChecked ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                            background: isChecked ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
+                            padding: '4px 10px',
+                            borderRadius: 6,
                             fontSize: 12,
-                            color: isChecked ? 'var(--color-text)' : 'var(--color-text-muted)',
+                            cursor: 'pointer',
+                            border: isSel ? '1px solid #10b981' : '1px solid var(--color-border)',
+                            background: isSel ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)',
+                            color: isSel ? '#34d399' : 'var(--color-text-muted)',
+                            fontWeight: isSel ? 600 : 400,
                           }}
                         >
-                          <div
-                            style={{
-                              width: 14,
-                              height: 14,
-                              borderRadius: 3,
-                              border: isChecked ? 'none' : '1px solid var(--color-border)',
-                              background: isChecked ? 'var(--color-primary)' : 'transparent',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {isChecked && <CheckCircle size={10} color="#000" />}
-                          </div>
                           {act.label}
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -688,29 +655,11 @@ function FincaModal({
             )}
           </div>
 
-          {/* ====================================================== */}
-          {/* FOOTER FIJO CON BOTONES DE ACCIÓN                      */}
-          {/* ====================================================== */}
-          <div
-            style={{
-              position: 'sticky',
-              bottom: 0,
-              background: 'var(--color-surface)',
-              borderTop: '1px solid var(--color-border)',
-              paddingTop: 16,
-              paddingBottom: 6,
-              marginTop: 4,
-              display: 'flex',
-              gap: 12,
-              justifyContent: 'flex-end',
-              zIndex: 20,
-            }}
-          >
-            <button type="button" onClick={onClose} className="btn-secondary">
-              Cancelar
-            </button>
-            <button type="submit" className="btn-primary" disabled={loading} id="btn-guardar-finca">
-              {loading ? 'Guardando...' : finca ? 'Actualizar Finca' : 'Guardar Finca'}
+          {/* Footer Form */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 14, borderTop: '1px solid var(--color-border)' }}>
+            <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
+            <button type="submit" className="btn-primary" disabled={loading} style={{ background: '#10b981' }}>
+              {loading ? 'Guardando...' : finca ? 'Actualizar Predio' : 'Registrar Finca'}
             </button>
           </div>
         </form>
@@ -719,100 +668,424 @@ function FincaModal({
   );
 }
 
-// Modal para Crear Lote dentro de una Finca
-function LoteModal({
-  fincaId,
+// Modal Rápido para Delimitar la Zona de la Finca mediante Puntos
+function FincaPerimeterModal({
+  finca,
   onClose,
   onSave,
 }: {
-  fincaId: string | number;
+  finca: Finca;
   onClose: () => void;
   onSave: () => void;
 }) {
-  const [form, setForm] = useState({ name: '', area: '', soilType: 'Franco' });
+  const [points, setPoints] = useState<{ lat: number; lng: number }[]>(() => {
+    if (!finca.coordenadas) return [];
+    if (Array.isArray(finca.coordenadas)) {
+      return finca.coordenadas.map((c: any) => ({
+        lat: Array.isArray(c) ? c[0] : c.lat,
+        lng: Array.isArray(c) ? c[1] : c.lng,
+      }));
+    }
+    if (typeof finca.coordenadas === 'string') {
+      try {
+        const p = JSON.parse(finca.coordenadas);
+        if (Array.isArray(p)) return p.map((c: any) => ({ lat: Array.isArray(c) ? c[0] : c.lat, lng: Array.isArray(c) ? c[1] : c.lng }));
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+  const [computedArea, setComputedArea] = useState<number>(finca.hectareas || 0);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim() || !form.area) {
-      useToastStore.getState().warning('Nombre y área son obligatorios.');
+  const handleSavePerimeter = async () => {
+    if (points.length < 3) {
+      useToastStore.getState().warning('Debes marcar al menos 3 vértices para cerrar el perímetro de la finca.');
       return;
     }
     setLoading(true);
     try {
-      await fincasApi.createLote(fincaId, {
-        name: form.name.trim(),
-        area: parseFloat(form.area),
-        soilType: form.soilType || undefined,
+      const sumLat = points.reduce((acc, p) => acc + p.lat, 0);
+      const sumLng = points.reduce((acc, p) => acc + p.lng, 0);
+      const centroidLat = parseFloat((sumLat / points.length).toFixed(6));
+      const centroidLng = parseFloat((sumLng / points.length).toFixed(6));
+
+      await fincasApi.update(finca.id, {
+        coordenadas: points,
+        latitude: centroidLat,
+        longitude: centroidLng,
+        hectareas: computedArea > 0 ? computedArea : finca.hectareas,
       });
-      useToastStore.getState().success('Lote / Parcela creada con éxito.');
+      useToastStore.getState().success(`Zona perimetral de "${finca.nombre}" guardada con éxito (${computedArea.toFixed(2)} ha).`);
       onSave();
       onClose();
     } catch {
-      useToastStore.getState().error('Error al crear el lote.');
+      useToastStore.getState().error('Error al guardar la zona geográfica.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" style={{ maxWidth: 440 }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-          <h3 className="font-display" style={{ fontSize: 18, fontWeight: 700 }}>Nueva Parcela / Lote</h3>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
+      <div
+        className="modal-content"
+        style={{ maxWidth: 780, width: '94vw', maxHeight: '92vh', overflowY: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Compass size={22} color="#10b981" />
+            <div>
+              <h3 className="font-display" style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
+                Delimitar Zona Perimetral de la Finca
+              </h3>
+              <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0 }}>
+                Predio: <strong>{finca.nombre}</strong> • Arrastra los puntos sobre el mapa satelital para ajustar los linderos
+              </p>
+            </div>
+          </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
             <X size={18} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+        <FincaPerimeterDrawer
+          initialPoints={points}
+          centerLat={finca.latitude || 10.4631}
+          centerLng={finca.longitude || -73.2532}
+          targetHectareas={finca.hectareas}
+          onPointsChange={(pts, area) => {
+            setPoints(pts);
+            setComputedArea(area);
+          }}
+          height="460px"
+        />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+            {points.length >= 3 ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#10b981', fontWeight: 600 }}>
+                <CheckCircle2 size={14} /> Perímetro cerrado: {points.length} puntos delimitados • Superficie: {computedArea.toFixed(2)} ha
+              </span>
+            ) : (
+              <span>Marca al menos 3 puntos en el mapa para cerrar el polígono predial.</span>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
+            <button
+              type="button"
+              onClick={handleSavePerimeter}
+              disabled={loading || points.length < 3}
+              className="btn-primary"
+              style={{ background: '#10b981', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <CheckCircle size={15} />
+              <span>{loading ? 'Guardando...' : 'Guardar Zona de la Finca'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal Agronómico para Crear o Editar Parcela / Lote
+function LoteAgronomicModal({
+  fincaId,
+  finca,
+  lote,
+  onClose,
+  onSave,
+}: {
+  fincaId: string | number;
+  finca?: Finca | null;
+  lote?: Lote | null;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    name: lote?.nombre || '',
+    area: lote?.hectareas ? String(lote.hectareas) : '',
+    status: lote?.status || 'ACTIVO',
+    soilType: lote?.tipoSuelo || 'Franco',
+    cultivoActual: lote?.cultivoActual || '',
+    sistemaRiego: lote?.sistemaRiego || 'Secano (lluvia natural)',
+    topografia: lote?.topografia || 'PLANO',
+    ph: lote?.ph != null ? String(lote.ph) : '',
+    capacidadCarga: lote?.capacidadCarga != null ? String(lote.capacidadCarga) : '',
+    coberturaVegetal: lote?.coberturaVegetal || '',
+    notas: lote?.notas || '',
+  });
+
+  const totalFincaHa = finca?.hectareas || 0;
+  const existingLotesHa = useMemo(() => {
+    if (!finca || !Array.isArray(finca.lotes)) return 0;
+    return finca.lotes
+      .filter((l) => !lote || String(l.id) !== String(lote.id))
+      .reduce((sum, l) => sum + (l.hectareas || 0), 0);
+  }, [finca, lote]);
+
+  const remainingHa = Math.max(0, parseFloat((totalFincaHa - existingLotesHa).toFixed(2)));
+
+  const diagnostics = useMemo(() => {
+    return getAgronomicDiagnostics({
+      tipoSuelo: form.soilType,
+      ph: form.ph ? parseFloat(form.ph) : null,
+      status: form.status,
+      capacidadCarga: form.capacidadCarga ? parseFloat(form.capacidadCarga) : null,
+    });
+  }, [form.soilType, form.ph, form.status, form.capacidadCarga]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) {
+      useToastStore.getState().warning('El nombre del lote o potrero es obligatorio.');
+      return;
+    }
+    if (!form.area || parseFloat(form.area) <= 0) {
+      useToastStore.getState().warning('Indica un área válida en hectáreas.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        name: form.name.trim(),
+        area: parseFloat(form.area),
+        soilType: form.soilType,
+        status: form.status,
+        cultivoActual: form.cultivoActual || undefined,
+        sistemaRiego: form.sistemaRiego,
+        topografia: form.topografia,
+        ph: form.ph ? parseFloat(form.ph) : null,
+        capacidadCarga: form.capacidadCarga ? parseFloat(form.capacidadCarga) : null,
+        coberturaVegetal: form.coberturaVegetal || undefined,
+        notas: form.notas || undefined,
+      };
+
+      if (lote) {
+        await fincasApi.updateLote(lote.id, payload);
+        useToastStore.getState().success(`Parcela "${form.name}" actualizada con éxito.`);
+      } else {
+        await fincasApi.createLote(fincaId, payload);
+        useToastStore.getState().success(`Parcela "${form.name}" registrada con éxito.`);
+      }
+      onSave();
+      onClose();
+    } catch {
+      useToastStore.getState().error('Error al guardar la parcela. Verifica la conexión.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
+      <div
+        className="modal-content"
+        style={{ maxWidth: 580, width: '92vw', maxHeight: '90vh', overflowY: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Layers size={22} color="#22c55e" />
+            <div>
+              <h3 className="font-display" style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
+                {lote ? 'Editar Ficha Agronómica de Parcela' : 'Registrar Nueva Parcela / Lote'}
+              </h3>
+              <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0 }}>
+                Parámetros edáficos, estado de cultivo y zonificación en mapa
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Identificación */}
           <div>
-            <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-              Nombre de la parcela / potrero / estanque *
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+              Nombre de la Parcela, Lote o Potrero *
             </label>
             <input
-              className="input-field"
-              placeholder="Ej: Lote 1 - Arroz, Potrero La Laguna, Estanque 2"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              type="text"
               required
+              placeholder="Ej: Lote 1 - Maíz Híbrido, Potrero La Cabaña, Tablón 4"
+              className="input-field"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Área (hectáreas) *
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                Área (Hectáreas) *
               </label>
               <input
-                className="input-field"
                 type="number"
                 step="0.01"
-                min="0"
-                placeholder="Ej: 5.5"
-                value={form.area}
-                onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
+                min="0.1"
                 required
+                placeholder="Ej: 5.5"
+                className="input-field"
+                value={form.area}
+                onChange={(e) => setForm({ ...form, area: e.target.value })}
               />
+              {totalFincaHa > 0 && (
+                <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Info size={12} color="#38bdf8" style={{ flexShrink: 0 }} />
+                  <span>
+                    Finca: <strong>{totalFincaHa} ha</strong> • Disponible: <strong style={{ color: remainingHa >= (parseFloat(form.area) || 0) ? '#34d399' : '#f87171' }}>{remainingHa} ha</strong>
+                  </span>
+                </div>
+              )}
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Tipo de suelo
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                Estado Operativo del Lote
+              </label>
+              <select
+                className="input-field"
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+              >
+                {ESTADOS_LOTE.map((st) => (
+                  <option key={st.value} value={st.value}>{st.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+              Cultivo Actual o Variedad de Pasto
+            </label>
+            <input
+              type="text"
+              placeholder="Ej: Maíz ICA V-109, Pasto Guinea Mombasa, Palma de Aceite, Café Castillo"
+              className="input-field"
+              value={form.cultivoActual}
+              onChange={(e) => setForm({ ...form, cultivoActual: e.target.value })}
+            />
+          </div>
+
+          {/* Edafología */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                Textura del Suelo
               </label>
               <select
                 className="input-field"
                 value={form.soilType}
-                onChange={(e) => setForm((f) => ({ ...f, soilType: e.target.value }))}
+                onChange={(e) => setForm({ ...form, soilType: e.target.value })}
               >
-                <option value="Franco">Franco</option>
-                <option value="Arcilloso">Arcilloso</option>
-                <option value="Arenoso">Arenoso</option>
-                <option value="Limoso">Limoso</option>
+                {TIPOS_SUELO_DETALLE.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                pH del Suelo (Acidez)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="3.0"
+                max="10.0"
+                placeholder="Ej: 6.2 (rango 4.0 - 9.0)"
+                className="input-field"
+                value={form.ph}
+                onChange={(e) => setForm({ ...form, ph: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Banner de Diagnóstico Edafológico en Vivo */}
+          <div
+            style={{
+              padding: '12px 14px',
+              borderRadius: 10,
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid var(--color-border)',
+              fontSize: 12,
+              lineHeight: 1.5,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{ padding: '2px 8px', borderRadius: 6, fontWeight: 700, fontSize: 11, background: `${diagnostics.phBadge.color}25`, color: diagnostics.phBadge.color, border: `1px solid ${diagnostics.phBadge.color}40` }}>
+                {diagnostics.phBadge.text}
+              </span>
+              <span style={{ color: 'var(--color-text-subtle)' }}>Diagnóstico Agronómico</span>
+            </div>
+            <p style={{ margin: 0, color: 'var(--color-text-muted)' }}>
+              {diagnostics.phBadge.desc}
+            </p>
+            {diagnostics.pastureTip && (
+              <p style={{ margin: '6px 0 0', color: '#f97316', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Layers size={13} style={{ flexShrink: 0 }} />
+                <span>{diagnostics.pastureTip}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Riego y Topografía */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                Topografía / Pendiente
+              </label>
+              <select
+                className="input-field"
+                value={form.topografia}
+                onChange={(e) => setForm({ ...form, topografia: e.target.value })}
+              >
+                <option value="PLANO">Plano (0-3% pendiente)</option>
+                <option value="LIGERA_PENDIENTE">Ligera Pendiente (3-7%)</option>
+                <option value="ONDULADO">Ondulado (7-12%)</option>
+                <option value="QUEBRADO">Quebrado (más del 12%)</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                Sistema de Riego
+              </label>
+              <select
+                className="input-field"
+                value={form.sistemaRiego}
+                onChange={(e) => setForm({ ...form, sistemaRiego: e.target.value })}
+              >
+                {SISTEMAS_RIEGO.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 10 }}>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+              Recomendaciones y Notas Agronómicas
+            </label>
+            <textarea
+              className="input-field"
+              rows={2}
+              placeholder="Historial de siembra, rotación de cultivos, fertilización aplicada..."
+              value={form.notas}
+              onChange={(e) => setForm({ ...form, notas: e.target.value })}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
             <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Creando...' : 'Crear Parcela'}
+            <button type="submit" className="btn-primary" disabled={loading} style={{ background: '#22c55e' }}>
+              {loading ? 'Guardando...' : lote ? 'Actualizar Parcela' : 'Crear Parcela'}
             </button>
           </div>
         </form>
@@ -821,25 +1094,33 @@ function LoteModal({
   );
 }
 
+// Modal Detalle de Finca con Mapa Satelital de Lotes
 function FincaDetailModal({
   finca,
   onClose,
   onEdit,
+  onOpenLoteModal,
+  onOpenPerimeterModal,
 }: {
   finca: Finca;
   onClose: () => void;
   onEdit: () => void;
+  onOpenLoteModal: (fincaId: string | number, lote?: Lote) => void;
+  onOpenPerimeterModal: (finca: Finca) => void;
 }) {
   const [lotes, setLotes] = useState<Lote[]>([]);
-  const [loadingLotes, setLoadingLotes] = useState(false);
+  const [selectedLote, setSelectedLote] = useState<Lote | null>(null);
 
   useEffect(() => {
     if (finca?.id) {
-      setLoadingLotes(true);
       fincasApi.getLotes(finca.id)
-        .then((res) => setLotes(res.data || []))
-        .catch(() => setLotes(finca.lotes || []))
-        .finally(() => setLoadingLotes(false));
+        .then((res) => {
+          setLotes(res.data || []);
+          if (res.data && res.data.length > 0) {
+            setSelectedLote(res.data[0]);
+          }
+        })
+        .catch(() => setLotes(finca.lotes || []));
     }
   }, [finca]);
 
@@ -847,9 +1128,13 @@ function FincaDetailModal({
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9998 }}>
-      <div className="modal-content" style={{ maxWidth: 740, maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-content"
+        style={{ maxWidth: 860, width: '94vw', maxHeight: '92vh', overflowY: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div
               style={{
@@ -881,97 +1166,105 @@ function FincaDetailModal({
         </div>
 
         {/* Resumen KPIs */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
-          <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
-            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Área Total</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)', marginTop: 4 }}>
-              {finca.hectareas} <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>ha</span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 20 }}>
+          <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 10 }}>
+            <div style={{ fontSize: 10, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Superficie</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginTop: 2 }}>
+              {finca.hectareas} <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>ha</span>
             </div>
           </div>
-          <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
-            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Tipo Explotación</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginTop: 6 }}>
-              {finca.tipoExplotacion || 'Agropecuaria'}
+          <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 10 }}>
+            <div style={{ fontSize: 10, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Parcelas</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#38bdf8', marginTop: 2 }}>
+              {lotes.length} <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>lotes</span>
             </div>
           </div>
-          <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
-            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Parcelas</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#38bdf8', marginTop: 4 }}>
-              {lotes.length} <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>lotes</span>
+          <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 10 }}>
+            <div style={{ fontSize: 10, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Suelo</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginTop: 4 }}>
+              {finca.tipoSuelo || 'Franco'}
             </div>
           </div>
-          <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 12 }}>
-            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Estado Operativo</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#4ade80', marginTop: 6 }}>
-              {finca.estado || 'Activa'}
+          <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 10 }}>
+            <div style={{ fontSize: 10, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>Riego</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#34d399', marginTop: 4 }}>
+              {finca.sistemaRiego || 'Secano'}
             </div>
           </div>
         </div>
 
-        {/* Descripción del Predio */}
-        {finca.descripcion && (
-          <div style={{ padding: '14px 16px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 12, marginBottom: 20 }}>
-            <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
-              Descripción del Predio
+        {/* Visor Satelital de Parcelas y Zona Perimetral */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Layers size={16} color="#22c55e" />
+              <span>Zona Perimetral de la Finca y Parcelas</span>
             </div>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-              {finca.descripcion}
-            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => onOpenPerimeterModal(finca)}
+                className="btn-secondary"
+                style={{ fontSize: 11, padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 4, color: '#10b981', borderColor: 'rgba(16,185,129,0.4)' }}
+              >
+                <Compass size={12} /> Delimitar Zona Finca
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenLoteModal(finca.id)}
+                className="btn-secondary"
+                style={{ fontSize: 11, padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 4, color: '#22c55e' }}
+              >
+                <Plus size={12} /> Nueva Parcela
+              </button>
+            </div>
+          </div>
+
+          <FincaParcelasMap
+            finca={finca}
+            lotes={lotes}
+            selectedLoteId={selectedLote?.id}
+            onSelectLote={(l) => setSelectedLote(l)}
+            height="380px"
+          />
+        </div>
+
+        {/* Ficha de la Parcela Seleccionada */}
+        {selectedLote && (
+          <div style={{ padding: '14px 16px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 12, marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <div>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>
+                  {selectedLote.nombre}
+                </span>
+                <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--color-text-muted)' }}>
+                  ({selectedLote.hectareas} ha • {((selectedLote.hectareas / (finca.hectareas || 1)) * 100).toFixed(0)}% del predio)
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => onOpenLoteModal(finca.id, selectedLote)}
+                className="btn-secondary"
+                style={{ padding: '3px 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              >
+                <Edit3 size={11} /> Editar Parcela
+              </button>
+            </div>
+            {selectedLote.cultivoActual && (
+              <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Sprout size={13} color="#22c55e" />
+                <span>Cultivo / Forraje: {selectedLote.cultivoActual}</span>
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+              Suelo: <strong>{selectedLote.tipoSuelo || 'Franco'}</strong> • Pendiente: <strong>{selectedLote.topografia || 'Plana'}</strong> • Riego: <strong>{selectedLote.sistemaRiego || 'Secano'}</strong>
+            </div>
           </div>
         )}
 
-        {/* Mapa de Ubicación */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <MapIcon size={15} color="#10b981" />
-            Ubicación Geográfica en Mapa
-          </div>
-          {finca.latitude && finca.longitude ? (
-            <MapPicker
-              latitude={finca.latitude}
-              longitude={finca.longitude}
-              readOnly={true}
-              height="260px"
-            />
-          ) : (
-            <div style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--color-border)', color: 'var(--color-text-subtle)', fontSize: 13 }}>
-              Este predio aún no cuenta con coordenadas GPS guardadas. Puedes editar la finca para ubicarlas en el mapa interactivo.
-            </div>
-          )}
-        </div>
-
-        {/* Parcelas / Lotes */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Layers size={15} color="#38bdf8" />
-            Parcelas y Lotes Registrados ({lotes.length})
-          </div>
-          {loadingLotes ? (
-            <div style={{ padding: 16, textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 13 }}>Cargando parcelas...</div>
-          ) : lotes.length === 0 ? (
-            <div style={{ padding: 16, background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--color-border)', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
-              Sin parcelas o lotes registrados en esta finca.
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
-              {lotes.map((lote) => (
-                <div key={lote.id} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: 10, fontSize: 13 }}>
-                  <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{lote.nombre}</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-muted)', fontSize: 12, marginTop: 4 }}>
-                    <span>{lote.hectareas} ha</span>
-                    {lote.tipoSuelo && <span>Suelo: {lote.tipoSuelo}</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Acciones */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
-          <button type="button" onClick={onClose} className="btn-secondary">
-            Volver
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 14, borderTop: '1px solid var(--color-border)' }}>
+          <button type="button" onClick={onClose} className="btn-secondary">Volver</button>
           <button
             type="button"
             onClick={() => {
@@ -981,8 +1274,7 @@ function FincaDetailModal({
             className="btn-primary"
             style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            <Edit3 size={15} />
-            Editar Predio
+            <Edit3 size={15} /> Editar Predio
           </button>
         </div>
       </div>
@@ -997,9 +1289,26 @@ export default function FincasPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editFinca, setEditFinca] = useState<Finca | undefined>();
   const [viewFinca, setViewFinca] = useState<Finca | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
-  // Modal de confirmación de eliminación profesional
+  // Modos de vista: Cuadrícula, Mapa General de Fincas, o Visor Satelital de Parcelas
+  const [viewMode, setViewMode] = useState<'grid' | 'parcelas'>('grid');
+
+  // Estado para el Visor Satelital de Parcelas
+  const [selectedFincaIdForMap, setSelectedFincaIdForMap] = useState<string | number | null>(null);
+  const [mapViewerLotes, setMapViewerLotes] = useState<Lote[]>([]);
+  const [selectedLoteInMap, setSelectedLoteInMap] = useState<Lote | null>(null);
+
+  // Modal para Delimitar Perímetro de Finca
+  const [perimeterModalFinca, setPerimeterModalFinca] = useState<Finca | null>(null);
+
+  // Modal Lote Agronómico
+  const [loteModalData, setLoteModalData] = useState<{
+    isOpen: boolean;
+    fincaId: string | number;
+    lote?: Lote | null;
+  } | null>(null);
+
+  // Modal Confirmación Eliminación
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     type: 'finca' | 'lote';
@@ -1015,17 +1324,19 @@ export default function FincasPage() {
     loading: false,
   });
 
-  // Lotes management state
+  // Lotes desplegables en tarjetas
   const [selectedFincaForLotes, setSelectedFincaForLotes] = useState<string | number | null>(null);
   const [fincaLotes, setFincaLotes] = useState<Lote[]>([]);
   const [loadingLotes, setLoadingLotes] = useState(false);
-  const [newLoteModalFincaId, setNewLoteModalFincaId] = useState<string | number | null>(null);
 
   const loadFincas = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fincasApi.getAll();
       setFincas(res.data);
+      if (res.data && res.data.length > 0 && !selectedFincaIdForMap) {
+        setSelectedFincaIdForMap(res.data[0].id);
+      }
     } catch (err: any) {
       console.error('Error al cargar fincas:', err);
       const msg = err.response?.data?.message || 'Error al cargar la lista de fincas.';
@@ -1033,11 +1344,28 @@ export default function FincasPage() {
     } finally {
       setLoading(false);
     }
-  }, [setFincas]);
+  }, [setFincas, selectedFincaIdForMap]);
 
   useEffect(() => {
     loadFincas();
   }, [loadFincas]);
+
+  // Cargar lotes cuando cambia la finca activa en el Visor Satelital de Parcelas
+  useEffect(() => {
+    if (selectedFincaIdForMap) {
+      fincasApi.getLotes(selectedFincaIdForMap)
+        .then((res) => {
+          const list = res.data || [];
+          setMapViewerLotes(list);
+          if (list.length > 0) {
+            setSelectedLoteInMap(list[0]);
+          } else {
+            setSelectedLoteInMap(null);
+          }
+        })
+        .catch(() => setMapViewerLotes([]));
+    }
+  }, [selectedFincaIdForMap]);
 
   const confirmDeleteAction = async () => {
     if (!deleteModal.id) return;
@@ -1050,6 +1378,10 @@ export default function FincasPage() {
       } else {
         await fincasApi.deleteLote(deleteModal.id);
         setFincaLotes((prev) => prev.filter((l) => l.id !== deleteModal.id));
+        setMapViewerLotes((prev) => prev.filter((l) => l.id !== deleteModal.id));
+        if (selectedLoteInMap?.id === deleteModal.id) {
+          setSelectedLoteInMap(null);
+        }
         useToastStore.getState().success(`Parcela "${deleteModal.name}" eliminada.`);
         loadFincas();
       }
@@ -1078,16 +1410,14 @@ export default function FincasPage() {
     }
   };
 
-  const handleDeleteLote = (loteId: string | number, fincaId: string | number, loteNombre: string) => {
-    setDeleteModal({
-      isOpen: true,
-      type: 'lote',
-      id: loteId,
-      fincaId,
-      name: loteNombre,
-      loading: false,
-    });
-  };
+  const currentMapFinca = useMemo(() => {
+    return fincas.find((f) => String(f.id) === String(selectedFincaIdForMap)) || fincas[0] || null;
+  }, [fincas, selectedFincaIdForMap]);
+
+  const activeDiagnostics = useMemo(() => {
+    if (!selectedLoteInMap) return null;
+    return getAgronomicDiagnostics(selectedLoteInMap);
+  }, [selectedLoteInMap]);
 
   const filtered = fincas.filter(
     (f) =>
@@ -1096,40 +1426,42 @@ export default function FincasPage() {
   );
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
+    <div style={{ maxWidth: 1240, margin: '0 auto', paddingBottom: 40 }}>
       {/* Header */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 28,
+          marginBottom: 24,
           flexWrap: 'wrap',
           gap: 12,
         }}
       >
         <div>
           <h1 className="font-display" style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
-            Mis Fincas y Predios
+            Mis Fincas y Parcelas Agronómicas
           </h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>
-            {fincas.length} predio{fincas.length !== 1 ? 's' : ''} registrado{fincas.length !== 1 ? 's' : ''} en la organización
+            Monitoreo satelital, delimitación geográfica de linderos y diagnósticos agronómicos
           </p>
         </div>
-        <button
-          onClick={() => { setEditFinca(undefined); setModalOpen(true); }}
-          className="btn-primary"
-          style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-          id="btn-nueva-finca"
-        >
-          <Plus size={18} />
-          Nueva Finca
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={() => { setEditFinca(undefined); setModalOpen(true); }}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#10b981' }}
+            id="btn-nueva-finca"
+          >
+            <Plus size={18} />
+            Nueva Finca
+          </button>
+        </div>
       </div>
 
-      {/* Search & View Mode Switcher */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ position: 'relative', flex: 1, maxWidth: 380, minWidth: 220 }}>
+      {/* Switcher de Vistas */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: 360, minWidth: 220 }}>
           <Search
             size={16}
             style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }}
@@ -1137,14 +1469,14 @@ export default function FincasPage() {
           <input
             className="input-field"
             style={{ paddingLeft: 38 }}
-            placeholder="Buscar por predio o ubicación..."
+            placeholder="Buscar por predio o vereda..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        {/* View Mode Toggle Buttons */}
-        <div style={{ display: 'flex', background: 'var(--color-surface-2)', padding: 4, borderRadius: 10, border: '1px solid var(--color-border)' }}>
+        {/* View Mode Toggle Buttons con 3 modos */}
+        <div style={{ display: 'flex', background: 'var(--color-surface-2)', padding: 4, borderRadius: 10, border: '1px solid var(--color-border)', gap: 4 }}>
           <button
             type="button"
             onClick={() => setViewMode('grid')}
@@ -1152,7 +1484,7 @@ export default function FincasPage() {
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '6px 14px',
+              padding: '6px 12px',
               borderRadius: 8,
               border: 'none',
               cursor: 'pointer',
@@ -1165,11 +1497,12 @@ export default function FincasPage() {
             }}
           >
             <LayoutGrid size={15} />
-            <span>Cuadrícula</span>
+            <span>Predios</span>
           </button>
+
           <button
             type="button"
-            onClick={() => setViewMode('map')}
+            onClick={() => setViewMode('parcelas')}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -1179,36 +1512,263 @@ export default function FincasPage() {
               border: 'none',
               cursor: 'pointer',
               fontSize: 13,
-              fontWeight: 500,
-              background: viewMode === 'map' ? 'var(--color-surface)' : 'transparent',
-              color: viewMode === 'map' ? '#4ade80' : 'var(--color-text-muted)',
-              boxShadow: viewMode === 'map' ? '0 1px 3px rgba(0,0,0,0.2)' : 'none',
+              fontWeight: 600,
+              background: viewMode === 'parcelas' ? 'rgba(34, 197, 94, 0.15)' : 'transparent',
+              color: viewMode === 'parcelas' ? '#22c55e' : 'var(--color-text-muted)',
+              borderBottom: viewMode === 'parcelas' ? '2px solid #22c55e' : 'none',
               transition: 'all 0.2s',
             }}
           >
-            <MapIcon size={15} />
-            <span>Mapa Satelital</span>
+            <Layers size={15} />
+            <span>Visor de Parcelas y Lotes</span>
           </button>
         </div>
       </div>
 
-      {viewMode === 'map' ? (
-        <div style={{ marginBottom: 24 }}>
-          <FincasMapOverview
-            fincas={filtered}
-            onSelectFinca={(f) => {
-              const fullFinca = fincas.find((item) => String(item.id) === String(f.id));
-              if (fullFinca) {
-                setEditFinca(fullFinca);
-                setModalOpen(true);
-              }
+      {/* MODO 1: VISOR SATELITAL DE PARCELAS Y ZONA PERIMETRAL */}
+      {viewMode === 'parcelas' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Barra de Selección y Métricas de la Finca */}
+          <div
+            className="card"
+            style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 16,
+              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%)',
+              border: '1px solid rgba(34, 197, 94, 0.2)',
             }}
-            height="560px"
-          />
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(34, 197, 94, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22c55e' }}>
+                <Layers size={22} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#34d399', textTransform: 'uppercase', display: 'block' }}>
+                  Finca Activa en Visor Satelital:
+                </label>
+                <select
+                  className="input-field"
+                  style={{ marginTop: 2, padding: '4px 10px', fontSize: 14, fontWeight: 600, minWidth: 220 }}
+                  value={selectedFincaIdForMap || ''}
+                  onChange={(e) => setSelectedFincaIdForMap(e.target.value)}
+                >
+                  {fincas.map((f) => (
+                    <option key={f.id} value={f.id}>{f.nombre} ({f.hectareas} ha)</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {currentMapFinca && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 12 }}>
+                  <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Superficie Predio</span>
+                  <span style={{ fontWeight: 700, color: 'var(--color-text)', fontSize: 14 }}>{currentMapFinca.hectareas} ha</span>
+                </div>
+                <div style={{ fontSize: 12 }}>
+                  <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Parcelado</span>
+                  <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: 14 }}>
+                    {mapViewerLotes.reduce((sum, l) => sum + (l.hectareas || 0), 0)} ha ({mapViewerLotes.length} {mapViewerLotes.length === 1 ? 'lote' : 'lotes'})
+                  </span>
+                </div>
+                <div style={{ fontSize: 12 }}>
+                  <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Área Libre</span>
+                  <span style={{ fontWeight: 700, color: '#34d399', fontSize: 14 }}>
+                    {Math.max(0, parseFloat((currentMapFinca.hectareas - mapViewerLotes.reduce((sum, l) => sum + (l.hectareas || 0), 0)).toFixed(2)))} ha
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPerimeterModalFinca(currentMapFinca)}
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '7px 12px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+                  title="Delimitar zona geográfica del predio mediante puntos manuales"
+                >
+                  <Compass size={14} />
+                  <span>Delimitar Zona Finca</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoteModalData({ isOpen: true, fincaId: currentMapFinca.id })}
+                  className="btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '7px 12px', background: '#22c55e' }}
+                >
+                  <Plus size={14} /> Nueva Parcela
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Grid: Mapa Satelital + Ficha Agronómica Flotante */}
+          <div style={{ display: 'grid', gridTemplateColumns: currentMapFinca ? '1fr 340px' : '1fr', gap: 16, alignItems: 'start' }}>
+            {/* Mapa de Parcelas y Zona Perimetral */}
+            {currentMapFinca ? (
+              <FincaParcelasMap
+                finca={currentMapFinca}
+                lotes={mapViewerLotes}
+                selectedLoteId={selectedLoteInMap?.id}
+                onSelectLote={(l) => setSelectedLoteInMap(l)}
+                height="560px"
+              />
+            ) : (
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                No tienes predios registrados para inspeccionar parcelas.
+              </div>
+            )}
+
+            {/* Panel Agronómico de Parcela */}
+            {selectedLoteInMap ? (
+              <div
+                className="card"
+                style={{
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 14,
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-surface)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ overflow: 'hidden', paddingRight: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', textTransform: 'uppercase' }}>
+                      Ficha Agronómica
+                    </span>
+                    <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-text)', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={selectedLoteInMap.nombre}>
+                      {selectedLoteInMap.nombre}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLoteModalData({ isOpen: true, fincaId: selectedLoteInMap.fincaId || currentMapFinca?.id || '', lote: selectedLoteInMap })}
+                    className="btn-secondary"
+                    style={{ padding: '5px 8px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}
+                    title="Editar parámetros del lote"
+                  >
+                    <Edit3 size={13} /> Editar
+                  </button>
+                </div>
+
+                {/* Métricas del Lote */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
+                    <div style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>Área del Lote</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>
+                      {selectedLoteInMap.hectareas} ha
+                    </div>
+                  </div>
+                  <div style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
+                    <div style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>% del Predio</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#38bdf8' }}>
+                      {(((selectedLoteInMap.hectareas || 0) / (currentMapFinca?.hectareas || 1)) * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cultivo / Variedad */}
+                {selectedLoteInMap.cultivoActual ? (
+                  <div style={{ padding: '10px 12px', background: 'rgba(34, 197, 94, 0.08)', borderRadius: 8, border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', textTransform: 'uppercase' }}>Cultivo / Forraje</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }} title={selectedLoteInMap.cultivoActual}>
+                      <Sprout size={13} color="#22c55e" />
+                      <span>{selectedLoteInMap.cultivoActual}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 12, color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
+                    Sin cultivo asignado (editar lote para definirlo).
+                  </div>
+                )}
+
+                {/* Diagnóstico Edafológico */}
+                {activeDiagnostics && (
+                  <div style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--color-border)', fontSize: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 4 }}>
+                      <span style={{ fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Suelo: {selectedLoteInMap.tipoSuelo || 'Franco'}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: activeDiagnostics.phBadge.color, flexShrink: 0 }}>
+                        {activeDiagnostics.phBadge.text}
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                      {activeDiagnostics.soilDesc}
+                    </p>
+                    <p style={{ margin: '6px 0 0', color: 'var(--color-text-subtle)', fontSize: 11, lineHeight: 1.4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <Lightbulb size={12} color="#f59e0b" style={{ flexShrink: 0 }} />
+                      <span>{activeDiagnostics.phBadge.desc}</span>
+                    </p>
+                  </div>
+                )}
+
+                {/* Parámetros de Manejo */}
+                <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 6, color: 'var(--color-text-muted)' }}>
+                  <div>Sistema Riego: <strong style={{ color: 'var(--color-text)' }}>{selectedLoteInMap.sistemaRiego || 'Secano'}</strong></div>
+                  <div>Topografía: <strong style={{ color: 'var(--color-text)' }}>{selectedLoteInMap.topografia || 'Plano'}</strong></div>
+                  {selectedLoteInMap.capacidadCarga && (
+                    <div>Capacidad Ganadera: <strong style={{ color: '#f97316' }}>{selectedLoteInMap.capacidadCarga} UGM/ha</strong></div>
+                  )}
+                </div>
+
+                {selectedLoteInMap.notas && (
+                  <div style={{ padding: '8px 10px', background: 'var(--color-surface-2)', borderRadius: 8, fontSize: 11, color: 'var(--color-text-subtle)', wordBreak: 'break-word', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                    <FileText size={12} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span>{selectedLoteInMap.notas}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (currentMapFinca) {
+                        setDeleteModal({
+                          isOpen: true,
+                          type: 'lote',
+                          id: selectedLoteInMap.id,
+                          fincaId: currentMapFinca.id,
+                          name: selectedLoteInMap.nombre,
+                          loading: false,
+                        });
+                      }
+                    }}
+                    className="btn-secondary"
+                    style={{ flex: 1, color: '#f87171', fontSize: 12, padding: '7px' }}
+                  >
+                    Eliminar Parcela
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="card"
+                style={{
+                  padding: '30px 20px',
+                  textAlign: 'center',
+                  color: 'var(--color-text-muted)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <Layers size={32} color="#38bdf8" style={{ opacity: 0.5 }} />
+                <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>Inspección de Parcela</div>
+                <p style={{ fontSize: 12, lineHeight: 1.5, margin: 0 }}>
+                  Haz clic sobre cualquier lote en el mapa satelital para ver su ficha técnica, textura de suelo, pH y recomendaciones agronómicas.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
+      )}
+
+      {/* MODO 2: CUADRÍCULA DE PREDIOS */}
+      {viewMode === 'grid' && (
         <>
-          {/* Fincas Grid */}
           {loading ? (
             <div className="responsive-cards-grid">
               {[...Array(3)].map((_, i) => (
@@ -1216,219 +1776,227 @@ export default function FincasPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            color: 'var(--color-text-subtle)',
-          }}
-        >
-          <MapPin size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
-          <p style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: 'var(--color-text)' }}>
-            {search ? 'Sin resultados para la búsqueda' : 'Aún no has registrado fincas'}
-          </p>
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-            {search ? 'Intenta con otro término' : 'Comienza registrando tu primer predio o hacienda'}
-          </p>
-        </div>
-      ) : (
-        <div className="responsive-cards-grid">
-          {filtered.map((finca) => {
-            const isLotesOpen = selectedFincaForLotes === finca.id;
-            return (
-              <div
-                key={finca.id}
-                className="card glass-hover"
-                style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                  }}
-                >
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-subtle)' }}>
+              <MapPin size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
+              <p style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: 'var(--color-text)' }}>
+                {search ? 'Sin resultados para la búsqueda' : 'Aún no has registrado fincas'}
+              </p>
+              <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+                {search ? 'Intenta con otro término' : 'Comienza registrando tu primer predio o hacienda'}
+              </p>
+            </div>
+          ) : (
+            <div className="responsive-cards-grid">
+              {filtered.map((finca) => {
+                const isLotesOpen = selectedFincaForLotes === finca.id;
+                return (
                   <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      background: 'rgba(16, 185, 129, 0.12)',
-                      border: '1px solid rgba(16, 185, 129, 0.25)',
-                      borderRadius: 12,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--color-primary)',
-                    }}
+                    key={finca.id}
+                    className="card glass-hover"
+                    style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}
                   >
-                    <MapPin size={22} />
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button
-                      onClick={() => setViewFinca(finca)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--color-primary)',
-                        padding: 6,
-                        borderRadius: 8,
-                      }}
-                      title="Ver detalles de la finca"
-                    >
-                      <Eye size={15} />
-                    </button>
-                    <button
-                      onClick={() => { setEditFinca(finca); setModalOpen(true); }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--color-text-muted)',
-                        padding: 6,
-                        borderRadius: 8,
-                      }}
-                      title="Editar predio"
-                    >
-                      <Edit3 size={15} />
-                    </button>
-                    <button
-                      onClick={() => setDeleteModal({
-                        isOpen: true,
-                        type: 'finca',
-                        id: finca.id,
-                        name: finca.nombre,
-                        loading: false,
-                      })}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#f87171',
-                        padding: 6,
-                        borderRadius: 8,
-                      }}
-                      title="Eliminar predio"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 4, color: 'var(--color-text)' }}>
-                    {finca.nombre}
-                  </h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--color-text-muted)' }}>
-                    <MapPin size={13} style={{ flexShrink: 0 }} />
-                    <span>{finca.ubicacion}</span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--color-border)' }}>
-                  <div style={{ fontSize: 12 }}>
-                    <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Área</span>
-                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{finca.hectareas} ha</span>
-                  </div>
-                  <div style={{ fontSize: 12 }}>
-                    <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Suelo</span>
-                    <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{finca.tipoSuelo || 'Franco'}</span>
-                  </div>
-                  {finca.latitude && finca.longitude && (
-                    <div style={{ gridColumn: 'span 2', fontSize: 11, color: 'var(--color-text-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Compass size={11} color="var(--color-primary)" />
-                      <span>GPS: {finca.latitude.toFixed(4)}, {finca.longitude.toFixed(4)}</span>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <div
+                        style={{
+                          width: 44,
+                          height: 44,
+                          background: 'rgba(16, 185, 129, 0.12)',
+                          border: '1px solid rgba(16, 185, 129, 0.25)',
+                          borderRadius: 12,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--color-primary)',
+                        }}
+                      >
+                        <MapPin size={22} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => setViewFinca(finca)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', padding: 6, borderRadius: 8 }}
+                          title="Ver detalles de la finca"
+                        >
+                          <Eye size={15} />
+                        </button>
+                        <button
+                          onClick={() => { setEditFinca(finca); setModalOpen(true); }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
+                          title="Editar predio"
+                        >
+                          <Edit3 size={15} />
+                        </button>
+                        <button
+                          onClick={() => setDeleteModal({
+                            isOpen: true,
+                            type: 'finca',
+                            id: finca.id,
+                            name: finca.nombre,
+                            loading: false,
+                          })}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}
+                          title="Eliminar predio"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                {/* Collapsible Lotes Section */}
-                <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 10 }}>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleLotes(finca.id)}
-                    style={{
-                      width: '100%',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '6px 0',
-                      color: 'var(--color-primary)',
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Layers size={14} />
-                      Parcelas y Lotes ({finca.lotes?.length || 0})
-                    </span>
-                    {isLotesOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-                  </button>
+                    <div>
+                      <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 4, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={finca.nombre}>
+                        {finca.nombre}
+                      </h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--color-text-muted)' }}>
+                        <MapPin size={13} style={{ flexShrink: 0 }} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{finca.ubicacion}</span>
+                      </div>
+                    </div>
 
-                  {isLotesOpen && (
-                    <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {loadingLotes ? (
-                        <div style={{ fontSize: 12, color: 'var(--color-text-subtle)', padding: 8 }}>Cargando parcelas...</div>
-                      ) : (
-                        <>
-                          {fincaLotes.length === 0 ? (
-                            <div style={{ fontSize: 12, color: 'var(--color-text-subtle)', padding: 8 }}>
-                              No hay parcelas registradas en esta finca.
-                            </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '10px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--color-border)' }}>
+                      <div style={{ fontSize: 12 }}>
+                        <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Área</span>
+                        <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{finca.hectareas} ha</span>
+                      </div>
+                      <div style={{ fontSize: 12 }}>
+                        <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Suelo</span>
+                        <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{finca.tipoSuelo || 'Franco'}</span>
+                      </div>
+                    </div>
+
+                    {/* Botones rápidos de mapa y linderos */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedFincaIdForMap(finca.id);
+                          setViewMode('parcelas');
+                        }}
+                        className="btn-secondary"
+                        style={{ fontSize: 11, padding: '6px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.3)' }}
+                      >
+                        <Layers size={13} />
+                        <span>Ver en Mapa</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPerimeterModalFinca(finca)}
+                        className="btn-secondary"
+                        style={{ fontSize: 11, padding: '6px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }}
+                      >
+                        <Compass size={13} />
+                        <span>Delimitar</span>
+                      </button>
+                    </div>
+
+                    {/* Collapsible Lotes Section */}
+                    <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 10 }}>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleLotes(finca.id)}
+                        style={{
+                          width: '100%',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '6px 0',
+                          color: 'var(--color-primary)',
+                          fontSize: 13,
+                          fontWeight: 600,
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Layers size={14} />
+                          Parcelas y Lotes ({finca.lotes?.length || 0})
+                        </span>
+                        {isLotesOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                      </button>
+
+                      {isLotesOpen && (
+                        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {loadingLotes ? (
+                            <div style={{ fontSize: 12, color: 'var(--color-text-subtle)', padding: 8 }}>Cargando parcelas...</div>
                           ) : (
-                            fincaLotes.map((lote) => (
-                              <div
-                                key={lote.id}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  padding: '6px 10px',
-                                  background: 'rgba(255,255,255,0.03)',
-                                  borderRadius: 8,
-                                  fontSize: 12,
-                                }}
-                              >
-                                <div>
-                                  <span style={{ fontWeight: 600 }}>{lote.nombre}</span>
-                                  <span style={{ color: 'var(--color-text-subtle)', marginLeft: 8 }}>{lote.hectareas} ha</span>
+                            <>
+                              {fincaLotes.length === 0 ? (
+                                <div style={{ fontSize: 12, color: 'var(--color-text-subtle)', padding: 8 }}>
+                                  No hay parcelas registradas en esta finca.
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteLote(lote.id, finca.id, lote.nombre)}
-                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 2 }}
-                                  title="Eliminar lote"
-                                >
-                                  <X size={13} />
-                                </button>
-                              </div>
-                            ))
+                              ) : (
+                                fincaLotes.map((lote) => (
+                                  <div
+                                    key={lote.id}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      padding: '6px 10px',
+                                      background: 'rgba(255,255,255,0.03)',
+                                      borderRadius: 8,
+                                      fontSize: 12,
+                                    }}
+                                  >
+                                    <div style={{ overflow: 'hidden', paddingRight: 6 }}>
+                                      <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lote.nombre}</span>
+                                      <span style={{ color: 'var(--color-text-subtle)', marginLeft: 8 }}>{lote.hectareas} ha</span>
+                                      {lote.cultivoActual && (
+                                        <span style={{ color: '#22c55e', marginLeft: 8, fontSize: 11 }}>• {lote.cultivoActual}</span>
+                                      )}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                                      <button
+                                        type="button"
+                                        onClick={() => setLoteModalData({ isOpen: true, fincaId: finca.id, lote })}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2 }}
+                                        title="Editar lote"
+                                      >
+                                        <Edit3 size={13} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setDeleteModal({
+                                            isOpen: true,
+                                            type: 'lote',
+                                            id: lote.id,
+                                            fincaId: finca.id,
+                                            name: lote.nombre,
+                                            loading: false,
+                                          });
+                                        }}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 2 }}
+                                        title="Eliminar lote"
+                                      >
+                                        <X size={13} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setLoteModalData({ isOpen: true, fincaId: finca.id })}
+                                className="btn-secondary"
+                                style={{ fontSize: 12, padding: '6px 10px', marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                              >
+                                <Plus size={13} /> Agregar Parcela / Lote
+                              </button>
+                            </>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => setNewLoteModalFincaId(finca.id)}
-                            className="btn-secondary"
-                            style={{ fontSize: 12, padding: '6px 10px', marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                          >
-                            <Plus size={13} /> Agregar Parcela / Lote
-                          </button>
-                        </>
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      </>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
-      {/* Modal Finca */}
+      {/* Modal Finca (Crear/Editar) */}
       {modalOpen && (
         <FincaModal
           finca={editFinca}
@@ -1437,7 +2005,16 @@ export default function FincasPage() {
         />
       )}
 
-      {/* Modal Detalle Finca (Solo Lectura) */}
+      {/* Modal Delimitar Perímetro de Finca (Manual por Puntos) */}
+      {perimeterModalFinca && (
+        <FincaPerimeterModal
+          finca={perimeterModalFinca}
+          onClose={() => setPerimeterModalFinca(null)}
+          onSave={loadFincas}
+        />
+      )}
+
+      {/* Modal Detalle Finca con Mapa Satelital de Lotes */}
       {viewFinca && (
         <FincaDetailModal
           finca={viewFinca}
@@ -1448,18 +2025,31 @@ export default function FincasPage() {
             setEditFinca(f);
             setModalOpen(true);
           }}
+          onOpenLoteModal={(fincaId, lote) => {
+            setLoteModalData({ isOpen: true, fincaId, lote });
+          }}
+          onOpenPerimeterModal={(f) => {
+            setPerimeterModalFinca(f);
+          }}
         />
       )}
 
-      {/* Modal Lote */}
-      {newLoteModalFincaId && (
-        <LoteModal
-          fincaId={newLoteModalFincaId}
-          onClose={() => setNewLoteModalFincaId(null)}
+      {/* Modal Agronómico de Parcela / Lote */}
+      {loteModalData && loteModalData.isOpen && (
+        <LoteAgronomicModal
+          fincaId={loteModalData.fincaId}
+          finca={fincas.find((f) => String(f.id) === String(loteModalData.fincaId))}
+          lote={loteModalData.lote}
+          onClose={() => setLoteModalData(null)}
           onSave={() => {
             loadFincas();
-            if (selectedFincaForLotes === newLoteModalFincaId) {
-              handleToggleLotes(newLoteModalFincaId);
+            if (selectedFincaForLotes === loteModalData.fincaId) {
+              handleToggleLotes(loteModalData.fincaId);
+            }
+            if (selectedFincaIdForMap === loteModalData.fincaId) {
+              fincasApi.getLotes(loteModalData.fincaId).then((res) => {
+                setMapViewerLotes(res.data || []);
+              });
             }
           }}
         />

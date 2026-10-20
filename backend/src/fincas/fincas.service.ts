@@ -63,6 +63,7 @@ export class FincasService {
         description: data.description || data.descripcion || null,
         latitude: data.latitude ? parseFloat(data.latitude) : null,
         longitude: data.longitude ? parseFloat(data.longitude) : null,
+        coordenadas: typeof data.coordenadas === 'object' ? JSON.stringify(data.coordenadas) : (data.coordenadas || null),
         tipoExplotacion: data.tipoExplotacion || 'MIXTA',
         estado: data.estado || 'ACTIVA',
         tipoSuelo: data.tipoSuelo || null,
@@ -109,6 +110,9 @@ export class FincasService {
     }
     if (data.longitude !== undefined) {
       updateData.longitude = data.longitude !== null && data.longitude !== '' ? parseFloat(data.longitude) : null;
+    }
+    if (data.coordenadas !== undefined) {
+      updateData.coordenadas = typeof data.coordenadas === 'object' ? JSON.stringify(data.coordenadas) : (data.coordenadas || null);
     }
     if (data.tipoExplotacion !== undefined) updateData.tipoExplotacion = data.tipoExplotacion;
     if (data.estado !== undefined) updateData.estado = data.estado;
@@ -203,8 +207,56 @@ export class FincasService {
         name: String(data.name || data.nombre).trim(),
         area: parseFloat(data.area || data.hectareas || '1'),
         soilType: data.soilType || data.tipoSuelo || null,
+        status: data.status || data.estado || 'ACTIVO',
+        topografia: data.topografia || 'PLANO',
+        cultivoActual: data.cultivoActual || null,
+        sistemaRiego: data.sistemaRiego || null,
+        ph: data.ph ? parseFloat(data.ph) : null,
+        capacidadCarga: data.capacidadCarga ? parseFloat(data.capacidadCarga) : null,
+        coberturaVegetal: data.coberturaVegetal || null,
+        coordenadas: typeof data.coordenadas === 'object' ? JSON.stringify(data.coordenadas) : (data.coordenadas || null),
+        notas: data.notas || null,
         fincaId,
       },
+    });
+  }
+
+  async updateLote(loteId: string, orgId: string, data: any) {
+    const lote = await this.prisma.lote.findUnique({
+      where: { id: loteId },
+      include: { finca: true },
+    });
+    if (!lote || lote.finca.organizationId !== orgId) {
+      throw new NotFoundException('Lote no encontrado o acceso denegado');
+    }
+
+    const updateData: any = {};
+    if (data.name !== undefined || data.nombre !== undefined) {
+      updateData.name = String(data.name ?? data.nombre).trim();
+    }
+    if (data.area !== undefined || data.hectareas !== undefined) {
+      updateData.area = parseFloat(data.area ?? data.hectareas);
+    }
+    if (data.soilType !== undefined || data.tipoSuelo !== undefined) {
+      updateData.soilType = data.soilType ?? data.tipoSuelo ?? null;
+    }
+    if (data.status !== undefined || data.estado !== undefined) {
+      updateData.status = data.status ?? data.estado;
+    }
+    if (data.topografia !== undefined) updateData.topografia = data.topografia;
+    if (data.cultivoActual !== undefined) updateData.cultivoActual = data.cultivoActual;
+    if (data.sistemaRiego !== undefined) updateData.sistemaRiego = data.sistemaRiego;
+    if (data.ph !== undefined) updateData.ph = data.ph ? parseFloat(data.ph) : null;
+    if (data.capacidadCarga !== undefined) updateData.capacidadCarga = data.capacidadCarga ? parseFloat(data.capacidadCarga) : null;
+    if (data.coberturaVegetal !== undefined) updateData.coberturaVegetal = data.coberturaVegetal;
+    if (data.coordenadas !== undefined) {
+      updateData.coordenadas = typeof data.coordenadas === 'object' ? JSON.stringify(data.coordenadas) : (data.coordenadas || null);
+    }
+    if (data.notas !== undefined) updateData.notas = data.notas;
+
+    return this.prisma.lote.update({
+      where: { id: loteId },
+      data: updateData,
     });
   }
 

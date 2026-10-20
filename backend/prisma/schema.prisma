@@ -75,6 +75,7 @@ model Finca {
   description      String?      // Descripción general del predio
   latitude         Float?
   longitude        Float?
+  coordenadas      String?      // Polígono perimetral del predio en formato JSON: [{"lat": ..., "lng": ...}, ...]
   tipoExplotacion  String?      @default("MIXTA")
   estado           String?      @default("ACTIVA")
   tipoSuelo        String?
@@ -98,15 +99,24 @@ model Finca {
 }
 
 model Lote {
-  id           String       @id @default(uuid())
-  name         String
-  area         Float        // In hectares
-  soilType     String?
-  fincaId      String
-  finca        Finca        @relation(fields: [fincaId], references: [id])
-  producciones Produccion[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id               String       @id @default(uuid())
+  name             String
+  area             Float        // In hectares
+  soilType         String?      // Franco, Arcilloso, Arenoso, Limoso, etc.
+  status           String?      @default("ACTIVO") // ACTIVO, DESCANSO, PREPARACION, PASTOREO, RIEGO, RESERVA
+  topografia       String?      @default("PLANO") // PLANO, LIGERA_PENDIENTE, ONDULADO, QUEBRADO
+  cultivoActual    String?      // Variedad de cultivo o pastura establecida
+  sistemaRiego     String?      // Goteo, Aspersión, Microaspersión, Gravedad, Secano
+  ph               Float?       // Acidez / alcalinidad edáfica
+  capacidadCarga   Float?       // Capacidad de carga ganadera (UGM/ha)
+  coberturaVegetal String?      // % o tipo de cobertura
+  coordenadas      String?      // Polígono georreferenciado en formato JSON
+  notas            String?      // Recomendaciones agronómicas y observaciones
+  fincaId          String
+  finca            Finca        @relation(fields: [fincaId], references: [id])
+  producciones     Produccion[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 }
 
 model Produccion {

@@ -53,6 +53,12 @@ export class FincasController {
     return this.fincasService.createLote(fincaId, req.user.orgId, body);
   }
 
+  @Put('lotes/:loteId')
+  @ApiOperation({ summary: 'Actualizar atributos agronómicos y espaciales de un lote' })
+  async updateLote(@Param('loteId') loteId: string, @Body() body: any, @Request() req: any) {
+    return this.fincasService.updateLote(loteId, req.user.orgId, body);
+  }
+
   @Delete('lotes/:loteId')
   @ApiOperation({ summary: 'Eliminar un lote específico' })
   async deleteLote(@Param('loteId') loteId: string, @Request() req: any) {

@@ -5,6 +5,15 @@ export interface Lote {
   nombre: string;
   hectareas: number;
   tipoSuelo?: string;
+  status?: string; // 'ACTIVO' | 'DESCANSO' | 'PREPARACION' | 'PASTOREO' | 'RIEGO' | 'RESERVA'
+  topografia?: string; // 'PLANO' | 'LIGERA_PENDIENTE' | 'ONDULADO' | 'QUEBRADO'
+  cultivoActual?: string;
+  sistemaRiego?: string;
+  ph?: number | null;
+  capacidadCarga?: number | null; // UGM/ha
+  coberturaVegetal?: string;
+  coordenadas?: { lat: number; lng: number }[] | string | null;
+  notas?: string;
   fincaId?: string | number;
 }
 
@@ -28,6 +37,7 @@ export interface Finca {
   actividades?: string[];
   latitude?: number;
   longitude?: number;
+  coordenadas?: { lat: number; lng: number }[] | string | null;
   lotes?: Lote[];
   createdAt?: string;
 }
@@ -58,5 +68,8 @@ export const useFincasStore = create<FincasState>((set) => ({
       fincas: state.fincas.map((f) => (f.id === updated.id ? updated : f)),
     })),
   removeFinca: (id) =>
-    set((state) => ({ fincas: state.fincas.filter((f) => f.id !== id) })),
+    set((state) => ({
+      fincas: state.fincas.filter((f) => f.id !== id),
+      selectedFinca: state.selectedFinca?.id === id ? null : state.selectedFinca,
+    })),
 }));

@@ -28,10 +28,14 @@ export type AggregateLote = {
 
 export type LoteAvgAggregateOutputType = {
   area: number | null
+  ph: number | null
+  capacidadCarga: number | null
 }
 
 export type LoteSumAggregateOutputType = {
   area: number | null
+  ph: number | null
+  capacidadCarga: number | null
 }
 
 export type LoteMinAggregateOutputType = {
@@ -39,6 +43,15 @@ export type LoteMinAggregateOutputType = {
   name: string | null
   area: number | null
   soilType: string | null
+  status: string | null
+  topografia: string | null
+  cultivoActual: string | null
+  sistemaRiego: string | null
+  ph: number | null
+  capacidadCarga: number | null
+  coberturaVegetal: string | null
+  coordenadas: string | null
+  notas: string | null
   fincaId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -49,6 +62,15 @@ export type LoteMaxAggregateOutputType = {
   name: string | null
   area: number | null
   soilType: string | null
+  status: string | null
+  topografia: string | null
+  cultivoActual: string | null
+  sistemaRiego: string | null
+  ph: number | null
+  capacidadCarga: number | null
+  coberturaVegetal: string | null
+  coordenadas: string | null
+  notas: string | null
   fincaId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -59,6 +81,15 @@ export type LoteCountAggregateOutputType = {
   name: number
   area: number
   soilType: number
+  status: number
+  topografia: number
+  cultivoActual: number
+  sistemaRiego: number
+  ph: number
+  capacidadCarga: number
+  coberturaVegetal: number
+  coordenadas: number
+  notas: number
   fincaId: number
   createdAt: number
   updatedAt: number
@@ -68,10 +99,14 @@ export type LoteCountAggregateOutputType = {
 
 export type LoteAvgAggregateInputType = {
   area?: true
+  ph?: true
+  capacidadCarga?: true
 }
 
 export type LoteSumAggregateInputType = {
   area?: true
+  ph?: true
+  capacidadCarga?: true
 }
 
 export type LoteMinAggregateInputType = {
@@ -79,6 +114,15 @@ export type LoteMinAggregateInputType = {
   name?: true
   area?: true
   soilType?: true
+  status?: true
+  topografia?: true
+  cultivoActual?: true
+  sistemaRiego?: true
+  ph?: true
+  capacidadCarga?: true
+  coberturaVegetal?: true
+  coordenadas?: true
+  notas?: true
   fincaId?: true
   createdAt?: true
   updatedAt?: true
@@ -89,6 +133,15 @@ export type LoteMaxAggregateInputType = {
   name?: true
   area?: true
   soilType?: true
+  status?: true
+  topografia?: true
+  cultivoActual?: true
+  sistemaRiego?: true
+  ph?: true
+  capacidadCarga?: true
+  coberturaVegetal?: true
+  coordenadas?: true
+  notas?: true
   fincaId?: true
   createdAt?: true
   updatedAt?: true
@@ -99,6 +152,15 @@ export type LoteCountAggregateInputType = {
   name?: true
   area?: true
   soilType?: true
+  status?: true
+  topografia?: true
+  cultivoActual?: true
+  sistemaRiego?: true
+  ph?: true
+  capacidadCarga?: true
+  coberturaVegetal?: true
+  coordenadas?: true
+  notas?: true
   fincaId?: true
   createdAt?: true
   updatedAt?: true
@@ -196,6 +258,15 @@ export type LoteGroupByOutputType = {
   name: string
   area: number
   soilType: string | null
+  status: string | null
+  topografia: string | null
+  cultivoActual: string | null
+  sistemaRiego: string | null
+  ph: number | null
+  capacidadCarga: number | null
+  coberturaVegetal: string | null
+  coordenadas: string | null
+  notas: string | null
   fincaId: string
   createdAt: Date
   updatedAt: Date
@@ -229,6 +300,15 @@ export type LoteWhereInput = {
   name?: Prisma.StringFilter<"Lote"> | string
   area?: Prisma.FloatFilter<"Lote"> | number
   soilType?: Prisma.StringNullableFilter<"Lote"> | string | null
+  status?: Prisma.StringNullableFilter<"Lote"> | string | null
+  topografia?: Prisma.StringNullableFilter<"Lote"> | string | null
+  cultivoActual?: Prisma.StringNullableFilter<"Lote"> | string | null
+  sistemaRiego?: Prisma.StringNullableFilter<"Lote"> | string | null
+  ph?: Prisma.FloatNullableFilter<"Lote"> | number | null
+  capacidadCarga?: Prisma.FloatNullableFilter<"Lote"> | number | null
+  coberturaVegetal?: Prisma.StringNullableFilter<"Lote"> | string | null
+  coordenadas?: Prisma.StringNullableFilter<"Lote"> | string | null
+  notas?: Prisma.StringNullableFilter<"Lote"> | string | null
   fincaId?: Prisma.StringFilter<"Lote"> | string
   createdAt?: Prisma.DateTimeFilter<"Lote"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Lote"> | Date | string
@@ -241,6 +321,15 @@ export type LoteOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   area?: Prisma.SortOrder
   soilType?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrderInput | Prisma.SortOrder
+  topografia?: Prisma.SortOrderInput | Prisma.SortOrder
+  cultivoActual?: Prisma.SortOrderInput | Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrderInput | Prisma.SortOrder
+  ph?: Prisma.SortOrderInput | Prisma.SortOrder
+  capacidadCarga?: Prisma.SortOrderInput | Prisma.SortOrder
+  coberturaVegetal?: Prisma.SortOrderInput | Prisma.SortOrder
+  coordenadas?: Prisma.SortOrderInput | Prisma.SortOrder
+  notas?: Prisma.SortOrderInput | Prisma.SortOrder
   fincaId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -256,6 +345,15 @@ export type LoteWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"Lote"> | string
   area?: Prisma.FloatFilter<"Lote"> | number
   soilType?: Prisma.StringNullableFilter<"Lote"> | string | null
+  status?: Prisma.StringNullableFilter<"Lote"> | string | null
+  topografia?: Prisma.StringNullableFilter<"Lote"> | string | null
+  cultivoActual?: Prisma.StringNullableFilter<"Lote"> | string | null
+  sistemaRiego?: Prisma.StringNullableFilter<"Lote"> | string | null
+  ph?: Prisma.FloatNullableFilter<"Lote"> | number | null
+  capacidadCarga?: Prisma.FloatNullableFilter<"Lote"> | number | null
+  coberturaVegetal?: Prisma.StringNullableFilter<"Lote"> | string | null
+  coordenadas?: Prisma.StringNullableFilter<"Lote"> | string | null
+  notas?: Prisma.StringNullableFilter<"Lote"> | string | null
   fincaId?: Prisma.StringFilter<"Lote"> | string
   createdAt?: Prisma.DateTimeFilter<"Lote"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Lote"> | Date | string
@@ -268,6 +366,15 @@ export type LoteOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   area?: Prisma.SortOrder
   soilType?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrderInput | Prisma.SortOrder
+  topografia?: Prisma.SortOrderInput | Prisma.SortOrder
+  cultivoActual?: Prisma.SortOrderInput | Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrderInput | Prisma.SortOrder
+  ph?: Prisma.SortOrderInput | Prisma.SortOrder
+  capacidadCarga?: Prisma.SortOrderInput | Prisma.SortOrder
+  coberturaVegetal?: Prisma.SortOrderInput | Prisma.SortOrder
+  coordenadas?: Prisma.SortOrderInput | Prisma.SortOrder
+  notas?: Prisma.SortOrderInput | Prisma.SortOrder
   fincaId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -286,6 +393,15 @@ export type LoteScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"Lote"> | string
   area?: Prisma.FloatWithAggregatesFilter<"Lote"> | number
   soilType?: Prisma.StringNullableWithAggregatesFilter<"Lote"> | string | null
+  status?: Prisma.StringNullableWithAggregatesFilter<"Lote"> | string | null
+  topografia?: Prisma.StringNullableWithAggregatesFilter<"Lote"> | string | null
+  cultivoActual?: Prisma.StringNullableWithAggregatesFilter<"Lote"> | string | null
+  sistemaRiego?: Prisma.StringNullableWithAggregatesFilter<"Lote"> | string | null
+  ph?: Prisma.FloatNullableWithAggregatesFilter<"Lote"> | number | null
+  capacidadCarga?: Prisma.FloatNullableWithAggregatesFilter<"Lote"> | number | null
+  coberturaVegetal?: Prisma.StringNullableWithAggregatesFilter<"Lote"> | string | null
+  coordenadas?: Prisma.StringNullableWithAggregatesFilter<"Lote"> | string | null
+  notas?: Prisma.StringNullableWithAggregatesFilter<"Lote"> | string | null
   fincaId?: Prisma.StringWithAggregatesFilter<"Lote"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Lote"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Lote"> | Date | string
@@ -296,6 +412,15 @@ export type LoteCreateInput = {
   name: string
   area: number
   soilType?: string | null
+  status?: string | null
+  topografia?: string | null
+  cultivoActual?: string | null
+  sistemaRiego?: string | null
+  ph?: number | null
+  capacidadCarga?: number | null
+  coberturaVegetal?: string | null
+  coordenadas?: string | null
+  notas?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   finca: Prisma.FincaCreateNestedOneWithoutLotesInput
@@ -307,6 +432,15 @@ export type LoteUncheckedCreateInput = {
   name: string
   area: number
   soilType?: string | null
+  status?: string | null
+  topografia?: string | null
+  cultivoActual?: string | null
+  sistemaRiego?: string | null
+  ph?: number | null
+  capacidadCarga?: number | null
+  coberturaVegetal?: string | null
+  coordenadas?: string | null
+  notas?: string | null
   fincaId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -318,6 +452,15 @@ export type LoteUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
   soilType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  topografia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cultivoActual?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ph?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  capacidadCarga?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coberturaVegetal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finca?: Prisma.FincaUpdateOneRequiredWithoutLotesNestedInput
@@ -329,6 +472,15 @@ export type LoteUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
   soilType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  topografia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cultivoActual?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ph?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  capacidadCarga?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coberturaVegetal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fincaId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -340,6 +492,15 @@ export type LoteCreateManyInput = {
   name: string
   area: number
   soilType?: string | null
+  status?: string | null
+  topografia?: string | null
+  cultivoActual?: string | null
+  sistemaRiego?: string | null
+  ph?: number | null
+  capacidadCarga?: number | null
+  coberturaVegetal?: string | null
+  coordenadas?: string | null
+  notas?: string | null
   fincaId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -350,6 +511,15 @@ export type LoteUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
   soilType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  topografia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cultivoActual?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ph?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  capacidadCarga?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coberturaVegetal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -359,6 +529,15 @@ export type LoteUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
   soilType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  topografia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cultivoActual?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ph?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  capacidadCarga?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coberturaVegetal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fincaId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -379,6 +558,15 @@ export type LoteCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   area?: Prisma.SortOrder
   soilType?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  topografia?: Prisma.SortOrder
+  cultivoActual?: Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrder
+  ph?: Prisma.SortOrder
+  capacidadCarga?: Prisma.SortOrder
+  coberturaVegetal?: Prisma.SortOrder
+  coordenadas?: Prisma.SortOrder
+  notas?: Prisma.SortOrder
   fincaId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -386,6 +574,8 @@ export type LoteCountOrderByAggregateInput = {
 
 export type LoteAvgOrderByAggregateInput = {
   area?: Prisma.SortOrder
+  ph?: Prisma.SortOrder
+  capacidadCarga?: Prisma.SortOrder
 }
 
 export type LoteMaxOrderByAggregateInput = {
@@ -393,6 +583,15 @@ export type LoteMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   area?: Prisma.SortOrder
   soilType?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  topografia?: Prisma.SortOrder
+  cultivoActual?: Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrder
+  ph?: Prisma.SortOrder
+  capacidadCarga?: Prisma.SortOrder
+  coberturaVegetal?: Prisma.SortOrder
+  coordenadas?: Prisma.SortOrder
+  notas?: Prisma.SortOrder
   fincaId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -403,6 +602,15 @@ export type LoteMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   area?: Prisma.SortOrder
   soilType?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  topografia?: Prisma.SortOrder
+  cultivoActual?: Prisma.SortOrder
+  sistemaRiego?: Prisma.SortOrder
+  ph?: Prisma.SortOrder
+  capacidadCarga?: Prisma.SortOrder
+  coberturaVegetal?: Prisma.SortOrder
+  coordenadas?: Prisma.SortOrder
+  notas?: Prisma.SortOrder
   fincaId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -410,6 +618,8 @@ export type LoteMinOrderByAggregateInput = {
 
 export type LoteSumOrderByAggregateInput = {
   area?: Prisma.SortOrder
+  ph?: Prisma.SortOrder
+  capacidadCarga?: Prisma.SortOrder
 }
 
 export type LoteScalarRelationFilter = {
@@ -478,6 +688,15 @@ export type LoteCreateWithoutFincaInput = {
   name: string
   area: number
   soilType?: string | null
+  status?: string | null
+  topografia?: string | null
+  cultivoActual?: string | null
+  sistemaRiego?: string | null
+  ph?: number | null
+  capacidadCarga?: number | null
+  coberturaVegetal?: string | null
+  coordenadas?: string | null
+  notas?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   producciones?: Prisma.ProduccionCreateNestedManyWithoutLoteInput
@@ -488,6 +707,15 @@ export type LoteUncheckedCreateWithoutFincaInput = {
   name: string
   area: number
   soilType?: string | null
+  status?: string | null
+  topografia?: string | null
+  cultivoActual?: string | null
+  sistemaRiego?: string | null
+  ph?: number | null
+  capacidadCarga?: number | null
+  coberturaVegetal?: string | null
+  coordenadas?: string | null
+  notas?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   producciones?: Prisma.ProduccionUncheckedCreateNestedManyWithoutLoteInput
@@ -526,6 +754,15 @@ export type LoteScalarWhereInput = {
   name?: Prisma.StringFilter<"Lote"> | string
   area?: Prisma.FloatFilter<"Lote"> | number
   soilType?: Prisma.StringNullableFilter<"Lote"> | string | null
+  status?: Prisma.StringNullableFilter<"Lote"> | string | null
+  topografia?: Prisma.StringNullableFilter<"Lote"> | string | null
+  cultivoActual?: Prisma.StringNullableFilter<"Lote"> | string | null
+  sistemaRiego?: Prisma.StringNullableFilter<"Lote"> | string | null
+  ph?: Prisma.FloatNullableFilter<"Lote"> | number | null
+  capacidadCarga?: Prisma.FloatNullableFilter<"Lote"> | number | null
+  coberturaVegetal?: Prisma.StringNullableFilter<"Lote"> | string | null
+  coordenadas?: Prisma.StringNullableFilter<"Lote"> | string | null
+  notas?: Prisma.StringNullableFilter<"Lote"> | string | null
   fincaId?: Prisma.StringFilter<"Lote"> | string
   createdAt?: Prisma.DateTimeFilter<"Lote"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Lote"> | Date | string
@@ -536,6 +773,15 @@ export type LoteCreateWithoutProduccionesInput = {
   name: string
   area: number
   soilType?: string | null
+  status?: string | null
+  topografia?: string | null
+  cultivoActual?: string | null
+  sistemaRiego?: string | null
+  ph?: number | null
+  capacidadCarga?: number | null
+  coberturaVegetal?: string | null
+  coordenadas?: string | null
+  notas?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   finca: Prisma.FincaCreateNestedOneWithoutLotesInput
@@ -546,6 +792,15 @@ export type LoteUncheckedCreateWithoutProduccionesInput = {
   name: string
   area: number
   soilType?: string | null
+  status?: string | null
+  topografia?: string | null
+  cultivoActual?: string | null
+  sistemaRiego?: string | null
+  ph?: number | null
+  capacidadCarga?: number | null
+  coberturaVegetal?: string | null
+  coordenadas?: string | null
+  notas?: string | null
   fincaId: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -572,6 +827,15 @@ export type LoteUpdateWithoutProduccionesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
   soilType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  topografia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cultivoActual?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ph?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  capacidadCarga?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coberturaVegetal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finca?: Prisma.FincaUpdateOneRequiredWithoutLotesNestedInput
@@ -582,6 +846,15 @@ export type LoteUncheckedUpdateWithoutProduccionesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
   soilType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  topografia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cultivoActual?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ph?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  capacidadCarga?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coberturaVegetal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fincaId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -592,6 +865,15 @@ export type LoteCreateManyFincaInput = {
   name: string
   area: number
   soilType?: string | null
+  status?: string | null
+  topografia?: string | null
+  cultivoActual?: string | null
+  sistemaRiego?: string | null
+  ph?: number | null
+  capacidadCarga?: number | null
+  coberturaVegetal?: string | null
+  coordenadas?: string | null
+  notas?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -601,6 +883,15 @@ export type LoteUpdateWithoutFincaInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
   soilType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  topografia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cultivoActual?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ph?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  capacidadCarga?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coberturaVegetal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   producciones?: Prisma.ProduccionUpdateManyWithoutLoteNestedInput
@@ -611,6 +902,15 @@ export type LoteUncheckedUpdateWithoutFincaInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
   soilType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  topografia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cultivoActual?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ph?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  capacidadCarga?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coberturaVegetal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   producciones?: Prisma.ProduccionUncheckedUpdateManyWithoutLoteNestedInput
@@ -621,6 +921,15 @@ export type LoteUncheckedUpdateManyWithoutFincaInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   area?: Prisma.FloatFieldUpdateOperationsInput | number
   soilType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  topografia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cultivoActual?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sistemaRiego?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ph?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  capacidadCarga?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  coberturaVegetal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coordenadas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -661,6 +970,15 @@ export type LoteSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   name?: boolean
   area?: boolean
   soilType?: boolean
+  status?: boolean
+  topografia?: boolean
+  cultivoActual?: boolean
+  sistemaRiego?: boolean
+  ph?: boolean
+  capacidadCarga?: boolean
+  coberturaVegetal?: boolean
+  coordenadas?: boolean
+  notas?: boolean
   fincaId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -674,6 +992,15 @@ export type LoteSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   area?: boolean
   soilType?: boolean
+  status?: boolean
+  topografia?: boolean
+  cultivoActual?: boolean
+  sistemaRiego?: boolean
+  ph?: boolean
+  capacidadCarga?: boolean
+  coberturaVegetal?: boolean
+  coordenadas?: boolean
+  notas?: boolean
   fincaId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -685,6 +1012,15 @@ export type LoteSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   area?: boolean
   soilType?: boolean
+  status?: boolean
+  topografia?: boolean
+  cultivoActual?: boolean
+  sistemaRiego?: boolean
+  ph?: boolean
+  capacidadCarga?: boolean
+  coberturaVegetal?: boolean
+  coordenadas?: boolean
+  notas?: boolean
   fincaId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -696,12 +1032,21 @@ export type LoteSelectScalar = {
   name?: boolean
   area?: boolean
   soilType?: boolean
+  status?: boolean
+  topografia?: boolean
+  cultivoActual?: boolean
+  sistemaRiego?: boolean
+  ph?: boolean
+  capacidadCarga?: boolean
+  coberturaVegetal?: boolean
+  coordenadas?: boolean
+  notas?: boolean
   fincaId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type LoteOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "area" | "soilType" | "fincaId" | "createdAt" | "updatedAt", ExtArgs["result"]["lote"]>
+export type LoteOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "area" | "soilType" | "status" | "topografia" | "cultivoActual" | "sistemaRiego" | "ph" | "capacidadCarga" | "coberturaVegetal" | "coordenadas" | "notas" | "fincaId" | "createdAt" | "updatedAt", ExtArgs["result"]["lote"]>
 export type LoteInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   finca?: boolean | Prisma.FincaDefaultArgs<ExtArgs>
   producciones?: boolean | Prisma.Lote$produccionesArgs<ExtArgs>
@@ -725,6 +1070,15 @@ export type $LotePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string
     area: number
     soilType: string | null
+    status: string | null
+    topografia: string | null
+    cultivoActual: string | null
+    sistemaRiego: string | null
+    ph: number | null
+    capacidadCarga: number | null
+    coberturaVegetal: string | null
+    coordenadas: string | null
+    notas: string | null
     fincaId: string
     createdAt: Date
     updatedAt: Date
@@ -1157,6 +1511,15 @@ export interface LoteFieldRefs {
   readonly name: Prisma.FieldRef<"Lote", 'String'>
   readonly area: Prisma.FieldRef<"Lote", 'Float'>
   readonly soilType: Prisma.FieldRef<"Lote", 'String'>
+  readonly status: Prisma.FieldRef<"Lote", 'String'>
+  readonly topografia: Prisma.FieldRef<"Lote", 'String'>
+  readonly cultivoActual: Prisma.FieldRef<"Lote", 'String'>
+  readonly sistemaRiego: Prisma.FieldRef<"Lote", 'String'>
+  readonly ph: Prisma.FieldRef<"Lote", 'Float'>
+  readonly capacidadCarga: Prisma.FieldRef<"Lote", 'Float'>
+  readonly coberturaVegetal: Prisma.FieldRef<"Lote", 'String'>
+  readonly coordenadas: Prisma.FieldRef<"Lote", 'String'>
+  readonly notas: Prisma.FieldRef<"Lote", 'String'>
   readonly fincaId: Prisma.FieldRef<"Lote", 'String'>
   readonly createdAt: Prisma.FieldRef<"Lote", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Lote", 'DateTime'>

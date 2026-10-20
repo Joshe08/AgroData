@@ -30,6 +30,39 @@ const normalizeUser = (user: AnyRecord) => ({
   rol: user?.rol ?? user?.role ?? '',
 });
 
+export const mapLote = (lote: AnyRecord) => {
+  if (!lote) return null as any;
+  let coords = null;
+  if (lote.coordenadas) {
+    if (typeof lote.coordenadas === 'string') {
+      try {
+        coords = JSON.parse(lote.coordenadas);
+      } catch {
+        coords = null;
+      }
+    } else if (Array.isArray(lote.coordenadas)) {
+      coords = lote.coordenadas;
+    }
+  }
+  return {
+    ...lote,
+    id: lote.id,
+    nombre: lote.nombre ?? lote.name ?? '',
+    hectareas: lote.hectareas ?? lote.area ?? 0,
+    tipoSuelo: lote.tipoSuelo ?? lote.soilType ?? 'Franco',
+    status: lote.status ?? lote.estado ?? 'ACTIVO',
+    topografia: lote.topografia ?? 'PLANO',
+    cultivoActual: lote.cultivoActual ?? '',
+    sistemaRiego: lote.sistemaRiego ?? '',
+    ph: lote.ph != null ? Number(lote.ph) : null,
+    capacidadCarga: lote.capacidadCarga != null ? Number(lote.capacidadCarga) : null,
+    coberturaVegetal: lote.coberturaVegetal ?? '',
+    coordenadas: coords,
+    notas: lote.notas ?? '',
+    fincaId: lote.fincaId,
+  };
+};
+
 const mapFinca = (finca: AnyRecord) => {
   if (!finca) return null as any;
   let parsedActividades = finca.actividades;
@@ -40,6 +73,18 @@ const mapFinca = (finca: AnyRecord) => {
       parsedActividades = [];
     }
   }
+  let parsedCoords = null;
+  if (finca.coordenadas) {
+    if (typeof finca.coordenadas === 'string') {
+      try {
+        parsedCoords = JSON.parse(finca.coordenadas);
+      } catch {
+        parsedCoords = null;
+      }
+    } else if (Array.isArray(finca.coordenadas)) {
+      parsedCoords = finca.coordenadas;
+    }
+  }
   return {
     ...finca,
     nombre: finca.nombre ?? finca.name ?? '',
@@ -48,6 +93,7 @@ const mapFinca = (finca: AnyRecord) => {
     descripcion: finca.descripcion ?? finca.description ?? '',
     latitude: finca.latitude != null ? Number(finca.latitude) : null,
     longitude: finca.longitude != null ? Number(finca.longitude) : null,
+    coordenadas: parsedCoords,
     tipoExplotacion: finca.tipoExplotacion ?? '',
     estado: finca.estado ?? 'ACTIVA',
     tipoSuelo: finca.tipoSuelo ?? '',
@@ -60,12 +106,7 @@ const mapFinca = (finca: AnyRecord) => {
     referenciaAcceso: finca.referenciaAcceso ?? '',
     actividades: Array.isArray(parsedActividades) ? parsedActividades : [],
     lotes: Array.isArray(finca.lotes)
-      ? finca.lotes.map((lote: AnyRecord) => ({
-          ...lote,
-          nombre: lote.nombre ?? lote.name ?? '',
-          hectareas: lote.hectareas ?? lote.area ?? 0,
-          tipoSuelo: lote.tipoSuelo ?? lote.soilType ?? '',
-        }))
+      ? finca.lotes.map((lote: AnyRecord) => mapLote(lote))
       : [],
   };
 };
@@ -333,9 +374,11 @@ export const fincasApi = {
   create: (data: unknown) => withData(api.post('/fincas', fincaPayload(data as AnyRecord)), mapFinca),
   update: (id: number | string, data: unknown) => withData(api.put(`/fincas/${id}`, fincaPayload(data as AnyRecord)), mapFinca),
   delete: (id: number | string) => api.delete(`/fincas/${id}`),
-  getLotes: (fincaId: string | number) => api.get(`/fincas/${fincaId}/lotes`),
-  createLote: (fincaId: string | number, data: { name: string; area: number; soilType?: string }) =>
-    api.post(`/fincas/${fincaId}/lotes`, data),
+  getLotes: (fincaId: string | number) => withData(api.get(`/fincas/${fincaId}/lotes`), (data) => mapArray(data, mapLote)),
+  createLote: (fincaId: string | number, data: any) =>
+    withData(api.post(`/fincas/${fincaId}/lotes`, data), mapLote),
+  updateLote: (loteId: string | number, data: any) =>
+    withData(api.put(`/fincas/lotes/${loteId}`, data), mapLote),
   deleteLote: (loteId: string | number) => api.delete(`/fincas/lotes/${loteId}`),
 };
 
