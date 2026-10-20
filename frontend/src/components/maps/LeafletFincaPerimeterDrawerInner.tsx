@@ -95,6 +95,9 @@ export default function LeafletFincaPerimeterDrawerInner({
   // Ref que siempre tiene los puntos actuales sin pasar por closure de useEffect
   const pointsRef = useRef<{ lat: number; lng: number }[]>([]);
   const onPointsChangeRef = useRef(onPointsChange);
+  // Guardar el centro inicial en refs para que no cause re-init del mapa al cambiar el formulario
+  const initCenterLatRef = useRef(centerLat);
+  const initCenterLngRef = useRef(centerLng);
 
   // Modo de interacción: 'pan' (arrastrar mapa libremente) o 'draw' (clic añade vértices)
   const [drawMode, setDrawMode] = useState<'pan' | 'draw'>('pan');
@@ -110,7 +113,7 @@ export default function LeafletFincaPerimeterDrawerInner({
   const [liveAreaHa, setLiveAreaHa] = useState<number>(() => calculatePolygonAreaHa(points));
   const [mapType, setMapType] = useState<'satellite' | 'streets'>('satellite');
 
-  // Mantener refs sincronizadas
+  // Mantener refs sincronizadas (sin causar re-renders ni re-inits del mapa)
   useEffect(() => {
     pointsRef.current = points;
   }, [points]);
@@ -118,13 +121,14 @@ export default function LeafletFincaPerimeterDrawerInner({
     onPointsChangeRef.current = onPointsChange;
   }, [onPointsChange]);
 
-  // Inicializar Leaflet con soporte de arrastre total
+  // Inicializar Leaflet UNA SOLA VEZ — deps vacías para que no se destruya al cambiar el formulario
   useEffect(() => {
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
-    const startLat = pointsRef.current.length > 0 ? pointsRef.current[0].lat : centerLat;
-    const startLng = pointsRef.current.length > 0 ? pointsRef.current[0].lng : centerLng;
+    // Usar el centro inicial almacenado en ref — no se ve afectado por cambios del formulario
+    const startLat = pointsRef.current.length > 0 ? pointsRef.current[0].lat : initCenterLatRef.current;
+    const startLng = pointsRef.current.length > 0 ? pointsRef.current[0].lng : initCenterLngRef.current;
 
     const map = L.map(mapContainerRef.current, {
       center: [startLat, startLng],
@@ -154,7 +158,7 @@ export default function LeafletFincaPerimeterDrawerInner({
 
     mapInstanceRef.current = map;
 
-    // Centrar suavemente
+    // Centrar suavemente al primer polígono disponible
     if (pointsRef.current.length >= 3) {
       const bounds = L.latLngBounds(pointsRef.current.map((p) => [p.lat, p.lng]));
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
@@ -188,7 +192,8 @@ export default function LeafletFincaPerimeterDrawerInner({
         mapInstanceRef.current = null;
       }
     };
-  }, [centerLat, centerLng]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Manejador de clics para agregar puntos cuando drawMode === 'draw'
   useEffect(() => {
