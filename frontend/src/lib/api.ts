@@ -161,9 +161,19 @@ const mapFinanza = (tx: AnyRecord) => ({
   ...tx,
   tipo: tx.tipo ?? tx.type,
   categoria: tx.categoria ?? tx.category,
+  concepto: tx.concepto ?? tx.description ?? tx.descripcion ?? tx.category ?? '',
   monto: tx.monto ?? tx.amount ?? 0,
-  descripcion: tx.descripcion ?? tx.description,
+  descripcion: tx.descripcion ?? tx.description ?? '',
   fecha: tx.fecha ?? tx.date,
+  fincaId: tx.fincaId ?? tx.finca?.id ?? null,
+  produccionId: tx.produccionId ?? tx.produccion?.id ?? null,
+  // Mapear finca con nombre correcto (backend devuelve name, frontend espera nombre)
+  finca: tx.finca
+    ? { id: tx.finca.id, nombre: tx.finca.nombre ?? tx.finca.name ?? '' }
+    : null,
+  produccion: tx.produccion
+    ? { id: tx.produccion.id, nombre: tx.produccion.nombre ?? tx.produccion.name ?? '' }
+    : null,
 });
 
 const mapPersonal = (persona: AnyRecord) => ({
@@ -204,6 +214,8 @@ const mapMaquinaria = (maquina: AnyRecord) => ({
   tipo: maquina.tipo ?? 'OTRO',
   marca: maquina.marca ?? '',
   modelo: maquina.modelo ?? '',
+  placa: maquina.placa ?? '',
+  imageUrl: maquina.imageUrl ?? null,
   fincaId: maquina.fincaId ?? null,
   finca: maquina.finca ? { id: maquina.finca.id, nombre: maquina.finca.nombre ?? maquina.finca.name } : null,
   fechaAdquisicion: maquina.fechaAdquisicion ?? null,
@@ -211,7 +223,7 @@ const mapMaquinaria = (maquina: AnyRecord) => ({
   horasUso: maquina.horasUso != null ? Number(maquina.horasUso) : null,
   estado: maquina.estado ?? backendToUiStatus[maquina.status] ?? maquina.status ?? 'OPERATIVO',
   observaciones: maquina.observaciones ?? '',
-  proximoMantenimiento: maquina.proximoMantenimiento ?? maquina.lastMaintenance,
+  proximoMantenimiento: maquina.proximoMantenimiento ?? maquina.nextMaintenance ?? maquina.lastMaintenance,
   costoMantenimiento: maquina.costoMantenimiento ?? maquina.maintenanceCost ?? 0,
 });
 
@@ -252,6 +264,9 @@ const finanzaPayload = (data: AnyRecord) => ({
   amount: data.amount ?? data.monto,
   description: data.description ?? data.descripcion,
   date: data.date ?? data.fecha,
+  // Relaciones opcionales — se pierden si no se incluyen aquí
+  fincaId: data.fincaId && String(data.fincaId).trim() !== '' ? String(data.fincaId) : null,
+  produccionId: data.produccionId && String(data.produccionId).trim() !== '' ? String(data.produccionId) : null,
 });
 
 const personalPayload = (data: AnyRecord) => ({
@@ -273,13 +288,15 @@ const maquinariaPayload = (data: AnyRecord) => ({
   tipo: data.tipo ?? 'OTRO',
   marca: data.marca ?? '',
   modelo: data.modelo ?? '',
+  placa: data.placa ?? '',
   fincaId: data.fincaId && String(data.fincaId).trim() !== '' ? String(data.fincaId) : null,
   fechaAdquisicion: data.fechaAdquisicion || null,
   valor: data.valor !== undefined && data.valor !== '' && data.valor !== null ? parseFloat(data.valor) : null,
   horasUso: data.horasUso !== undefined && data.horasUso !== '' && data.horasUso !== null ? parseFloat(data.horasUso) : null,
   status: uiToBackendStatus[data.status ?? data.estado] ?? data.status ?? 'OPERATIVE',
   observaciones: data.observaciones ?? '',
-  lastMaintenance: data.lastMaintenance ?? data.proximoMantenimiento,
+  lastMaintenance: data.lastMaintenance ?? null,
+  nextMaintenance: data.nextMaintenance ?? data.proximoMantenimiento ?? null,
   maintenanceCost: data.maintenanceCost !== undefined && data.maintenanceCost !== '' ? parseFloat(data.maintenanceCost) : (data.costoMantenimiento !== undefined && data.costoMantenimiento !== '' ? parseFloat(data.costoMantenimiento) : 0),
 });
 
@@ -305,7 +322,10 @@ const mapStatusToBackend = (st?: string) => {
 };
 
 const produccionPayload = async (data: AnyRecord) => {
-  const loteId = data.loteId ?? (await ensureLoteId(data.fincaId));
+  // Si ya viene loteId del formulario, usarlo directamente sin auto-crear lotes
+  const loteId = data.loteId && String(data.loteId).trim() !== ''
+    ? String(data.loteId)
+    : await ensureLoteId(data.fincaId);
   const variedad = data.variedad ?? data.name;
   const uiStatus = data.estado ?? data.status ?? 'ACTIVE';
   const backendStatus = mapStatusToBackend(uiStatus);
@@ -397,7 +417,10 @@ export const inventarioApi = {
   getAll: (fincaId?: number | string) =>
     withData(api.get('/inventario', { params: fincaId ? { fincaId } : {} }), (data) => mapArray(data, mapInventario)),
   create: (data: unknown) => withData(api.post('/inventario', inventarioPayload(data as AnyRecord)), mapInventario),
-  update: (id: number | string, data: unknown) => withData(api.put(`/inventario/${id}`, inventarioPayload(data as AnyRecord)), (res) => res),
+  update: (id: number | string, data: unknown) => withData(api.put(`/inventario/${id}`, inventarioPayload(data as AnyRecord)), mapInventario),
+  // Actualiza SOLO la cantidad sin sobreescribir los demás campos
+  patchQuantity: (id: number | string, quantity: number) =>
+    withData(api.put(`/inventario/${id}`, { quantity }), mapInventario),
   delete: (id: number | string) => api.delete(`/inventario/${id}`),
   alertas: () => withData(api.get('/inventario/alertas'), (data) => mapArray(data, mapInventario)),
 };
@@ -429,6 +452,13 @@ export const maquinariaApi = {
   create: (data: unknown) => withData(api.post('/maquinaria', maquinariaPayload(data as AnyRecord)), mapMaquinaria),
   update: (id: number | string, data: unknown) => withData(api.put(`/maquinaria/${id}`, maquinariaPayload(data as AnyRecord)), mapMaquinaria),
   delete: (id: number | string) => api.delete(`/maquinaria/${id}`),
+  uploadFoto: (id: number | string, file: File) => {
+    const formData = new FormData();
+    formData.append('foto', file);
+    return api.post(`/maquinaria/${id}/foto`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 // Clima

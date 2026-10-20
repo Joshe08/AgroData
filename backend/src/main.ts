@@ -4,9 +4,21 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Asegurar carpeta uploads para fotografías de maquinaria y otros archivos
+  const uploadsDir = join(process.cwd(), 'uploads');
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  // Servir archivos estáticos: GET /uploads/<filename>
+  app.useStaticAssets(uploadsDir, { prefix: '/uploads' });
 
   // Global exception filter for error sanitization
   app.useGlobalFilters(new AllExceptionsFilter());
@@ -43,6 +55,7 @@ async function bootstrap() {
   console.log(`\n======================================================`);
   console.log(`AgroData Cesar API is running on: http://0.0.0.0:${port}`);
   console.log(`Interactive Swagger API Docs: http://0.0.0.0:${port}/api`);
+  console.log(`Uploads estáticos: http://0.0.0.0:${port}/uploads/`);
   console.log(`======================================================\n`);
 }
 bootstrap();

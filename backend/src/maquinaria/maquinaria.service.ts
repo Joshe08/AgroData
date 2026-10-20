@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class MaquinariaService {
@@ -35,13 +37,16 @@ export class MaquinariaService {
         tipo: data.tipo || 'Tractor agrícola',
         marca: data.marca || null,
         modelo: data.modelo || null,
+        placa: data.placa || null,
+        imageUrl: data.imageUrl || null,
         status: data.status || data.estado || 'OPERATIVE',
         fincaId: data.fincaId && String(data.fincaId).trim() !== '' ? String(data.fincaId) : null,
         fechaAdquisicion: data.fechaAdquisicion || data.fechaCompra ? new Date(data.fechaAdquisicion || data.fechaCompra) : null,
         valor: data.valor !== undefined && data.valor !== null && data.valor !== '' ? parseFloat(data.valor) : null,
         horasUso: data.horasUso !== undefined && data.horasUso !== null && data.horasUso !== '' ? parseFloat(data.horasUso) : null,
         observaciones: data.observaciones || null,
-        lastMaintenance: data.lastMaintenance || data.proximoMantenimiento ? new Date(data.lastMaintenance || data.proximoMantenimiento) : null,
+        lastMaintenance: data.lastMaintenance ? new Date(data.lastMaintenance) : null,
+        nextMaintenance: data.nextMaintenance ? new Date(data.nextMaintenance) : null,
         maintenanceCost: data.maintenanceCost !== undefined && data.maintenanceCost !== null ? parseFloat(data.maintenanceCost) : 0.0,
         organizationId: orgId,
       },
@@ -66,6 +71,8 @@ export class MaquinariaService {
     if (data.tipo !== undefined) updateData.tipo = data.tipo;
     if (data.marca !== undefined) updateData.marca = data.marca || null;
     if (data.modelo !== undefined) updateData.modelo = data.modelo || null;
+    if (data.placa !== undefined) updateData.placa = data.placa || null;
+    if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl || null;
     if (data.status !== undefined || data.estado !== undefined) {
       updateData.status = data.status ?? data.estado;
     }
@@ -85,9 +92,11 @@ export class MaquinariaService {
     if (data.observaciones !== undefined) {
       updateData.observaciones = data.observaciones || null;
     }
-    if (data.lastMaintenance !== undefined || data.proximoMantenimiento !== undefined) {
-      const lm = data.lastMaintenance ?? data.proximoMantenimiento;
-      updateData.lastMaintenance = lm ? new Date(lm) : null;
+    if (data.lastMaintenance !== undefined) {
+      updateData.lastMaintenance = data.lastMaintenance ? new Date(data.lastMaintenance) : null;
+    }
+    if (data.nextMaintenance !== undefined) {
+      updateData.nextMaintenance = data.nextMaintenance ? new Date(data.nextMaintenance) : null;
     }
     if (data.maintenanceCost !== undefined) {
       updateData.maintenanceCost = data.maintenanceCost !== null ? parseFloat(data.maintenanceCost) : 0.0;
@@ -102,6 +111,31 @@ export class MaquinariaService {
     });
   }
 
+  async uploadImage(id: string, orgId: string, file: Express.Multer.File): Promise<{ imageUrl: string }> {
+    const existing = await this.prisma.maquinaria.findFirst({
+      where: { id, organizationId: orgId },
+    });
+    if (!existing) {
+      throw new NotFoundException('Maquinaria no encontrada');
+    }
+
+    // Eliminar imagen anterior si existe
+    if (existing.imageUrl) {
+      const oldPath = path.join(process.cwd(), 'uploads', path.basename(existing.imageUrl));
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    const imageUrl = `/uploads/${file.filename}`;
+    await this.prisma.maquinaria.update({
+      where: { id },
+      data: { imageUrl },
+    });
+
+    return { imageUrl };
+  }
+
   async delete(id: string, orgId: string) {
     const existing = await this.prisma.maquinaria.findFirst({
       where: { id, organizationId: orgId },
@@ -110,10 +144,15 @@ export class MaquinariaService {
       throw new NotFoundException('Maquinaria no encontrada');
     }
 
-    await this.prisma.maquinaria.delete({
-      where: { id },
-    });
+    // Eliminar imagen si existe
+    if (existing.imageUrl) {
+      const imgPath = path.join(process.cwd(), 'uploads', path.basename(existing.imageUrl));
+      if (fs.existsSync(imgPath)) {
+        fs.unlinkSync(imgPath);
+      }
+    }
 
+    await this.prisma.maquinaria.delete({ where: { id } });
     return { success: true, message: 'Maquinaria eliminada correctamente' };
   }
 }

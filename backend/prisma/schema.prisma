@@ -214,6 +214,8 @@ model Maquinaria {
   tipo             String?
   marca            String?
   modelo           String?
+  placa            String?      // Placa, número de serie o código interno
+  imageUrl         String?      // Ruta de la fotografía almacenada en el servidor
   status           String       @default("OPERATIVE") // OPERATIVE, MAINTENANCE, BROKEN
   fincaId          String?
   finca            Finca?       @relation(fields: [fincaId], references: [id], onDelete: SetNull)
@@ -222,6 +224,7 @@ model Maquinaria {
   horasUso         Float?
   observaciones    String?
   lastMaintenance  DateTime?
+  nextMaintenance  DateTime?    // Próximo mantenimiento programado
   maintenanceCost  Float        @default(0.0)
   organizationId   String
   organization     Organization @relation(fields: [organizationId], references: [id])

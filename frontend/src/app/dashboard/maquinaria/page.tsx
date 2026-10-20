@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { maquinariaApi, fincasApi } from '@/lib/api';
 import { useToastStore } from '@/store/toastStore';
 import {
@@ -17,8 +17,9 @@ import {
   Calendar,
   DollarSign,
   FileText,
-  Tag,
   Tractor,
+  Camera,
+  Upload,
 } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
@@ -28,6 +29,7 @@ interface Maquina {
   tipo: string;
   marca?: string;
   modelo?: string;
+  placa?: string;
   estado: string;
   horasUso?: number;
   valor?: number;
@@ -36,12 +38,18 @@ interface Maquina {
   proximoMantenimiento?: string;
   fincaId?: string | number | null;
   finca?: { id: string | number; nombre: string } | null;
+  imageUrl?: string | null;
 }
 
 interface Finca {
   id: string | number;
   nombre: string;
 }
+
+const BACKEND_URL =
+  typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:3001`
+    : 'http://localhost:3001';
 
 const ESTADO_BADGE: Record<string, { bg: string; text: string; label: string }> = {
   OPERATIVO: { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', label: 'Operativo' },
@@ -118,14 +126,28 @@ function FichaTecnicaModal({
 
         {/* Hero Card */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: '16px', background: 'rgba(245,158,11,0.06)', borderRadius: 12, border: '1px solid rgba(245,158,11,0.2)' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 12, background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#fbbf24', flexShrink: 0 }}>
-            <Wrench size={28} />
-          </div>
+          {maquina.imageUrl ? (
+            <img
+              src={`${BACKEND_URL}${maquina.imageUrl}`}
+              alt={maquina.nombre}
+              style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, flexShrink: 0, border: '2px solid rgba(245,158,11,0.3)' }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          ) : (
+            <div style={{ width: 56, height: 56, borderRadius: 12, background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#fbbf24', flexShrink: 0 }}>
+              <Wrench size={28} />
+            </div>
+          )}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>{maquina.nombre}</div>
             <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 2 }}>
               {maquina.tipo} {maquina.marca ? `· ${maquina.marca}` : ''} {maquina.modelo ? `(${maquina.modelo})` : ''}
             </div>
+            {maquina.placa && (
+              <div style={{ fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 2 }}>
+                Placa / Serial: <strong>{maquina.placa}</strong>
+              </div>
+            )}
             <span
               style={{
                 display: 'inline-block',
@@ -214,6 +236,7 @@ function MaquinaModal({
     tipo: maquina?.tipo || 'Tractor agrícola',
     marca: maquina?.marca || '',
     modelo: maquina?.modelo || '',
+    placa: maquina?.placa || '',
     estado: maquina?.estado || 'OPERATIVO',
     horasUso: maquina?.horasUso != null ? String(maquina.horasUso) : '',
     valor: maquina?.valor != null ? String(maquina.valor) : '',
@@ -223,6 +246,11 @@ function MaquinaModal({
     fincaId: maquina?.fincaId != null ? String(maquina.fincaId) : (fincas[0]?.id ? String(fincas[0].id) : ''),
   });
   const [loading, setLoading] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(
+    maquina?.imageUrl ? `${BACKEND_URL}${maquina.imageUrl}` : null
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (maquina) {
@@ -231,6 +259,7 @@ function MaquinaModal({
         tipo: maquina.tipo || 'Tractor agrícola',
         marca: maquina.marca || '',
         modelo: maquina.modelo || '',
+        placa: maquina.placa || '',
         estado: maquina.estado || 'OPERATIVO',
         horasUso: maquina.horasUso != null ? String(maquina.horasUso) : '',
         valor: maquina.valor != null ? String(maquina.valor) : '',
@@ -239,8 +268,20 @@ function MaquinaModal({
         proximoMantenimiento: maquina.proximoMantenimiento ? maquina.proximoMantenimiento.split('T')[0] : '',
         fincaId: maquina.fincaId != null ? String(maquina.fincaId) : '',
       });
+      setPhotoPreview(maquina.imageUrl ? `${BACKEND_URL}${maquina.imageUrl}` : null);
     }
   }, [maquina]);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      useToastStore.getState().warning('La imagen no puede superar 5 MB.');
+      return;
+    }
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,6 +297,7 @@ function MaquinaModal({
         tipo: form.tipo,
         marca: form.marca.trim() || undefined,
         modelo: form.modelo.trim() || undefined,
+        placa: form.placa.trim() || undefined,
         estado: form.estado,
         fincaId: form.fincaId || null,
         horasUso: form.horasUso ? parseFloat(form.horasUso) : undefined,
@@ -265,13 +307,26 @@ function MaquinaModal({
         proximoMantenimiento: form.proximoMantenimiento || undefined,
       };
 
+      let savedId: string | number;
       if (maquina) {
         await maquinariaApi.update(maquina.id, p);
+        savedId = maquina.id;
         useToastStore.getState().success('Equipo actualizado exitosamente.');
       } else {
-        await maquinariaApi.create(p);
+        const res = await maquinariaApi.create(p);
+        savedId = res.data?.id;
         useToastStore.getState().success('Equipo registrado en maquinaria.');
       }
+
+      // Upload photo if selected
+      if (photoFile && savedId) {
+        try {
+          await maquinariaApi.uploadFoto(savedId, photoFile);
+        } catch {
+          useToastStore.getState().warning('Equipo guardado, pero no se pudo subir la foto.');
+        }
+      }
+
       onSave();
       onClose();
     } catch (err: any) {
@@ -284,7 +339,7 @@ function MaquinaModal({
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
-      <div className="modal-content" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" style={{ maxWidth: 580 }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <h2 className="font-display" style={{ fontSize: 20, fontWeight: 700 }}>
             {maquina ? 'Editar Equipo' : 'Nuevo Equipo o Maquinaria'}
@@ -295,6 +350,70 @@ function MaquinaModal({
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Foto del equipo */}
+          <div>
+            <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 8, fontWeight: 500 }}>
+              Foto del equipo (opcional)
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              {/* Preview */}
+              <div
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 12,
+                  border: '2px dashed var(--color-border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  background: 'var(--color-surface)',
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                title="Haz clic para seleccionar foto"
+              >
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Vista previa" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <Camera size={28} color="var(--color-text-subtle)" />
+                )}
+              </div>
+              <div style={{ flex: 1 }}>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+                >
+                  <Upload size={14} />
+                  {photoPreview ? 'Cambiar foto' : 'Seleccionar foto'}
+                </button>
+                <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 4 }}>
+                  JPG, PNG o WEBP · máx. 5 MB
+                </div>
+                {photoPreview && (
+                  <button
+                    type="button"
+                    onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                    style={{ fontSize: 11, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', marginTop: 2 }}
+                  >
+                    Quitar foto
+                  </button>
+                )}
+              </div>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              style={{ display: 'none' }}
+              onChange={handlePhotoChange}
+            />
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
@@ -361,6 +480,18 @@ function MaquinaModal({
                 value={form.modelo}
                 onChange={(e) => setForm((f) => ({ ...f, modelo: e.target.value }))}
                 placeholder="Ej: 5065E, FS 280, 2021"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                Placa / N° de serial
+              </label>
+              <input
+                className="input-field"
+                value={form.placa}
+                onChange={(e) => setForm((f) => ({ ...f, placa: e.target.value }))}
+                placeholder="Ej: ABC-123, SN-4567890"
               />
             </div>
 
@@ -631,21 +762,34 @@ export default function MaquinariaPage() {
             return (
               <div key={m.id} className="card glass-hover" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div
-                    style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: 10,
-                      background: 'rgba(245, 158, 11, 0.12)',
-                      border: '1px solid rgba(245, 158, 11, 0.25)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#fbbf24',
-                    }}
-                  >
-                    <Wrench size={20} />
-                  </div>
+                  {/* Thumbnail o icono */}
+                  {m.imageUrl ? (
+                    <img
+                      src={`${BACKEND_URL}${m.imageUrl}`}
+                      alt={m.nombre}
+                      style={{ width: 42, height: 42, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(245,158,11,0.3)', flexShrink: 0 }}
+                      onError={(e) => {
+                        const img = e.target as HTMLImageElement;
+                        img.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 10,
+                        background: 'rgba(245, 158, 11, 0.12)',
+                        border: '1px solid rgba(245, 158, 11, 0.25)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fbbf24',
+                      }}
+                    >
+                      <Wrench size={20} />
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: 4 }}>
                     <button
                       onClick={() => setDetalleMaquina(m)}
@@ -678,6 +822,11 @@ export default function MaquinariaPage() {
                   <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                     {m.tipo} {m.marca ? `· ${m.marca}` : ''} {m.modelo ? `(${m.modelo})` : ''}
                   </div>
+                  {m.placa && (
+                    <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginTop: 2 }}>
+                      Placa: {m.placa}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-subtle)' }}>

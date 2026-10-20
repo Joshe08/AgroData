@@ -68,6 +68,14 @@ function TransaccionModal({
     }
   }, [transaccion]);
 
+  // Pre-seleccionar la primera finca cuando se abre una nueva transaccion
+  useEffect(() => {
+    if (!transaccion && fincas.length > 0 && form.fincaId === '') {
+      setForm(f => ({ ...f, fincaId: String(fincas[0].id) }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fincas.length, transaccion]);
+
   const categorias = {
     INGRESO: [
       'Venta de producción',
