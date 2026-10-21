@@ -19,6 +19,7 @@ import { SaasModule } from './saas/saas.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env', 'backend/.env', '../backend/.env'],
     }),
     PrismaModule,
     AuthModule,
