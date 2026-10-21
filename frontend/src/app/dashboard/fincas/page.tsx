@@ -798,16 +798,68 @@ function LoteAgronomicModal({
   fincaId,
   finca,
   lote,
+  initialOpenMap = false,
   onClose,
   onSave,
 }: {
   fincaId: string | number;
   finca?: Finca | null;
   lote?: Lote | null;
+  initialOpenMap?: boolean;
   onClose: () => void;
   onSave: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [showMapDrawer, setShowMapDrawer] = useState(initialOpenMap);
+  const [coordenadas, setCoordenadas] = useState<{ lat: number; lng: number }[]>(() => {
+    if (!lote?.coordenadas) return [];
+    if (Array.isArray(lote.coordenadas)) {
+      return lote.coordenadas.map((c: any) => ({
+        lat: Array.isArray(c) ? Number(c[0]) : Number(c.lat),
+        lng: Array.isArray(c) ? Number(c[1]) : Number(c.lng),
+      }));
+    }
+    if (typeof lote.coordenadas === 'string') {
+      try {
+        const p = JSON.parse(lote.coordenadas);
+        if (Array.isArray(p)) {
+          return p.map((c: any) => ({
+            lat: Array.isArray(c) ? Number(c[0]) : Number(c.lat),
+            lng: Array.isArray(c) ? Number(c[1]) : Number(c.lng),
+          }));
+        }
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+  const [measuredHa, setMeasuredHa] = useState<number>(0);
+
+  const fincaPerimeterPoints = useMemo<{ lat: number; lng: number }[]>(() => {
+    if (!finca?.coordenadas) return [];
+    if (Array.isArray(finca.coordenadas)) {
+      return finca.coordenadas.map((c: any) => ({
+        lat: Array.isArray(c) ? Number(c[0]) : Number(c.lat),
+        lng: Array.isArray(c) ? Number(c[1]) : Number(c.lng),
+      }));
+    }
+    if (typeof finca.coordenadas === 'string') {
+      try {
+        const p = JSON.parse(finca.coordenadas);
+        if (Array.isArray(p)) {
+          return p.map((c: any) => ({
+            lat: Array.isArray(c) ? Number(c[0]) : Number(c.lat),
+            lng: Array.isArray(c) ? Number(c[1]) : Number(c.lng),
+          }));
+        }
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }, [finca?.coordenadas]);
+
   const [form, setForm] = useState({
     name: lote?.nombre || '',
     area: lote?.hectareas ? String(lote.hectareas) : '',
@@ -865,6 +917,7 @@ function LoteAgronomicModal({
         ph: form.ph ? parseFloat(form.ph) : null,
         capacidadCarga: form.capacidadCarga ? parseFloat(form.capacidadCarga) : null,
         coberturaVegetal: form.coberturaVegetal || undefined,
+        coordenadas: coordenadas && coordenadas.length >= 3 ? coordenadas : undefined,
         notas: form.notas || undefined,
       };
 
@@ -888,7 +941,13 @@ function LoteAgronomicModal({
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
       <div
         className="modal-content"
-        style={{ maxWidth: 580, width: '92vw', maxHeight: '90vh', overflowY: 'auto' }}
+        style={{
+          maxWidth: showMapDrawer ? 760 : 580,
+          width: '94vw',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          transition: 'max-width 0.2s ease',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -962,6 +1021,95 @@ function LoteAgronomicModal({
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Delimitación Perimetral de la Parcela en el Mapa */}
+          <div
+            style={{
+              padding: '12px 14px',
+              borderRadius: 12,
+              background: 'rgba(16, 185, 129, 0.04)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MapPin size={16} color="#10b981" />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>
+                    Delimitación de la Parcela en el Mapa
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                    {coordenadas.length >= 3
+                      ? `Parcela delimitada con ${coordenadas.length} vértices exactos.`
+                      : 'Ubica la parcela en su posición real trazando su polígono dentro de la finca.'}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowMapDrawer(!showMapDrawer)}
+                className="btn-secondary"
+                style={{
+                  padding: '5px 12px',
+                  fontSize: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  borderColor: showMapDrawer ? '#10b981' : undefined,
+                  background: showMapDrawer ? 'rgba(16,185,129,0.15)' : undefined,
+                }}
+              >
+                <Compass size={13} color="#10b981" />
+                <span>{showMapDrawer ? 'Cerrar trazador' : coordenadas.length >= 3 ? 'Editar perímetro en mapa' : 'Delimitar en mapa satelital'}</span>
+              </button>
+            </div>
+
+            {showMapDrawer && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, fontSize: 11, color: 'var(--color-text-subtle)', flexWrap: 'wrap', gap: 6 }}>
+                  <span>Haz clic en el mapa satelital para trazar los vértices de esta parcela. El contorno azul discontinuo muestra los linderos de la finca.</span>
+                  {coordenadas.length >= 3 && measuredHa > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, area: String(measuredHa) })}
+                      style={{
+                        background: 'rgba(16,185,129,0.2)',
+                        border: '1px solid #10b981',
+                        color: '#10b981',
+                        borderRadius: 6,
+                        padding: '3px 8px',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                      title="Copiar las hectáreas medidas directamente al campo Área"
+                    >
+                      <CheckCircle2 size={12} />
+                      Aplicar área medida: {measuredHa} ha
+                    </button>
+                  )}
+                </div>
+
+                <FincaPerimeterDrawer
+                  initialPoints={coordenadas}
+                  referencePolygon={fincaPerimeterPoints}
+                  referenceLabel={finca?.nombre ? `Límite Finca: ${finca.nombre}` : undefined}
+                  centerLat={finca?.latitude ? Number(finca.latitude) : 10.4631}
+                  centerLng={finca?.longitude ? Number(finca.longitude) : -73.2532}
+                  targetHectareas={parseFloat(form.area) || 5}
+                  height="340px"
+                  onPointsChange={(pts, areaHa) => {
+                    setCoordenadas(pts);
+                    setMeasuredHa(areaHa);
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           <div>
@@ -1105,7 +1253,7 @@ function FincaDetailModal({
   finca: Finca;
   onClose: () => void;
   onEdit: () => void;
-  onOpenLoteModal: (fincaId: string | number, lote?: Lote) => void;
+  onOpenLoteModal: (fincaId: string | number, lote?: Lote, openMap?: boolean) => void;
   onOpenPerimeterModal: (finca: Finca) => void;
 }) {
   const [lotes, setLotes] = useState<Lote[]>([]);
@@ -1241,14 +1389,25 @@ function FincaDetailModal({
                   ({selectedLote.hectareas} ha • {((selectedLote.hectareas / (finca.hectareas || 1)) * 100).toFixed(0)}% del predio)
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => onOpenLoteModal(finca.id, selectedLote)}
-                className="btn-secondary"
-                style={{ padding: '3px 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
-              >
-                <Edit3 size={11} /> Editar Parcela
-              </button>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => onOpenLoteModal(finca.id, selectedLote, true)}
+                  className="btn-secondary"
+                  style={{ padding: '3px 9px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4, color: '#10b981', borderColor: 'rgba(16,185,129,0.4)' }}
+                  title="Delimitar el polígono de esta parcela en el mapa satelital"
+                >
+                  <Compass size={12} color="#10b981" /> Delimitar en Mapa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenLoteModal(finca.id, selectedLote, false)}
+                  className="btn-secondary"
+                  style={{ padding: '3px 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                >
+                  <Edit3 size={11} /> Editar Parcela
+                </button>
+              </div>
             </div>
             {selectedLote.cultivoActual && (
               <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1306,6 +1465,7 @@ export default function FincasPage() {
     isOpen: boolean;
     fincaId: string | number;
     lote?: Lote | null;
+    openMap?: boolean;
   } | null>(null);
 
   // Modal Confirmación Eliminación
@@ -1643,15 +1803,40 @@ export default function FincasPage() {
                       {selectedLoteInMap.nombre}
                     </h3>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setLoteModalData({ isOpen: true, fincaId: selectedLoteInMap.fincaId || currentMapFinca?.id || '', lote: selectedLoteInMap })}
-                    className="btn-secondary"
-                    style={{ padding: '5px 8px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}
-                    title="Editar parámetros del lote"
-                  >
-                    <Edit3 size={13} /> Editar
-                  </button>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLoteModalData({
+                          isOpen: true,
+                          fincaId: selectedLoteInMap.fincaId || currentMapFinca?.id || '',
+                          lote: selectedLoteInMap,
+                          openMap: true,
+                        })
+                      }
+                      className="btn-secondary"
+                      style={{ padding: '5px 8px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, color: '#10b981', borderColor: 'rgba(16,185,129,0.4)' }}
+                      title="Delimitar el polígono de esta parcela en el mapa satelital"
+                    >
+                      <Compass size={13} color="#10b981" /> Delimitar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLoteModalData({
+                          isOpen: true,
+                          fincaId: selectedLoteInMap.fincaId || currentMapFinca?.id || '',
+                          lote: selectedLoteInMap,
+                          openMap: false,
+                        })
+                      }
+                      className="btn-secondary"
+                      style={{ padding: '5px 8px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}
+                      title="Editar parámetros del lote"
+                    >
+                      <Edit3 size={13} /> Editar
+                    </button>
+                  </div>
                 </div>
 
                 {/* Métricas del Lote */}
@@ -1725,6 +1910,24 @@ export default function FincasPage() {
                     type="button"
                     onClick={() => {
                       if (currentMapFinca) {
+                        setLoteModalData({
+                          isOpen: true,
+                          fincaId: currentMapFinca.id,
+                          lote: selectedLoteInMap,
+                          openMap: true,
+                        });
+                      }
+                    }}
+                    className="btn-primary"
+                    style={{ flex: 1, fontSize: 12, padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: '#10b981' }}
+                  >
+                    <Compass size={13} />
+                    Delimitar Parcela
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (currentMapFinca) {
                         setDeleteModal({
                           isOpen: true,
                           type: 'lote',
@@ -1736,9 +1939,9 @@ export default function FincasPage() {
                       }
                     }}
                     className="btn-secondary"
-                    style={{ flex: 1, color: '#f87171', fontSize: 12, padding: '7px' }}
+                    style={{ color: '#f87171', fontSize: 12, padding: '7px 12px' }}
                   >
-                    Eliminar Parcela
+                    Eliminar
                   </button>
                 </div>
               </div>
@@ -1945,10 +2148,18 @@ export default function FincasPage() {
                                         <span style={{ color: '#22c55e', marginLeft: 8, fontSize: 11 }}>• {lote.cultivoActual}</span>
                                       )}
                                     </div>
-                                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                                       <button
                                         type="button"
-                                        onClick={() => setLoteModalData({ isOpen: true, fincaId: finca.id, lote })}
+                                        onClick={() => setLoteModalData({ isOpen: true, fincaId: finca.id, lote, openMap: true })}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#10b981', padding: 2 }}
+                                        title="Delimitar parcela en mapa satelital"
+                                      >
+                                        <Compass size={13} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setLoteModalData({ isOpen: true, fincaId: finca.id, lote, openMap: false })}
                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2 }}
                                         title="Editar lote"
                                       >
@@ -2025,8 +2236,8 @@ export default function FincasPage() {
             setEditFinca(f);
             setModalOpen(true);
           }}
-          onOpenLoteModal={(fincaId, lote) => {
-            setLoteModalData({ isOpen: true, fincaId, lote });
+          onOpenLoteModal={(fincaId, lote, openMap) => {
+            setLoteModalData({ isOpen: true, fincaId, lote, openMap });
           }}
           onOpenPerimeterModal={(f) => {
             setPerimeterModalFinca(f);
@@ -2040,6 +2251,7 @@ export default function FincasPage() {
           fincaId={loteModalData.fincaId}
           finca={fincas.find((f) => String(f.id) === String(loteModalData.fincaId))}
           lote={loteModalData.lote}
+          initialOpenMap={loteModalData.openMap}
           onClose={() => setLoteModalData(null)}
           onSave={() => {
             loadFincas();

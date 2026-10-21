@@ -10,6 +10,8 @@ export interface FincaPerimeterDrawerProps {
   centerLat?: number;
   centerLng?: number;
   targetHectareas?: number;
+  referencePolygon?: { lat: number; lng: number }[];
+  referenceLabel?: string;
   onPointsChange: (points: { lat: number; lng: number }[], computedAreaHa: number) => void;
   height?: string;
 }
@@ -83,6 +85,8 @@ export default function LeafletFincaPerimeterDrawerInner({
   centerLat = 10.4631,
   centerLng = -73.2532,
   targetHectareas,
+  referencePolygon,
+  referenceLabel,
   onPointsChange,
   height = '440px',
 }: FincaPerimeterDrawerProps) {
@@ -91,6 +95,7 @@ export default function LeafletFincaPerimeterDrawerInner({
   const pointsLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const polygonLayerRef = useRef<L.Polygon | null>(null);
   const polylineLayerRef = useRef<L.Polyline | null>(null);
+  const referencePolygonLayerRef = useRef<L.Polygon | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   // Ref que siempre tiene los puntos actuales sin pasar por closure de useEffect
   const pointsRef = useRef<{ lat: number; lng: number }[]>([]);
@@ -175,6 +180,11 @@ export default function LeafletFincaPerimeterDrawerInner({
     if (pointsRef.current.length >= 3) {
       const bounds = L.latLngBounds(pointsRef.current.map((p) => [p.lat, p.lng]));
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
+    } else if (referencePolygon && referencePolygon.length >= 3) {
+      const refBounds = L.latLngBounds(referencePolygon.map((p) => [p.lat, p.lng]));
+      if (refBounds.isValid()) {
+        map.fitBounds(refBounds, { padding: [40, 40], maxZoom: 17 });
+      }
     }
 
     const ro = new ResizeObserver(() => {
@@ -207,6 +217,45 @@ export default function LeafletFincaPerimeterDrawerInner({
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Capa de polígono de referencia (ej. perímetro de la finca madre)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (referencePolygonLayerRef.current) {
+      try {
+        map.removeLayer(referencePolygonLayerRef.current);
+      } catch {
+        // Ignorar
+      }
+      referencePolygonLayerRef.current = null;
+    }
+
+    if (referencePolygon && referencePolygon.length >= 3) {
+      const refPoly = L.polygon(
+        referencePolygon.map((p) => [p.lat, p.lng]),
+        {
+          color: '#38bdf8',
+          dashArray: '6, 6',
+          weight: 2.5,
+          fillColor: '#38bdf8',
+          fillOpacity: 0.08,
+          interactive: false,
+        }
+      ).addTo(map);
+
+      if (referenceLabel) {
+        refPoly.bindTooltip(referenceLabel, {
+          permanent: true,
+          direction: 'center',
+          className: 'finca-ref-tooltip',
+        });
+      }
+
+      referencePolygonLayerRef.current = refPoly;
+    }
+  }, [referencePolygon, referenceLabel]);
 
   // Manejador de clics para agregar puntos cuando drawMode === 'draw'
   useEffect(() => {
