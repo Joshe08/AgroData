@@ -227,25 +227,35 @@ const mapMaquinaria = (maquina: AnyRecord) => ({
   costoMantenimiento: maquina.costoMantenimiento ?? maquina.maintenanceCost ?? 0,
 });
 
-const fincaPayload = (data: AnyRecord) => ({
-  name: data.name ?? data.nombre,
-  location: data.location ?? data.ubicacion,
-  area: data.area !== undefined && data.area !== '' ? parseFloat(data.area) : (data.hectareas !== undefined && data.hectareas !== '' ? parseFloat(data.hectareas) : 0),
-  description: data.description ?? data.descripcion ?? null,
-  latitude: data.latitude != null && data.latitude !== '' ? parseFloat(data.latitude) : null,
-  longitude: data.longitude != null && data.longitude !== '' ? parseFloat(data.longitude) : null,
-  tipoExplotacion: data.tipoExplotacion,
-  estado: data.estado,
-  tipoSuelo: data.tipoSuelo,
-  fuenteAgua: data.fuenteAgua,
-  sistemaRiego: data.sistemaRiego,
-  tipoAcceso: data.tipoAcceso,
-  departamento: data.departamento,
-  municipio: data.municipio,
-  vereda: data.vereda,
-  referenciaAcceso: data.referenciaAcceso,
-  actividades: data.actividades,
-});
+const fincaPayload = (data: AnyRecord) => {
+  const payload: AnyRecord = {
+    name: data.name ?? data.nombre,
+    location: data.location ?? data.ubicacion,
+    area: data.area !== undefined && data.area !== '' ? parseFloat(data.area) : (data.hectareas !== undefined && data.hectareas !== '' ? parseFloat(data.hectareas) : 0),
+    description: data.description ?? data.descripcion ?? null,
+    latitude: data.latitude != null && data.latitude !== '' ? parseFloat(data.latitude) : null,
+    longitude: data.longitude != null && data.longitude !== '' ? parseFloat(data.longitude) : null,
+    tipoExplotacion: data.tipoExplotacion,
+    estado: data.estado,
+    tipoSuelo: data.tipoSuelo,
+    fuenteAgua: data.fuenteAgua,
+    sistemaRiego: data.sistemaRiego,
+    tipoAcceso: data.tipoAcceso,
+    departamento: data.departamento,
+    municipio: data.municipio,
+    vereda: data.vereda,
+    referenciaAcceso: data.referenciaAcceso,
+    actividades: data.actividades,
+  };
+
+  if (data.coordenadas !== undefined) {
+    payload.coordenadas = typeof data.coordenadas === 'string'
+      ? data.coordenadas
+      : JSON.stringify(data.coordenadas);
+  }
+
+  return payload;
+};
 
 const inventarioPayload = (data: AnyRecord) => ({
   name: data.name ?? data.nombre,
@@ -494,6 +504,8 @@ export const colaboradoresApi = {
 // AI
 export const aiApi = {
   recomendaciones: (data: unknown) => api.post('/ai/recomendaciones', data),
+  chat: (data: unknown) => api.post('/ai/chat', data),
+  executeAction: (data: unknown) => api.post('/ai/execute-action', data),
 };
 
 // SaaS Management (Solo SuperAdmin)

@@ -1,7 +1,7 @@
 'use client';
 
-import { Bot, ExternalLink, Sprout, Package, DollarSign, Wrench } from 'lucide-react';
-import Link from 'next/link';
+import { Bot, ExternalLink, Sprout, Package, DollarSign, Wrench, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface AgroIAWidgetProps {
   alertasInventario: number;
@@ -11,44 +11,66 @@ interface AgroIAWidgetProps {
 }
 
 export default function AgroIAWidget({ alertasInventario, producciones, fincas, balance }: AgroIAWidgetProps) {
+  const router = useRouter();
+
   // Generar sugerencia contextual basada en datos reales del sistema
-  const getSugerencia = (): { texto: string; icono: React.ReactNode; color: string } => {
+  const getSugerencia = (): {
+    texto: string;
+    icono: React.ReactNode;
+    color: string;
+    href: string;
+    query?: string;
+  } => {
     if (alertasInventario > 0) {
       return {
-        texto: `Tienes ${alertasInventario} insumo(s) con stock bajo. Consulta a AgroIA sobre qué comprar primero y cómo optimizar el inventario crítico.`,
+        texto: `${alertasInventario} insumo(s) con stock bajo en bodega. Revisa qué comprar primero para no detener las labores de campo.`,
         icono: <Package size={16} />,
         color: '#f59e0b',
+        href: '/dashboard/inventario',
       };
     }
     if (producciones === 0) {
       return {
-        texto: 'No hay producciones activas. AgroIA puede ayudarte a planificar el próximo ciclo productivo según la época del año y las condiciones de tus fincas.',
+        texto: 'No hay producciones activas. Planifica el próximo ciclo productivo según la época del año y las condiciones de tus fincas.',
         icono: <Sprout size={16} />,
         color: '#10b981',
+        href: '/dashboard/producciones',
       };
     }
     if (balance < 0) {
       return {
-        texto: 'El balance financiero es negativo. AgroIA puede analizar los gastos actuales y sugerir estrategias de reducción de costos para tu operación.',
+        texto: 'El balance financiero es negativo. Consulta el detalle de gastos e ingresos por categoría.',
         icono: <DollarSign size={16} />,
         color: '#ef4444',
+        href: '/dashboard/finanzas',
       };
     }
     if (fincas === 0) {
       return {
-        texto: 'Registra tu primera finca para que AgroIA pueda darte recomendaciones personalizadas sobre manejo agropecuario y clima.',
+        texto: 'Registra tu primera finca para obtener recomendaciones personalizadas sobre manejo agropecuario y clima.',
         icono: <Sprout size={16} />,
         color: '#10b981',
+        href: '/dashboard/fincas',
       };
     }
     return {
-      texto: `Con ${fincas} finca(s) y ${producciones} producción(es) activa(s), AgroIA puede ayudarte a identificar oportunidades de mejora en rendimiento y costos.`,
+      texto: `Con ${fincas} finca(s) y ${producciones} producción(es) activa(s), identifica oportunidades de mejora en rendimiento y costos.`,
       icono: <Wrench size={16} />,
       color: '#8b5cf6',
+      href: '/dashboard/ai',
+      query: '¿Cuál es el diagnóstico integral de la organización y dónde hay oportunidades de mejora?',
     };
   };
 
   const sugerencia = getSugerencia();
+
+  const handleSugerenciaClick = () => {
+    if (sugerencia.query) {
+      router.push(`/dashboard/ai?q=${encodeURIComponent(sugerencia.query)}`);
+    } else {
+      router.push(sugerencia.href);
+    }
+  };
 
   return (
     <div
@@ -70,23 +92,39 @@ export default function AgroIAWidget({ alertasInventario, producciones, fincas, 
         </div>
       </div>
 
-      {/* Sugerencia contextual */}
-      <div style={{ padding: '12px 14px', background: 'rgba(139,92,246,0.06)', borderRadius: 10, marginBottom: 14 }}>
+      {/* Sugerencia contextual — clic lleva al módulo correspondiente */}
+      <div
+        onClick={handleSugerenciaClick}
+        style={{
+          padding: '12px 14px',
+          background: 'rgba(139,92,246,0.06)',
+          borderRadius: 10,
+          marginBottom: 14,
+          cursor: 'pointer',
+          transition: 'background 0.15s',
+          border: '1px solid transparent',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(139,92,246,0.12)';
+          e.currentTarget.style.borderColor = 'rgba(139,92,246,0.25)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(139,92,246,0.06)';
+          e.currentTarget.style.borderColor = 'transparent';
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <span style={{ color: sugerencia.color, flexShrink: 0, marginTop: 1 }}>{sugerencia.icono}</span>
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.5, flex: 1 }}>
             {sugerencia.texto}
           </p>
+          <ArrowRight size={14} style={{ color: sugerencia.color, flexShrink: 0, marginTop: 2 }} />
         </div>
       </div>
 
-      {/* Nota de transparencia */}
-      <p style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 12, lineHeight: 1.4 }}>
-        Esta sugerencia se genera a partir de los datos reales del sistema. Para un análisis completo, consulta AgroIA directamente.
-      </p>
-
-      <Link
-        href="/dashboard/ai"
+      {/* Botón consultar AgroIA */}
+      <button
+        onClick={() => router.push('/dashboard/ai')}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -100,12 +138,16 @@ export default function AgroIAWidget({ alertasInventario, producciones, fincas, 
           border: '1px solid rgba(139,92,246,0.2)',
           borderRadius: 8,
           transition: 'background 0.15s',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(139,92,246,0.18)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(139,92,246,0.1)')}
       >
         <Bot size={14} />
         Consultar AgroIA
         <ExternalLink size={11} />
-      </Link>
+      </button>
     </div>
   );
 }

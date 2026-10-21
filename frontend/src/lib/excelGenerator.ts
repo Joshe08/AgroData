@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AgroData — Generador Profesional de Reportes Excel (multi-hoja)
  * Libreria: xlsx  |  Hojas: RESUMEN + datos por modulo
  * Sin undefined/null en celdas. Columnas auto-ajustadas.
@@ -26,6 +26,7 @@ export interface ExcelReportOptions {
   fincaLabel: string;
   kpis: KpiItem[];
   modulos: ModuloData[];
+  customFileName?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,7 +69,7 @@ const addDataSheet = (
 // ─── Función Principal ────────────────────────────────────────────────────────
 
 export const generateExcelReport = (options: ExcelReportOptions): void => {
-  const { organizationName, periodo, fincaLabel, kpis, modulos } = options;
+  const { organizationName, periodo, fincaLabel, kpis, modulos, customFileName } = options;
   const wb = XLSX.utils.book_new();
   const fechaGeneracion = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es });
 
@@ -102,7 +103,7 @@ export const generateExcelReport = (options: ExcelReportOptions): void => {
     }
   });
 
-  const fileName = `AgroData_Reporte_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
+  const fileName = customFileName || `AgroData_Reporte_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
   XLSX.writeFile(wb, fileName);
 };
 
@@ -188,4 +189,36 @@ export const buildPersonalModulo = (personal: any[], includeSalary = true): Modu
     );
     return base;
   }),
+});
+
+export const buildMaquinariaModulo = (maquinaria: any[]): ModuloData => ({
+  nombre: 'MAQUINARIA',
+  headers: [
+    'ID',
+    'Nombre / Equipo',
+    'Tipo',
+    'Marca',
+    'Modelo',
+    'Placa / Serial',
+    'Estado Operativo',
+    'Finca Asignada',
+    'Horas de Uso',
+    'Valor Estimado (COP)',
+    'Costo Mantenimiento (COP)',
+    'Próximo Mantenimiento',
+  ],
+  rows: maquinaria.map((m) => [
+    m.id ?? '',
+    m.nombre ?? m.name ?? '',
+    m.tipo ?? '',
+    m.marca ?? '',
+    m.modelo ?? '',
+    m.placa ?? '',
+    m.estado ?? m.status ?? 'OPERATIVO',
+    m.finca?.nombre ?? (m.fincaId ? `Finca #${m.fincaId}` : 'Sin asignar'),
+    m.horasUso ?? 0,
+    m.valor ?? 0,
+    m.costoMantenimiento ?? m.maintenanceCost ?? 0,
+    tryDate(m.proximoMantenimiento ?? m.nextMaintenance),
+  ]),
 });

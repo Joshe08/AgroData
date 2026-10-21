@@ -1,327 +1,934 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { aiApi, fincasApi, produccionesApi } from '@/lib/api';
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { aiApi, fincasApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
+import { useToastStore } from '@/store/toastStore';
 import {
   Bot,
   Send,
   Loader2,
-  Sprout,
-  CloudSun,
-  DollarSign,
-  Lightbulb,
-  ChevronRight,
   RefreshCw,
-  Droplets,
-  Bug,
-  FlaskConical,
-  TrendingUp,
-  Wheat,
-  Layers,
-  CloudRain,
-  ShieldAlert,
+  Mic,
+  MicOff,
+  Image as ImageIcon,
+  X,
+  CheckCircle2,
+  Database,
+  ArrowRight,
+  ClipboardList,
 } from 'lucide-react';
 
-interface Recomendacion {
-  titulo: string;
-  descripcion: string;
-  prioridad: 'alta' | 'media' | 'baja';
-  categoria: string;
+interface Finca {
+  id: number | string;
+  nombre: string;
+  ubicacion: string;
+  hectareas: number;
 }
 
-interface AIResponse {
-  recomendaciones: Recomendacion[];
-  resumen?: string;
-  fuente?: string;
-}
-
-interface Finca { id: number | string; nombre: string; ubicacion: string; hectareas: number; }
-interface Produccion { id: number | string; tipo: string; variedad?: string; estado: string; }
-
-const PRIORIDAD_STYLE: Record<string, { color: string; badge: string; dot: string }> = {
-  alta:  { color: '#f87171', badge: 'badge-danger',  dot: '#ef4444' },
-  media: { color: '#fbbf24', badge: 'badge-warning', dot: '#f59e0b' },
-  baja:  { color: '#4ade80', badge: 'badge-success', dot: '#22c55e' },
-};
-
-function getCategoryIcon(cat: string) {
-  const c = (cat || '').toUpperCase();
-  if (c.includes('CLIMA')) return <CloudRain size={16} color="#38bdf8" />;
-  if (c.includes('RIEGO')) return <Droplets size={16} color="#38bdf8" />;
-  if (c.includes('PLAGA') || c.includes('ENFERMEDAD')) return <Bug size={16} color="#f87171" />;
-  if (c.includes('FERTIL')) return <FlaskConical size={16} color="#a78bfa" />;
-  if (c.includes('COSECHA')) return <Wheat size={16} color="#fbbf24" />;
-  if (c.includes('ECONOM') || c.includes('COSTO')) return <TrendingUp size={16} color="#34d399" />;
-  if (c.includes('SUELO')) return <Layers size={16} color="#fb923c" />;
-  return <Lightbulb size={16} color="#4ade80" />;
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  sources?: string[];
+  actionSuggestion?: {
+    type: string;
+    data: any;
+  } | null;
+  actionExecuted?: boolean;
+  imageUrl?: string;
+  kpis?: any;
 }
 
 const PROMPT_SUGERIDOS = [
-  { label: '¿Cuántas fincas tengo?', prompt: '¿Cuántas fincas y hectáreas totales tengo registradas?', icon: <Sprout size={14} color="#4ade80" /> },
-  { label: 'Balance y Gastos', prompt: '¿Cuánto he gastado este mes y cuál es el balance financiero?', icon: <TrendingUp size={14} color="#34d399" /> },
-  { label: 'Alertas de Inventario', prompt: '¿Qué productos o insumos tienen bajo stock en bodega?', icon: <Layers size={14} color="#fbbf24" /> },
-  { label: 'Riego óptimo', prompt: '¿Cuál es la frecuencia y volumen de riego óptimo para mis cultivos en el Cesar considerando las condiciones agrometeorológicas actuales?', icon: <Droplets size={14} color="#38bdf8" /> },
-  { label: 'Control fitosanitario', prompt: '¿Qué plagas y enfermedades debo monitorear prioritariamente en esta época en el departamento del Cesar y cuáles son las medidas preventivas recomendadas?', icon: <Bug size={14} color="#f87171" /> },
-  { label: 'Plan de fertilización', prompt: '¿Qué recomendaciones de fertilización y nutrición vegetal optimizan el rendimiento para los tipos de suelo predominantes en la región?', icon: <FlaskConical size={14} color="#a78bfa" /> },
+  {
+    label: 'Diagnóstico global',
+    prompt:
+      'Realiza un diagnóstico y análisis integral de toda la organización: predios, cultivos activos, finanzas, inventario en bodega, maquinaria y clima.',
+  },
+  {
+    label: 'Balance financiero',
+    prompt:
+      '¿Cuál es el balance financiero neto entre ingresos y gastos, y qué predio o cultivo genera mayor costo?',
+  },
+  {
+    label: 'Alertas de inventario',
+    prompt:
+      '¿Qué insumos y fertilizantes están en stock crítico o agotados en bodega y requieren compra urgente?',
+  },
+  {
+    label: 'Estado de maquinaria',
+    prompt:
+      '¿Cuál es el estado operativo de la maquinaria y tractores, y qué equipos tienen horas acumuladas para mantenimiento?',
+  },
+  {
+    label: 'Riego y clima en Cesar',
+    prompt:
+      'Considerando las temperaturas actuales y probabilidad de lluvia en el Cesar, ¿cuál es la recomendación de turnos de riego y labores?',
+  },
+  {
+    label: 'Manejo fitosanitario',
+    prompt:
+      '¿Qué plagas y enfermedades deben monitorearse prioritariamente en el Cesar en esta temporada y qué insumos en bodega son compatibles?',
+  },
 ];
 
-export default function AIPage() {
+function getTimeGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    return 'buenos días';
+  } else if (hour >= 12 && hour < 19) {
+    return 'buenas tardes';
+  } else {
+    return 'buenas noches';
+  }
+}
+
+function buildWelcomeMessage(name?: string): string {
+  const timeGreeting = getTimeGreeting();
+  const cleanName = name ? name.trim() : '';
+  if (cleanName) {
+    return `Hola, ${timeGreeting}, ${cleanName}. ¿Qué quieres hacer hoy?`;
+  }
+  return `Hola, ${timeGreeting}. ¿Qué quieres hacer hoy?`;
+}
+
+function AIPageInner() {
+  const user = useAuthStore((state) => state.user);
+  const userName = user?.nombre || (user as any)?.name;
+  const searchParams = useSearchParams();
+
   const [fincas, setFincas] = useState<Finca[]>([]);
-  const [producciones, setProducciones] = useState<Produccion[]>([]);
   const [selectedFinca, setSelectedFinca] = useState<string>('');
   const [consulta, setConsulta] = useState('');
-  const [response, setResponse] = useState<AIResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [executingActionId, setExecutingActionId] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  // Grabación de voz (Speech-to-Text)
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Imagen adjunta (Visión Fitosanitaria)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Historial de mensajes con saludo dinámico según la hora y usuario
+  const [messages, setMessages] = useState<Message[]>([]);
+  const autoSentRef = useRef(false);
+
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length > 0) return prev;
+      return [
+        {
+          id: 'welcome-msg',
+          role: 'assistant',
+          content: buildWelcomeMessage(userName),
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ];
+    });
+  }, [userName]);
+
+  // Si llega ?q= desde el dashboard, pre-rellenar y enviar automáticamente
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q && !autoSentRef.current) {
+      autoSentRef.current = true;
+      setConsulta(q);
+      // Pequeño delay para que el estado del saludo inicial esté listo
+      setTimeout(() => handleSendMessage(q), 300);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
+
+  // Cargar fincas para el selector
+  const loadFincas = useCallback(async () => {
     try {
-      const [fRes, pRes] = await Promise.allSettled([fincasApi.getAll(), produccionesApi.getAll()]);
-      if (fRes.status === 'fulfilled') {
-        setFincas(fRes.value.data);
-        if (fRes.value.data.length > 0) setSelectedFinca(fRes.value.data[0].id.toString());
-      }
-      if (pRes.status === 'fulfilled') setProducciones(pRes.value.data);
-    } catch (err) { console.error(err); }
+      const res = await fincasApi.getAll();
+      setFincas(res.data || []);
+    } catch (err) {
+      console.error(err);
+    }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadFincas();
+  }, [loadFincas]);
 
-  const handleSubmit = async (promptText?: string) => {
-    const text = promptText || consulta;
-    if (!text.trim()) return;
+  // Configurar reconocimiento de voz (Speech-to-Text)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'es-CO';
+
+        recognition.onresult = (event: any) => {
+          const transcript = Array.from(event.results)
+            .map((result: any) => result[0].transcript)
+            .join('');
+          setConsulta(transcript);
+        };
+
+        recognition.onerror = () => {
+          setIsRecording(false);
+        };
+
+        recognition.onend = () => {
+          setIsRecording(false);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
+  }, []);
+
+  const toggleRecording = () => {
+    if (!recognitionRef.current) {
+      useToastStore
+        .getState()
+        .warning('El reconocimiento de voz no está soportado en este navegador.');
+      return;
+    }
+
+    if (isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsRecording(true);
+        useToastStore.getState().info('Micrófono activado. Habla con claridad.');
+      } catch {
+        setIsRecording(false);
+      }
+    }
+  };
+
+  // Manejo de imagen para análisis fitosanitario
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        useToastStore.getState().warning('La imagen debe pesar menos de 5MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result as string);
+        useToastStore.getState().info('Fotografía adjunta para análisis fitosanitario.');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Enviar mensaje a AgroIA
+  const handleSendMessage = async (customPrompt?: string) => {
+    const promptToSend = customPrompt || consulta;
+    if (!promptToSend.trim() && !selectedImage) return;
+
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
+
+    const currentImage = selectedImage;
+    setSelectedImage(null);
+    setConsulta('');
+
+    const userMsgId = 'user-' + Date.now();
+    const newUserMessage: Message = {
+      id: userMsgId,
+      role: 'user',
+      content: promptToSend,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      imageUrl: currentImage || undefined,
+    };
+
+    const newHistory = [...messages, newUserMessage];
+    setMessages(newHistory);
     setLoading(true);
-    setError('');
-    setResponse(null);
 
     try {
-      const finca = fincas.find(f => f.id.toString() === selectedFinca);
-      const prods = producciones.filter(p => selectedFinca ? p : true).slice(0, 5);
+      const historyPayload = newHistory
+        .filter((m) => m.id !== 'welcome-msg')
+        .map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
 
-      const payload = {
-        consulta: text,
-        contexto: {
-          finca: finca ? { nombre: finca.nombre, ubicacion: finca.ubicacion, hectareas: finca.hectareas } : undefined,
-          producciones: prods.map(p => ({ tipo: p.tipo, variedad: p.variedad, estado: p.estado })),
-          region: 'Cesar, Colombia',
-        },
+      const res = await aiApi.chat({
+        messages: historyPayload,
+        fincaId: selectedFinca || undefined,
+        imageBase64: currentImage || undefined,
+      });
+
+      const assistantMsg: Message = {
+        id: 'assistant-' + Date.now(),
+        role: 'assistant',
+        content: res.data.text || 'Consulta procesada con éxito.',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sources: res.data.sources || ['Base de Datos AgroData'],
+        actionSuggestion: res.data.actionSuggestion || null,
+        kpis: res.data.kpis,
       };
 
-      const res = await aiApi.recomendaciones(payload);
-      setResponse(res.data);
-      if (!promptText) setConsulta('');
+      setMessages((prev) => [...prev, assistantMsg]);
     } catch {
-      setError('No se pudo obtener respuesta de la IA. Intenta de nuevo.');
+      useToastStore.getState().error('Error al comunicarse con AgroIA. Intenta nuevamente.');
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: 'error-' + Date.now(),
+          role: 'assistant',
+          content:
+            'Hubo un inconveniente al procesar la solicitud con el servidor. Por favor verifica la conexión o intenta reformular la pregunta.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Ejecutar acción sugerida por AgroIA en la base de datos
+  const handleExecuteAction = async (msgId: string, action: any) => {
+    setExecutingActionId(msgId);
+    try {
+      const res = await aiApi.executeAction(action);
+      useToastStore.getState().success(res.data.message || 'Acción ejecutada en la base de datos.');
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, actionExecuted: true } : m))
+      );
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: 'action-confirm-' + Date.now(),
+          role: 'assistant',
+          content: `Confirmación de registro: ${res.data.message || 'El registro ha sido asentado exitosamente en la base de datos.'}`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    } catch (e: any) {
+      useToastStore.getState().error(e.response?.data?.message || 'Error al ejecutar la acción.');
+    } finally {
+      setExecutingActionId(null);
+    }
+  };
+
+  // Limpiar chat
+  const handleClearChat = () => {
+    autoSentRef.current = false;
+    setMessages([
+      {
+        id: 'welcome-msg-' + Date.now(),
+        role: 'assistant',
+        content: buildWelcomeMessage(userName),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
+  };
+
+  // Renderizado limpio de Markdown
+  const renderMarkdown = (text: string) => {
+    return text.split('\n').map((line, idx) => {
+      if (line.startsWith('### ')) {
+        return (
+          <h4
+            key={idx}
+            style={{ fontSize: 14, fontWeight: 700, margin: '12px 0 6px', color: '#10b981' }}
+          >
+            {line.replace('### ', '')}
+          </h4>
+        );
+      }
+      if (line.startsWith('## ')) {
+        return (
+          <h3
+            key={idx}
+            style={{ fontSize: 15, fontWeight: 700, margin: '14px 0 6px', color: 'var(--color-text)' }}
+          >
+            {line.replace('## ', '')}
+          </h3>
+        );
+      }
+
+      if (line.trim().startsWith('- ') || line.trim().startsWith('• ')) {
+        const itemContent = line.trim().replace(/^[-•]\s*/, '');
+        return (
+          <li key={idx} style={{ marginLeft: 16, marginBottom: 4, lineHeight: 1.6 }}>
+            {parseBold(itemContent)}
+          </li>
+        );
+      }
+
+      return (
+        <p key={idx} style={{ margin: '4px 0', lineHeight: 1.65 }}>
+          {parseBold(line)}
+        </p>
+      );
+    });
+  };
+
+  const parseBold = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <strong key={i} style={{ color: 'var(--color-text)', fontWeight: 600 }}>
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <div style={{ width: 44, height: 44, background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Bot size={22} color="#a78bfa" />
+    <div
+      style={{
+        maxWidth: 860,
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'calc(100vh - 100px)',
+        minHeight: 0,
+      }}
+    >
+      {/* Top Header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 10,
+          flexWrap: 'wrap',
+          gap: 8,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div
+            style={{
+              width: 34,
+              height: 34,
+              background: 'rgba(16,185,129,0.15)',
+              border: '1px solid rgba(16,185,129,0.3)',
+              borderRadius: 9,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Bot size={18} color="#10b981" />
           </div>
           <div>
-            <h1 className="font-display" style={{ fontSize: 24, fontWeight: 700, marginBottom: 2 }}>AgroIA</h1>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>Asistente inteligente para tu finca</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Context selector */}
-      <div className="card" style={{ padding: '20px', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <Sprout size={16} color="#4ade80" />
-          <span style={{ fontSize: 14, fontWeight: 600 }}>Contexto de análisis</span>
-        </div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 6 }}>Finca a analizar</label>
-            <select className="input-field" value={selectedFinca} onChange={(e) => setSelectedFinca(e.target.value)}>
-              <option value="">Todas las fincas</option>
-              {fincas.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
-            </select>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
-            <div style={{ padding: '8px 14px', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.15)', borderRadius: 10, fontSize: 12 }}>
-              <CloudSun size={13} style={{ display: 'inline', marginRight: 4 }} color="#4ade80" />
-              <span style={{ color: 'var(--color-text-muted)' }}>Región: Cesar</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <h1
+                className="font-display"
+                style={{ fontSize: 17, fontWeight: 700, margin: 0, color: 'var(--color-text)' }}
+              >
+                AgroIA
+              </h1>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  padding: '2px 7px',
+                  borderRadius: 10,
+                  background: 'rgba(16,185,129,0.12)',
+                  color: '#10b981',
+                  border: '1px solid rgba(16,185,129,0.25)',
+                }}
+              >
+                Analista Agronómico
+              </span>
             </div>
-            <div style={{ padding: '8px 14px', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.15)', borderRadius: 10, fontSize: 12 }}>
-              <DollarSign size={13} style={{ display: 'inline', marginRight: 4 }} color="#4ade80" />
-              <span style={{ color: 'var(--color-text-muted)' }}>{producciones.length} producciones</span>
-            </div>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: 11, margin: 0 }}>
+              Consulta sobre cultivos, finanzas, inventario y clima en el Cesar
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Quick prompts */}
-      <div style={{ marginBottom: 20 }}>
-        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 10, fontWeight: 500 }}>
-          <Lightbulb size={14} style={{ display: 'inline', marginRight: 4 }} />
-          Consultas frecuentes:
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {PROMPT_SUGERIDOS.map((p, i) => (
-            <button
-              key={i}
-              onClick={() => handleSubmit(p.prompt)}
-              disabled={loading}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px',
-                background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
-                borderRadius: 20, fontSize: 13, color: 'var(--color-text-muted)', cursor: 'pointer',
-                transition: 'all 0.2s', fontFamily: 'Inter, sans-serif', fontWeight: 500,
-              }}
-            >
-              <span>{p.icon}</span> {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Input */}
-      <div className="card" style={{ padding: '16px', marginBottom: 24 }}>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-          <textarea
+        {/* Controles: Selector de finca y reinicio */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <select
             className="input-field"
-            style={{ flex: 1, resize: 'none', minHeight: 72, lineHeight: 1.5 }}
-            placeholder="Escribe tu consulta agrícola aquí... (Ej: ¿Cuándo es el mejor momento para cosechar el arroz en la región?)"
-            value={consulta}
-            onChange={(e) => setConsulta(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); }
-            }}
-            rows={3}
-          />
-          <button
-            onClick={() => handleSubmit()}
-            className="btn-primary"
-            disabled={loading || !consulta.trim()}
-            style={{ height: 44, width: 44, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            style={{ width: 'auto', minWidth: 140, maxWidth: 200, padding: '5px 10px', fontSize: 12 }}
+            value={selectedFinca}
+            onChange={(e) => setSelectedFinca(e.target.value)}
           >
-            {loading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={18} />}
+            <option value="">Todas las fincas</option>
+            {fincas.map((f) => (
+              <option key={f.id} value={String(f.id)}>
+                {f.nombre}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={handleClearChat}
+            className="btn-secondary"
+            style={{
+              padding: '5px 10px',
+              fontSize: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+            }}
+            title="Reiniciar conversación"
+          >
+            <RefreshCw size={12} />
+            <span>Nueva consulta</span>
           </button>
         </div>
-        <p style={{ fontSize: 12, color: 'var(--color-text-subtle)', marginTop: 8 }}>Presiona Enter para enviar · Shift+Enter para nueva línea</p>
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-
-      {error && (
-        <div style={{ padding: '14px 18px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, color: '#f87171', marginBottom: 20 }}>
-          {error}
-        </div>
-      )}
-
-      {/* Loading skeleton */}
-      {loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-text-muted)', fontSize: 14 }}>
-            <Loader2 size={18} style={{ animation: 'spin 1s linear infinite', color: '#a78bfa' }} />
-            AgroIA está analizando tu consulta...
-          </div>
-          {[...Array(3)].map((_, i) => <div key={i} className="skeleton" style={{ height: 100, borderRadius: 14 }} />)}
-        </div>
-      )}
-
-      {/* Response */}
-      {response && !loading && (
-        <div className="animate-fade-in-up">
-          {/* Resumen */}
-          {response.resumen && (
-            <div style={{ padding: '16px 20px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 14, marginBottom: 16, fontSize: 14, color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Bot size={16} color="#a78bfa" />
-                <span style={{ fontWeight: 600, color: '#a78bfa', fontSize: 13 }}>Análisis general</span>
-              </div>
-              {response.resumen}
-            </div>
-          )}
-
-          {/* Recomendaciones */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {(response.recomendaciones || []).map((rec, i) => {
-              const style = PRIORIDAD_STYLE[rec.prioridad] || PRIORIDAD_STYLE.baja;
-              return (
-                <div
-                  key={i}
-                  className="card"
-                  style={{ padding: '20px 24px', borderLeft: `3px solid ${style.dot}` }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 10,
-                          background: 'var(--color-surface-2)',
-                          border: '1px solid var(--color-border)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {getCategoryIcon(rec.categoria)}
-                      </div>
-                      <div>
-                        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>{rec.titulo}</h3>
-                        <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-                          {rec.categoria}
-                        </span>
-                      </div>
-                    </div>
-                    <span className={`badge ${style.badge}`} style={{ flexShrink: 0, fontSize: 11 }}>
-                      {rec.prioridad?.toUpperCase()}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: 14, color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-                    {rec.descripcion}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Source + reset */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, flexWrap: 'wrap', gap: 8 }}>
-            {response.fuente && (
-              <span style={{ fontSize: 12, color: 'var(--color-text-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <ChevronRight size={13} />
-                Fuente: {response.fuente}
-              </span>
-            )}
-            <button
-              onClick={() => setResponse(null)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, padding: '6px 10px', borderRadius: 8 }}
+      {/* Chat Messages Container */}
+      <div
+        className="card"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          marginBottom: 8,
+          borderRadius: 12,
+          background: 'var(--color-surface, #0f172a)',
+          minHeight: 0,
+        }}
+      >
+        {messages.map((msg) => {
+          const isUser = msg.role === 'user';
+          return (
+            <div
+              key={msg.id}
+              style={{
+                display: 'flex',
+                gap: 8,
+                flexDirection: isUser ? 'row-reverse' : 'row',
+                alignItems: 'flex-start',
+              }}
             >
-              <RefreshCw size={14} /> Nueva consulta
-            </button>
+              {/* Avatar */}
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 7,
+                  background: isUser ? '#3b82f6' : 'rgba(16,185,129,0.15)',
+                  border: isUser ? 'none' : '1px solid rgba(16,185,129,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  color: isUser ? '#fff' : '#10b981',
+                  fontWeight: 600,
+                  fontSize: 11,
+                }}
+              >
+                {isUser ? 'Tú' : <Bot size={14} />}
+              </div>
+
+              {/* Message Bubble */}
+              <div
+                style={{
+                  maxWidth: '78%',
+                  background: isUser
+                    ? 'rgba(59, 130, 246, 0.12)'
+                    : 'var(--color-surface-2, #1e293b)',
+                  border: isUser
+                    ? '1px solid rgba(59, 130, 246, 0.3)'
+                    : '1px solid var(--color-border, #334155)',
+                  borderRadius: 10,
+                  padding: '10px 14px',
+                }}
+              >
+                {msg.imageUrl && (
+                  <div style={{ marginBottom: 8 }}>
+                    <img
+                      src={msg.imageUrl}
+                      alt="Fotografía de muestra"
+                      style={{
+                        maxWidth: 240,
+                        maxHeight: 180,
+                        borderRadius: 6,
+                        objectFit: 'cover',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                      }}
+                    />
+                    <div style={{ fontSize: 10, color: 'var(--color-text-subtle)', marginTop: 3 }}>
+                      Fotografía adjunta para análisis técnico
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ fontSize: 13, color: 'var(--color-text)', lineHeight: 1.6 }}>
+                  {renderMarkdown(msg.content)}
+                </div>
+
+                {/* Tarjeta de Acción Sugerida */}
+                {msg.actionSuggestion && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      background: 'rgba(16, 185, 129, 0.08)',
+                      border: '1px dashed rgba(16, 185, 129, 0.4)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <ClipboardList size={14} color="#10b981" />
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>
+                        Registro sugerido para la base de datos
+                      </span>
+                    </div>
+
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '0 0 8px' }}>
+                      Acción: <strong>{msg.actionSuggestion.type.replace(/_/g, ' ')}</strong> ·{' '}
+                      {JSON.stringify(msg.actionSuggestion.data)}
+                    </p>
+
+                    <button
+                      onClick={() => handleExecuteAction(msg.id, msg.actionSuggestion)}
+                      disabled={executingActionId === msg.id || msg.actionExecuted}
+                      className="btn-primary"
+                      style={{
+                        padding: '5px 12px',
+                        fontSize: 11,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        background: msg.actionExecuted ? '#334155' : '#10b981',
+                        cursor: msg.actionExecuted ? 'default' : 'pointer',
+                      }}
+                    >
+                      {executingActionId === msg.id ? (
+                        <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                      ) : msg.actionExecuted ? (
+                        <CheckCircle2 size={12} color="#4ade80" />
+                      ) : (
+                        <ArrowRight size={12} />
+                      )}
+                      <span>
+                        {msg.actionExecuted
+                          ? 'Registro asentado'
+                          : 'Confirmar y guardar en base de datos'}
+                      </span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Footer con fuentes y hora */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: 6,
+                    paddingTop: 4,
+                    borderTop: '1px solid rgba(255,255,255,0.05)',
+                    fontSize: 10,
+                    color: 'var(--color-text-subtle)',
+                    flexWrap: 'wrap',
+                    gap: 6,
+                  }}
+                >
+                  <span>{msg.timestamp}</span>
+                  {msg.sources && msg.sources.length > 0 && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Database size={10} color="#10b981" />
+                      Fuentes: {msg.sources.join(' · ')}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {loading && (
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: 'rgba(16,185,129,0.15)',
+                border: '1px solid rgba(16,185,129,0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Bot size={16} color="#10b981" />
+            </div>
+            <div
+              style={{
+                background: 'var(--color-surface-2, #1e293b)',
+                border: '1px solid var(--color-border, #334155)',
+                borderRadius: 12,
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 12,
+                color: 'var(--color-text-muted)',
+              }}
+            >
+              <Loader2 size={14} style={{ animation: 'spin 1s linear infinite', color: '#10b981' }} />
+              <span>Consultando y procesando datos de la organización...</span>
+            </div>
           </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Sugerencias en la parte inferior (sin emojis) */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 6,
+          overflowX: 'auto',
+          paddingBottom: 6,
+          marginBottom: 6,
+          scrollbarWidth: 'none',
+        }}
+      >
+        {PROMPT_SUGERIDOS.map((p, i) => (
+          <button
+            key={i}
+            onClick={() => handleSendMessage(p.prompt)}
+            disabled={loading}
+            style={{
+              padding: '5px 11px',
+              background: 'var(--color-surface-2, #1e293b)',
+              border: '1px solid var(--color-border, #334155)',
+              borderRadius: 16,
+              fontSize: 11,
+              color: 'var(--color-text-muted)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.15s',
+              fontFamily: 'inherit',
+              fontWeight: 500,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#10b981';
+              e.currentTarget.style.color = 'var(--color-text)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--color-border, #334155)';
+              e.currentTarget.style.color = 'var(--color-text-muted)';
+            }}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Vista previa de imagen seleccionada */}
+      {selectedImage && (
+        <div
+          style={{
+            marginBottom: 6,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'var(--color-surface-2, #1e293b)',
+            padding: '5px 10px',
+            borderRadius: 8,
+            border: '1px solid #10b981',
+            maxWidth: 'fit-content',
+          }}
+        >
+          <img
+            src={selectedImage}
+            alt="Muestra adjunta"
+            style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover' }}
+          />
+          <span style={{ fontSize: 11, color: '#10b981', fontWeight: 600 }}>
+            Fotografía adjunta para análisis
+          </span>
+          <button
+            onClick={() => setSelectedImage(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--color-text-muted)',
+            }}
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
-      {/* Empty state */}
-      {!response && !loading && !error && (
-        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-          <div style={{ width: 72, height: 72, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <Bot size={32} color="#a78bfa" />
-          </div>
-          <h3 style={{ fontSize: 17, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 8 }}>
-            Pregúntale a AgroIA
-          </h3>
-          <p style={{ fontSize: 13, color: 'var(--color-text-subtle)', maxWidth: 400, margin: '0 auto', lineHeight: 1.6 }}>
-            Obtén recomendaciones personalizadas sobre cultivos, clima, fertilización, plagas y más,
-            basadas en el contexto de tus fincas en el Cesar.
-          </p>
-        </div>
-      )}
+      {/* Input Box with Voice & Image */}
+      <div
+        className="card"
+        style={{
+          padding: '10px 14px',
+          borderRadius: 12,
+          background: 'var(--color-surface, #1e293b)',
+          border: '1px solid var(--color-border, #334155)',
+          display: 'flex',
+          gap: 8,
+          alignItems: 'center',
+        }}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImageChange}
+          accept="image/*"
+          style={{ display: 'none' }}
+        />
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={loading}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: selectedImage ? '#10b981' : 'var(--color-text-muted)',
+            cursor: 'pointer',
+            padding: 6,
+            borderRadius: 6,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          title="Adjuntar fotografía para diagnóstico de plagas, hojas o suelo"
+        >
+          <ImageIcon size={18} />
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleRecording}
+          disabled={loading}
+          style={{
+            background: isRecording ? 'rgba(239,68,68,0.2)' : 'transparent',
+            border: isRecording ? '1px solid #ef4444' : 'none',
+            color: isRecording ? '#ef4444' : 'var(--color-text-muted)',
+            cursor: 'pointer',
+            padding: 6,
+            borderRadius: 6,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          title={isRecording ? 'Detener dictado' : 'Dictar por voz'}
+        >
+          {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
+        </button>
+
+        <textarea
+          className="input-field"
+          style={{
+            flex: 1,
+            resize: 'none',
+            minHeight: 38,
+            maxHeight: 100,
+            lineHeight: 1.4,
+            border: 'none',
+            background: 'transparent',
+            padding: '8px 4px',
+            fontSize: 13,
+            outline: 'none',
+          }}
+          placeholder={
+            isRecording
+              ? 'Escuchando tu voz...'
+              : 'Escribe tu consulta sobre cultivos, finanzas, bodega, maquinaria o clima...'
+          }
+          value={consulta}
+          onChange={(e) => setConsulta(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSendMessage();
+            }
+          }}
+          rows={1}
+        />
+
+        <button
+          onClick={() => handleSendMessage()}
+          className="btn-primary"
+          disabled={loading || (!consulta.trim() && !selectedImage)}
+          style={{
+            height: 38,
+            width: 38,
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            borderRadius: 8,
+          }}
+        >
+          {loading ? (
+            <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+          ) : (
+            <Send size={16} />
+          )}
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '4px 4px 0',
+          fontSize: 10,
+          color: 'var(--color-text-subtle)',
+        }}
+      >
+        <span>Enter para enviar. Puedes hablar por micrófono o adjuntar imágenes.</span>
+        <span>AgroData Cesar</span>
+      </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
+  );
+}
+
+export default function AIPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--color-text-muted)' }}>Cargando AgroIA...</div>}>
+      <AIPageInner />
+    </Suspense>
   );
 }

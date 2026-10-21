@@ -562,3 +562,64 @@ body {
 }
 
 
+
+/* ─── AgroIA Chat Responsive ─────────────────────────────────────────────── */
+
+/* Tablets y pantallas medianas */
+@media (max-width: 900px) {
+  .agroia-chat-container {
+    height: calc(100vh - 90px) !important;
+    padding: 0 4px;
+  }
+}
+
+/* Móviles */
+@media (max-width: 640px) {
+  .agroia-chat-container {
+    height: calc(100dvh - 70px) !important;
+    max-width: 100% !important;
+  }
+
+  .agroia-header-controls {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+
+  .agroia-header-controls select {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .agroia-bubble {
+    max-width: 90% !important;
+    font-size: 12px !important;
+  }
+
+  .agroia-suggestions-bar {
+    gap: 4px !important;
+  }
+
+  .agroia-suggestions-bar button {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+}
+
+/* ─── Dashboard Responsive Grid ─────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .dashboard-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

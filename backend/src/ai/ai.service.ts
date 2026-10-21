@@ -3,6 +3,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ClimaService } from '../clima/clima.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
@@ -12,13 +17,13 @@ export class AiService {
     private climaService: ClimaService,
   ) {}
 
-  // ─── HERRAMIENTAS DE DATOS CONTROLADAS (DATA TOOLS) ──────────────────────────
+  // ─── CONSULTAS A LA BASE DE DATOS (DATA TOOLS) ─────────────────────────────
 
   async getFincas(orgId: string) {
     return this.prisma.finca.findMany({
       where: { organizationId: orgId },
       include: {
-        lotes: { select: { id: true, name: true, area: true } },
+        lotes: true,
       },
       orderBy: { name: 'asc' },
     });
@@ -33,6 +38,7 @@ export class AiService {
             finca: { select: { id: true, name: true, location: true } },
           },
         },
+        diarios: { orderBy: { date: 'desc' }, take: 10 },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -51,479 +57,560 @@ export class AiService {
   async getFinanzas(orgId: string) {
     return this.prisma.finanza.findMany({
       where: { organizationId: orgId },
+      include: {
+        finca: { select: { id: true, name: true } },
+        produccion: { select: { id: true, name: true } },
+      },
       orderBy: { date: 'desc' },
-      take: 20,
+      take: 100,
+    });
+  }
+
+  async getPersonal(orgId: string) {
+    return this.prisma.empleado.findMany({
+      where: { organizationId: orgId },
+      include: {
+        finca: { select: { id: true, name: true } },
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async getMaquinaria(orgId: string) {
+    return this.prisma.maquinaria.findMany({
+      where: { organizationId: orgId },
+      include: {
+        finca: { select: { id: true, name: true } },
+      },
+      orderBy: { name: 'asc' },
     });
   }
 
   async getWeatherForFinca(finca: any) {
     const lat = finca?.latitude ?? 10.4631;
     const lon = finca?.longitude ?? -73.2532;
-    return this.climaService.getCurrentWeather(finca?.location || 'Valledupar', lat, lon);
+    return this.climaService.getWeather(lat, lon);
   }
 
-  // ─── GENERACIÓN DE ASESORÍAS GENERALES PARA EL DASHBOARD ───────────────────
+  // ─── INSTANTÁNEA GLOBAL DE LA BASE DE DATOS (BUSINESS INTELLIGENCE) ─────────
+
+  async getGlobalDatabaseSnapshot(orgId: string, fincaId?: string) {
+    const [fincasRaw, produccionesRaw, inventarioRaw, finanzasRaw, personalRaw, maquinariaRaw] =
+      await Promise.all([
+        this.getFincas(orgId),
+        this.getProducciones(orgId),
+        this.getInventario(orgId),
+        this.getFinanzas(orgId),
+        this.getPersonal(orgId),
+        this.getMaquinaria(orgId),
+      ]);
+
+    // Filtrar por finca si se seleccionó una específica
+    const fincas = fincaId ? fincasRaw.filter((f) => f.id === fincaId) : fincasRaw;
+    const producciones = fincaId
+      ? produccionesRaw.filter((p) => p.lote?.finca?.id === fincaId)
+      : produccionesRaw;
+    const inventario = fincaId
+      ? inventarioRaw.filter((i) => i.fincaId === fincaId || i.finca?.id === fincaId)
+      : inventarioRaw;
+    const finanzas = fincaId
+      ? finanzasRaw.filter((f) => f.fincaId === fincaId || f.finca?.id === fincaId)
+      : finanzasRaw;
+    const personal = fincaId
+      ? personalRaw.filter((p) => p.fincaId === fincaId || p.finca?.id === fincaId)
+      : personalRaw;
+    const maquinaria = fincaId
+      ? maquinariaRaw.filter((m) => m.fincaId === fincaId || m.finca?.id === fincaId)
+      : maquinariaRaw;
+
+    const weatherTarget = fincas[0] || fincasRaw[0];
+    const weather = await this.getWeatherForFinca(weatherTarget);
+
+    // Métricas globales calculadas
+    const totalHectareas = fincas.reduce((s, f) => s + (f.area || 0), 0);
+    const totalLotes = fincas.reduce((s, f) => s + (f.lotes?.length || 0), 0);
+    const produccionesActivas = producciones.filter((p) => p.status === 'ACTIVE');
+
+    const totalIngresos = finanzas
+      .filter((f) => f.type === 'INGRESO')
+      .reduce((s, f) => s + f.amount, 0);
+    const totalGastos = finanzas
+      .filter((f) => f.type === 'GASTO')
+      .reduce((s, f) => s + f.amount, 0);
+    const balanceNeto = totalIngresos - totalGastos;
+
+    const inventarioBajoStock = inventario.filter((i) => i.quantity <= i.minAlertQuantity);
+    const valorInventario = inventario.reduce((s, i) => s + (i.quantity || 0) * (i.costo || 0), 0);
+
+    const maquinariaOperativa = maquinaria.filter(
+      (m) => m.status === 'OPERATIVE' || (m as any).estado === 'OPERATIVO',
+    );
+    const nominaMensual = personal.reduce((s, p) => s + (p.dailyRate || 0), 0);
+
+    return {
+      fincas,
+      producciones,
+      produccionesActivas,
+      inventario,
+      inventarioBajoStock,
+      finanzas,
+      personal,
+      maquinaria,
+      maquinariaOperativa,
+      weather,
+      kpis: {
+        fincasCount: fincas.length,
+        totalHectareas,
+        totalLotes,
+        produccionesActivasCount: produccionesActivas.length,
+        totalIngresos,
+        totalGastos,
+        balanceNeto,
+        inventarioCount: inventario.length,
+        inventarioBajoStockCount: inventarioBajoStock.length,
+        valorInventario,
+        personalCount: personal.length,
+        nominaMensual,
+        maquinariaCount: maquinaria.length,
+        maquinariaOperativaCount: maquinariaOperativa.length,
+      },
+    };
+  }
+
+  // ─── CHAT INTELIGENTE MULTITURNO CON ACCESO TOTAL A LA BASE DE DATOS ───────
+
+  async chat(
+    orgId: string,
+    messages: ChatMessage[],
+    fincaId?: string,
+    imageBase64?: string,
+  ) {
+    const snapshot = await this.getGlobalDatabaseSnapshot(orgId, fincaId);
+    const userMessage = messages[messages.length - 1]?.content || '';
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      this.logger.warn('GEMINI_API_KEY no configurada. Utilizando motor analítico local.');
+      return this.generateSmartChatFallback(userMessage, snapshot);
+    }
+
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      // Modelo multimodal rápido y preciso con Google Search grounding
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        tools: [{ googleSearch: {} } as any],
+      });
+
+      // Preparar el resumen estructurado de la base de datos real
+      const dbContext = {
+        resumenEjecutivo: snapshot.kpis,
+        climaActualCesar: {
+          temp: `${snapshot.weather.temperature}°C`,
+          humedad: `${snapshot.weather.humidity}%`,
+          condicion: snapshot.weather.conditions,
+          lluviaProb: `${snapshot.weather.rainProbability}%`,
+          viento: `${snapshot.weather.windSpeed} km/h`,
+        },
+        predios: snapshot.fincas.map((f) => ({
+          nombre: f.name,
+          areaHa: f.area,
+          lotes: f.lotes.map((l) => ({
+            nombre: l.name,
+            area: l.area,
+            suelo: l.soilType,
+            cultivo: l.cultivoActual,
+            estado: l.status,
+            riego: l.sistemaRiego,
+          })),
+        })),
+        produccionesEnCurso: snapshot.produccionesActivas.map((p) => ({
+          nombre: p.name,
+          tipo: p.type,
+          finca: p.lote?.finca?.name,
+          lote: p.lote?.name,
+          rendimientoEsperado: `${p.expectedYield || 0} ${p.unit || ''}`,
+          diariosRecientes: p.diarios?.slice(0, 3).map((d) => ({
+            actividad: d.activity,
+            plagas: d.diseases,
+            abono: d.fertilizerUsed,
+            riegoLitros: d.waterIrrigation,
+          })),
+        })),
+        alertasStockBodega: snapshot.inventarioBajoStock.map((i) => ({
+          insumo: i.name,
+          disponible: `${i.quantity} ${i.unit}`,
+          minimoAlerta: `${i.minAlertQuantity} ${i.unit}`,
+          proveedor: i.proveedor,
+        })),
+        finanzasRecientes: snapshot.finanzas.slice(0, 10).map((f) => ({
+          tipo: f.type,
+          categoria: f.category,
+          monto: f.amount,
+          concepto: f.description,
+          finca: f.finca?.name,
+        })),
+        maquinaria: snapshot.maquinaria.map((m) => ({
+          equipo: m.name,
+          tipo: m.tipo,
+          estado: m.status,
+          horas: m.horasUso,
+          finca: m.finca?.name,
+        })),
+        personal: snapshot.personal.map((p) => ({
+          nombre: `${p.name} ${p.lastName || ''}`.trim(),
+          cargo: p.role,
+          finca: p.finca?.name,
+        })),
+      };
+
+      const systemPrompt = `
+Eres AgroIA, el Copiloto Agronómico y Analista Ejecutivo de AgroData para el Departamento del Cesar, Colombia.
+Cuentas con acceso en tiempo real a la base de datos empresarial de la organización agropecuaria.
+También tienes acceso a búsqueda en internet para complementar cualquier información que no esté en la base de datos interna.
+
+DATOS VIVOS Y REALES DE LA BASE DE DATOS (AUDITORÍA ACTUAL):
+${JSON.stringify(dbContext, null, 2)}
+
+INSTRUCCIONES Y REGLAS OPERATIVAS:
+1. Responde SIEMPRE fundamentado en las cifras y datos REALES suministrados arriba. NUNCA inventes nombres de predios, cultivos, hectáreas ni montos que no existan en la base de datos.
+2. Si el usuario pide un análisis global, cruza la información entre departamentos (ej. cómo las finanzas afectan la siembra, cómo el clima condiciona el inventario de fertilizantes o los turnos de riego).
+3. Si la base de datos interna no contiene información suficiente para responder (precios de mercado, normativa ICA, dosis técnicas de productos, ciclos de plagas, recomendaciones varietales, condiciones externas del Cesar), usa la búsqueda en internet para complementar. En ese caso, indica claramente qué información proviene de la base de datos interna y qué proviene de fuentes externas.
+4. Conoce la agronomía propia del Cesar:
+   - Valledupar, Codazzi, La Paz: arroz de riego/secano, maíz, ganadería de doble propósito, altas temperaturas diurnas.
+   - San Alberto, San Martín, Aguachica: palma de aceite, cereales, suelos aluviales fértiles.
+   - Serranía del Perijá y estribaciones de la Sierra Nevada: café especial bajo sombra, cacao, frutales.
+5. Si el usuario adjunta una fotografía o consulta sobre sanidad vegetal, actúa como fitopatólogo experto:
+   - Identifica la plaga, enfermedad o carencia nutricional.
+   - Recomienda un plan de Manejo Integrado de Plagas (MIP).
+   - Revisa si en su inventario actual tienen insumos compatibles para aplicar de inmediato.
+   - Si no tienes información suficiente en la base de datos, busca en internet dosis, períodos de carencia y alternativas registradas ante el ICA Colombia.
+6. Si el usuario te pide registrar un gasto, diario o insumo, incluye al final de tu respuesta el bloque de acción ejecutable:
+   <<<ACTION:{"type":"REGISTRAR_GASTO"|"REGISTRAR_DIARIO"|"ACTUALIZAR_INVENTARIO","data":{...}}>>>
+7. Utiliza formato Markdown profesional (negritas, listas estructuradas, tablas técnicas).
+8. ESTRICTAMENTE PROHIBIDO usar emojis o emoticones en tus respuestas. Mantén un tono técnico, formal, sobrio y analítico de informe agronómico.
+`;
+
+      // Construir historial de mensajes para Gemini
+      const conversationHistory = messages.slice(0, -1).map((m) => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }));
+
+      const chatHistory = [
+        { role: 'user', parts: [{ text: systemPrompt }] },
+        { role: 'model', parts: [{ text: 'Entendido. Soy AgroIA, tu copiloto agronómico con acceso total a los datos de tu organización en el Cesar. Cuando la base de datos interna no sea suficiente, consultaré fuentes externas para complementar el análisis.' }] },
+        ...conversationHistory,
+      ];
+
+      // Intentar con Google Search grounding; si falla, reintentar sin grounding
+      let chatSession: any;
+      try {
+        chatSession = model.startChat({ history: chatHistory });
+      } catch {
+        const modelPlain = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        chatSession = modelPlain.startChat({ history: chatHistory });
+      }
+
+      let contentParts: any[] = [{ text: userMessage }];
+
+      if (imageBase64) {
+        // Extraer mimeType si viene en formato data:image/jpeg;base64,...
+        const match = imageBase64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+        const mimeType = match ? match[1] : 'image/jpeg';
+        const rawBase64 = match ? match[2] : imageBase64;
+
+        contentParts = [
+          {
+            inlineData: {
+              data: rawBase64,
+              mimeType,
+            },
+          },
+          { text: userMessage || 'Analiza esta imagen desde una perspectiva agronómica y fitosanitaria.' },
+        ];
+      }
+
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Gemini timeout')), 25000),
+      );
+
+      const responsePromise = chatSession.sendMessage(contentParts);
+      const result = (await Promise.race([responsePromise, timeoutPromise])) as any;
+      let text = result.response.text();
+
+      // Detectar si Gemini usó búsqueda web (grounding metadata)
+      const groundingMetadata = result.response?.candidates?.[0]?.groundingMetadata;
+      const usedWebSearch = !!(groundingMetadata?.webSearchQueries?.length > 0 || groundingMetadata?.searchEntryPoint);
+
+      // Extraer acción sugerida si existe
+      let actionSuggestion = null;
+      const actionMatch = text.match(/<<<ACTION:(.*?)>>>/);
+      if (actionMatch) {
+        try {
+          actionSuggestion = JSON.parse(actionMatch[1]);
+          text = text.replace(/<<<ACTION:(.*?)>>>/, '').trim();
+        } catch (e) {
+          this.logger.warn(`Error al parsear action sugerida: ${e}`);
+        }
+      }
+
+      const suggestions = this.generateFollowUpQuestions(userMessage, snapshot);
+      const sources = ['Base de Datos AgroData', 'Fincas & Lotes', 'Finanzas', 'Inventario', 'Clima'];
+      if (usedWebSearch) {
+        sources.push('Búsqueda Web (Google)');
+      }
+
+      return {
+        text,
+        fuente: usedWebSearch
+          ? 'AgroIA + Base de Datos + Búsqueda Web (Gemini)'
+          : 'AgroIA + Base de Datos en Tiempo Real (Gemini)',
+        suggestions,
+        actionSuggestion,
+        sources,
+        kpis: snapshot.kpis,
+      };
+    } catch (error) {
+      this.logger.warn(`Gemini API unavailable: ${(error as any)?.message}. Usando motor analítico local.`);
+      return this.generateSmartChatFallback(userMessage, snapshot);
+    }
+  }
+
+  // ─── EJECUCIÓN DE ACCIONES POR LENGUAJE NATURAL ─────────────────────────────
+
+  async executeAction(orgId: string, action: { type: string; data: any }) {
+    const { type, data } = action;
+
+    if (type === 'REGISTRAR_GASTO' || type === 'REGISTRAR_INGRESO') {
+      const created = await this.prisma.finanza.create({
+        data: {
+          type: type === 'REGISTRAR_INGRESO' ? 'INGRESO' : 'GASTO',
+          category: data.category || 'VARIOS',
+          amount: parseFloat(data.amount || data.monto || 0),
+          description: data.description || data.descripcion || 'Registrado mediante AgroIA',
+          fincaId: data.fincaId || null,
+          produccionId: data.produccionId || null,
+          organizationId: orgId,
+        },
+      });
+      return { success: true, message: `Transacción por $${created.amount.toLocaleString('es-CO')} registrada correctamente.`, record: created };
+    }
+
+    if (type === 'REGISTRAR_DIARIO') {
+      if (!data.produccionId) {
+        throw new Error('Se requiere especificar la producción para el diario de campo.');
+      }
+      const created = await this.prisma.diarioProduccion.create({
+        data: {
+          produccionId: data.produccionId,
+          activity: data.activity || data.actividad || 'Labor de campo',
+          observations: data.observations || data.observaciones || null,
+          diseases: data.diseases || data.plagas || null,
+          fertilizerUsed: data.fertilizerUsed || data.abono || null,
+          waterIrrigation: data.waterIrrigation ? parseFloat(data.waterIrrigation) : null,
+        },
+      });
+      return { success: true, message: 'Entrada en el diario de campo registrada con éxito.', record: created };
+    }
+
+    if (type === 'ACTUALIZAR_INVENTARIO') {
+      const created = await this.prisma.inventario.create({
+        data: {
+          name: data.name || data.nombre,
+          category: data.category || data.categoria || 'INSUMO',
+          quantity: parseFloat(data.quantity || data.cantidad || 0),
+          unit: data.unit || data.unidad || 'unidades',
+          minAlertQuantity: parseFloat(data.minAlertQuantity || data.stockMinimo || 10),
+          costo: data.costo ? parseFloat(data.costo) : null,
+          proveedor: data.proveedor || null,
+          fincaId: data.fincaId || null,
+          organizationId: orgId,
+        },
+      });
+      return { success: true, message: `Insumo "${created.name}" agregado a bodega.`, record: created };
+    }
+
+    throw new Error(`Tipo de acción no soportado: ${type}`);
+  }
+
+  // ─── GENERADOR DE PREGUNTAS SUGERIDAS INTELIGENTES ──────────────────────────
+
+  private generateFollowUpQuestions(query: string, snapshot: any): string[] {
+    const q = (query || '').toLowerCase();
+    const suggestions: string[] = [];
+
+    if (q.includes('gasto') || q.includes('costo') || q.includes('finanza')) {
+      suggestions.push('¿Cuáles son los insumos que más gastos generan en bodega?');
+      suggestions.push('¿Cuál es el margen operativo por predio?');
+    } else if (q.includes('inventario') || q.includes('stock')) {
+      suggestions.push('¿Qué insumos debo reponer urgentemente para no frenar labores?');
+      suggestions.push('¿Cuánto dinero total tenemos inmovilizado en bodega?');
+    } else if (q.includes('clima') || q.includes('lluvia') || q.includes('riego')) {
+      suggestions.push('¿Cómo optimizar los turnos de riego con las temperaturas del Cesar?');
+      suggestions.push('¿Hay riesgo fitosanitario por la humedad actual?');
+    } else {
+      suggestions.push('Hazme un balance integral de todo el negocio');
+      suggestions.push('¿Qué maquinaria requiere mantenimiento próximamente?');
+      suggestions.push('¿Cómo están los rendimientos esperados en las cosechas activas?');
+    }
+
+    return suggestions.slice(0, 3);
+  }
+
+  // ─── MOTOR ANALÍTICO LOCAL INTELIGENTE (CUANDO GEMINI ESTÁ OFFLINE) ──────────
+
+  private generateSmartChatFallback(query: string, snapshot: any) {
+    const q = (query || '').toLowerCase().trim();
+    const formatCOP = (v: number) =>
+      new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
+
+    const { kpis, weather, fincas, produccionesActivas, inventarioBajoStock, maquinaria } = snapshot;
+
+    let text = '';
+    const suggestions: string[] = [
+      '¿Qué insumos tienen stock crítico?',
+      '¿Cuál es el estado de la maquinaria?',
+      '¿Cómo afectará el clima del Cesar a mis cultivos esta semana?',
+    ];
+
+    if (q.includes('balance') || q.includes('global') || q.includes('todo') || q.includes('resumen') || q.includes('negocio')) {
+      text = `### Diagnostico y Analisis Global de la Organizacion
+
+**1. Territorio y Predios:**
+- Administras **${kpis.fincasCount} predio(s)** con un area catastral acumulada de **${kpis.totalHectareas.toFixed(1)} hectareas** distribuidas en **${kpis.totalLotes} parcelas o lotes**.
+
+**2. Operacion de Cultivos y Cosechas:**
+- Cuentas con **${kpis.produccionesActivasCount} ciclo(s) productivo(s) activo(s)** (${produccionesActivas.map((p: any) => p.name).join(', ') || 'sin cosechas en curso'}).
+
+**3. Salud Financiera:**
+- **Ingresos Registrados:** ${formatCOP(kpis.totalIngresos)}
+- **Costos y Gastos:** ${formatCOP(kpis.totalGastos)}
+- **Margen Operativo Neto:** **${formatCOP(kpis.balanceNeto)}** (${kpis.balanceNeto >= 0 ? 'Superavit operativo' : 'Deficit contable'}).
+
+**4. Inventario y Almacen:**
+- Registras **${kpis.inventarioCount} insumos** valorados en **${formatCOP(kpis.valorInventario)}**. 
+- Existen **${kpis.inventarioBajoStockCount} producto(s) en umbral critico de stock** (${inventarioBajoStock.map((i: any) => i.name).join(', ') || 'Ninguno'}).
+
+**5. Condiciones Agrometeorologicas (Cesar):**
+- Temperatura actual: **${weather.temperature}°C** | Humedad: **${weather.humidity}%** | Probabilidad de lluvia: **${weather.rainProbability}%**.`;
+    } else if (q.includes('maquinaria') || q.includes('tractor') || q.includes('equipo')) {
+      const operativas = maquinaria.filter((m: any) => m.status === 'OPERATIVE');
+      text = `### Auditoria de Maquinaria y Equipos
+
+- **Total de unidades:** ${maquinaria.length} equipos registrados.
+- **Operatividad:** **${operativas.length} operativas** de ${maquinaria.length}.
+- **Flota registrada:** ${maquinaria.map((m: any) => `${m.name} (${m.status === 'OPERATIVE' ? 'Operativo' : 'En Mantenimiento'}, ${m.horasUso || 0} hrs)`).join('; ')}.
+- **Recomendacion agronomica:** Programa cambio de lubricantes y filtros en equipos con mas de 250 horas de labor de campo.`;
+    } else {
+      text = `### Consulta Agronomica Procesada
+
+Actualmente tu organizacion cuenta con **${kpis.fincasCount} fincas (${kpis.totalHectareas.toFixed(1)} ha)** en el Cesar, con balance financiero de **${formatCOP(kpis.balanceNeto)}** y clima de **${weather.temperature}°C (${weather.conditions})**.
+
+Si deseas un analisis detallado sobre fitosanidad, costos o fertilizacion para tus lotes, formula tu pregunta especifica o sube una fotografia para diagnostico directo.`;
+    }
+
+    return {
+      text,
+      fuente: 'Motor Analítico Local AgroData (Cesar)',
+      suggestions,
+      actionSuggestion: null,
+      sources: ['Base de Datos SQLite', 'Servicio Meteorológico Cesar'],
+      kpis,
+    };
+  }
+
+  // ─── RECOMENDACIONES LEGACY (COMPATIBILIDAD CON VISTAS EXISTENTES) ──────────
 
   async getAdvisories(orgId: string) {
-    const [inventory, finances, productions, fincas] = await Promise.all([
-      this.getInventario(orgId),
-      this.getFinanzas(orgId),
-      this.getProducciones(orgId),
-      this.getFincas(orgId),
-    ]);
+    const snapshot = await this.getGlobalDatabaseSnapshot(orgId);
+    const advisories: any[] = [];
 
-    const activeProds = productions.filter((p) => p.status === 'ACTIVE');
-    const weather = await this.climaService.getWeather(
-      fincas[0]?.latitude ?? 10.4631,
-      fincas[0]?.longitude ?? -73.2532,
-    );
-
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
-      return this.generateSmartMockAdvisories(inventory, finances, activeProds, weather, fincas);
-    }
-
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-      const prompt = `
-        Eres un asesor agrícola experto de AgroData para el departamento del Cesar, Colombia.
-        Analiza los datos reales de la organización y genera exactamente 3 recomendaciones concretas y personalizadas en formato JSON:
-
-        DATOS REALES:
-        - Fincas registradas (${fincas.length}): ${JSON.stringify(fincas.map((f) => ({ name: f.name, area: f.area, loc: f.location })))}
-        - Producciones activas (${activeProds.length}): ${JSON.stringify(activeProds.map((p) => ({ name: p.name, type: p.type, yield: p.expectedYield, unit: p.unit, finca: p.lote?.finca?.name })))}
-        - Inventario (${inventory.length} items): ${JSON.stringify(inventory.map((i) => ({ name: i.name, qty: i.quantity, unit: i.unit, minAlert: i.minAlertQuantity })))}
-        - Finanzas recientes: ${JSON.stringify(finances.slice(0, 8).map((f) => ({ type: f.type, cat: f.category, amount: f.amount })))}
-        - Clima actual: ${weather.temperature}°C, ${weather.humidity}% humedad, ${weather.conditions}.
-
-        Devuelve ÚNICAMENTE un arreglo JSON con 3 elementos:
-        [
-          {
-            "id": "adv-1",
-            "type": "WARNING" | "INFO" | "CRITICAL",
-            "title": "Título descriptivo",
-            "message": "Mensaje fundamentado en los datos reales del usuario.",
-            "category": "INVENTARIO" | "CLIMA" | "FINANZAS" | "CULTIVO"
-          }
-        ]
-      `;
-
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Gemini timeout')), 12000),
-      );
-      const geminiPromise = model.generateContent(prompt);
-      const result = (await Promise.race([geminiPromise, timeoutPromise])) as any;
-      const cleanText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '').trim();
-      return JSON.parse(cleanText);
-    } catch (error) {
-      this.logger.warn(`Gemini API unavailable, using internal smart advisory engine: ${(error as any)?.message}`);
-      return this.generateSmartMockAdvisories(inventory, finances, activeProds, weather, fincas);
-    }
-  }
-
-  // ─── CONSULTAS PERSONALIZADAS Y PREGUNTAS EN VIVO ───────────────────────────
-
-  async getCustomRecomendaciones(orgId: string, consulta: string, contexto: any) {
-    const [inventory, finances, productions, fincas] = await Promise.all([
-      this.getInventario(orgId),
-      this.getFinanzas(orgId),
-      this.getProducciones(orgId),
-      this.getFincas(orgId),
-    ]);
-
-    const activeProds = productions.filter((p) => p.status === 'ACTIVE');
-    const targetFinca = contexto?.finca || fincas[0];
-    const weather = await this.climaService.getWeather(
-      targetFinca?.latitude ?? 10.4631,
-      targetFinca?.longitude ?? -73.2532,
-    );
-
-    // Intent recognition on user's query against real database values
-    const queryResult = this.evaluateDirectQuery(consulta, fincas, activeProds, inventory, finances, weather);
-    if (queryResult) {
-      return queryResult;
-    }
-
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
-      return this.generateSmartFallback(consulta, inventory, finances, activeProds, weather, contexto, fincas);
-    }
-
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-      const prompt = `
-        Eres AgroIA, el asesor agronómico y analista técnico de AgroData para el departamento del Cesar, Colombia.
-        El usuario ha consultado: "${consulta}"
-
-        DATOS REALES DE LA ORGANIZACIÓN DEL USUARIO:
-        - Fincas (${fincas.length}): ${JSON.stringify(fincas.map((f) => ({ nombre: f.name, hectareas: f.area, ubicacion: f.location, lotes: f.lotes.length })))}
-        - Producciones activas (${activeProds.length}): ${JSON.stringify(activeProds.map((p) => ({ nombre: p.name, tipo: p.type, finca: p.lote?.finca?.name })))}
-        - Inventario con alertas de bajo stock: ${JSON.stringify(inventory.filter((i) => i.quantity <= i.minAlertQuantity).map((i) => ({ nombre: i.name, cantidad: i.quantity, minimo: i.minAlertQuantity, unidad: i.unit })))}
-        - Total de insumos registrados: ${inventory.length}
-        - Finanzas (últimos registros): Ingresos totales acumulados: ${finances.filter((f) => f.type === 'INGRESO').reduce((s, f) => s + f.amount, 0)}, Gastos totales acumulados: ${finances.filter((f) => f.type === 'GASTO').reduce((s, f) => s + f.amount, 0)}
-        - Clima actual: ${weather.temperature}°C, humedad ${weather.humidity}%, ${weather.conditions}.
-
-        REGLAS DE RESPUESTA:
-        1. Responde a la pregunta del usuario utilizando ÚNICAMENTE sus datos REALES. No inventes cifras, predios ni nombres.
-        2. Si no existen datos suficientes para responder con precisión, tu resumen debe iniciar exactamente con: "No hay información suficiente para realizar esta consulta." y explicar qué dato falta registrar.
-        3. Prohibido usar frases como "Como modelo de lenguaje", "Como IA", "Como inteligencia artificial". Habla con tono técnico y profesional de analista de campo.
-        4. Devuelve estrictamente un objeto JSON con el siguiente formato:
-        {
-          "resumen": "Respuesta clara, ejecutiva y fundamentada en datos exactos.",
-          "recomendaciones": [
-            {
-              "titulo": "Título técnico",
-              "descripcion": "Instrucción agronómica u operativa precisa.",
-              "prioridad": "alta" | "media" | "baja",
-              "categoria": "CLIMA" | "RIEGO" | "PLAGAS" | "FERTILIZACION" | "COSECHA" | "ECONOMICO" | "SUELO" | "GENERAL"
-            }
-          ]
-        }
-      `;
-
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Gemini timeout')), 15000),
-      );
-      const geminiPromise = model.generateContent(prompt);
-      const result = (await Promise.race([geminiPromise, timeoutPromise])) as any;
-      const cleanText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '').trim();
-      return JSON.parse(cleanText);
-    } catch (error) {
-      this.logger.warn(`Gemini unavailable, processing with local analytical engine: ${(error as any)?.message}`);
-      return this.generateSmartFallback(consulta, inventory, finances, activeProds, weather, contexto, fincas);
-    }
-  }
-
-  // ─── EVALUADOR DE CONSULTAS DIRECTAS BASADO EN DATOS REALES ─────────────────
-
-  private evaluateDirectQuery(
-    consulta: string,
-    fincas: any[],
-    productions: any[],
-    inventory: any[],
-    finances: any[],
-    weather: any
-  ) {
-    const q = consulta.toLowerCase().trim();
-
-    // 1. Preguntas sobre Fincas
-    if (q.includes('finca') || q.includes('predio') || q.includes('terreno')) {
-      const nombres = fincas.map((f) => `${f.name} (${f.area} ha en ${f.location || 'Colombia'})`).join(', ');
-      const totalHa = fincas.reduce((acc, f) => acc + (f.area || 0), 0);
-      return {
-        resumen: fincas.length === 0
-          ? 'No hay datos suficientes para responder esta consulta. No tienes fincas registradas en tu organización.'
-          : `Actualmente tienes ${fincas.length} finca(s) registrada(s) con un total de ${totalHa.toFixed(1)} hectáreas: ${nombres}.`,
-        recomendaciones: [
-          {
-            titulo: 'Verificación de Predios',
-            descripcion: 'Mantén actualizadas las coordenadas satelitales y los lotes de cada predio para un seguimiento agronómico preciso.',
-            prioridad: 'media',
-            categoria: 'GENERAL',
-          },
-        ],
-      };
-    }
-
-    // 2. Preguntas sobre Producción
-    if (q.includes('produccion') || q.includes('producción') || q.includes('cultivo') || q.includes('cosecha') || q.includes('siembra')) {
-      const totalProds = productions.length;
-      if (totalProds === 0) {
-        return {
-          resumen: 'No hay datos suficientes para responder esta consulta. No registras producciones activas en este momento.',
-          recomendaciones: [
-            {
-              titulo: 'Crear Ciclo Productivo',
-              descripcion: 'Ingresa al módulo "Producciones" para registrar el cultivo o actividad pecuaria en tus lotes.',
-              prioridad: 'alta',
-              categoria: 'COSECHA',
-            },
-          ],
-        };
-      }
-      const listaProds = productions.map((p) => `${p.name} (${p.type}) en ${p.lote?.finca?.name || 'predio'}`).join(', ');
-      return {
-        resumen: `Tienes ${totalProds} producción(es) activa(s) registrada(s): ${listaProds}.`,
-        recomendaciones: [
-          {
-            titulo: 'Control de Diario de Campo',
-            descripcion: 'Registra oportunamente las labores fitosanitarias, riegos y fertilizaciones en el diario de producción de cada lote.',
-            prioridad: 'alta',
-            categoria: 'COSECHA',
-          },
-        ],
-      };
-    }
-
-    // 3. Preguntas sobre Inventario Bajo / Productos
-    if (q.includes('inventario') || q.includes('producto') || q.includes('insumo') || q.includes('stock') || q.includes('agotad')) {
-      if (inventory.length === 0) {
-        return {
-          resumen: 'No hay datos suficientes para responder esta consulta. Aún no tienes productos registrados en el inventario.',
-          recomendaciones: [
-            {
-              titulo: 'Registrar Insumos',
-              descripcion: 'Comienza registrando insumos, semillas o fertilizantes en el módulo de Inventario.',
-              prioridad: 'alta',
-              categoria: 'GENERAL',
-            },
-          ],
-        };
-      }
-      const bajoStock = inventory.filter((i) => i.quantity <= i.minAlertQuantity);
-      if (bajoStock.length === 0) {
-        return {
-          resumen: `Todos los productos (${inventory.length} items registrados) se encuentran con niveles por encima del stock mínimo recomendado. No hay alertas de agotamiento.`,
-          recomendaciones: [
-            {
-              titulo: 'Inventario Abastecido',
-              descripcion: 'Continúa realizando inventarios periódicos para planificar tus labores sin contratiempos.',
-              prioridad: 'baja',
-              categoria: 'GENERAL',
-            },
-          ],
-        };
-      }
-      const detalle = bajoStock.map((i) => `${i.name}: ${i.quantity} ${i.unit} (mínimo de alerta: ${i.minAlertQuantity} ${i.unit})`).join('; ');
-      return {
-        resumen: `Se detectaron ${bajoStock.length} producto(s) con niveles bajos o críticos en bodega: ${detalle}.`,
-        recomendaciones: [
-          {
-            titulo: 'Reponer Insumos Críticos',
-            descripcion: 'Gestiona la compra con tus proveedores antes de la próxima fertilización o aplicación fitosanitaria programada.',
-            prioridad: 'alta',
-            categoria: 'FERTILIZACION',
-          },
-        ],
-      };
-    }
-
-    // 4. Preguntas sobre Gastos, Costos y Finanzas (con soporte para "este mes")
-    if (q.includes('gaste') || q.includes('gasté') || q.includes('gasto') || q.includes('costo') || q.includes('balance') || q.includes('ingreso') || q.includes('dinero') || q.includes('financ')) {
-      if (finances.length === 0) {
-        return {
-          resumen: 'No hay datos suficientes para responder esta consulta. No se han registrado movimientos financieros en el sistema.',
-          recomendaciones: [
-            {
-              titulo: 'Registrar Transacciones',
-              descripcion: 'Ingresa al módulo de Finanzas para asentar los ingresos y gastos de tus fincas.',
-              prioridad: 'alta',
-              categoria: 'ECONOMICO',
-            },
-          ],
-        };
-      }
-
-      const formatCOP = (v: number) =>
-        new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
-
-      const isEsteMes = q.includes('este mes') || q.includes('del mes') || q.includes('mes actual');
-      const now = new Date();
-      const filteredFinances = isEsteMes
-        ? finances.filter((f) => {
-            const d = new Date(f.date);
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-          })
-        : finances;
-
-      const gastos = filteredFinances.filter((f) => f.type === 'GASTO').reduce((acc, f) => acc + f.amount, 0);
-      const ingresos = filteredFinances.filter((f) => f.type === 'INGRESO').reduce((acc, f) => acc + f.amount, 0);
-      const balance = ingresos - gastos;
-
-      const periodoStr = isEsteMes ? 'en el mes actual' : 'en tus registros contables recientes';
-
-      return {
-        resumen: `Gastaste ${formatCOP(gastos)} ${periodoStr} (Ingresos registrados: ${formatCOP(ingresos)}, Balance neto: ${formatCOP(balance)}).`,
-        recomendaciones: [
-          {
-            titulo: 'Control de Costos Operativos',
-            descripcion: 'Asocia cada gasto a su predio correspondiente para calcular la rentabilidad precisa.',
-            prioridad: 'media',
-            categoria: 'ECONOMICO',
-          },
-        ],
-      };
-    }
-
-    // 5. Preguntas sobre Clima
-    if (q.includes('clima') || q.includes('tiempo') || q.includes('llueve') || q.includes('llover') || q.includes('temperatura')) {
-      return {
-        resumen: `En tus predios del departamento del Cesar se registran actualmente ${weather.temperature}°C, ${weather.humidity}% de humedad relativa y condiciones de ${weather.conditions.toLowerCase()}. La velocidad del viento es de ${weather.windSpeed} km/h con probabilidad de lluvia del ${weather.rainProbability}%.`,
-        recomendaciones: [
-          {
-            titulo: weather.rainProbability >= 60 ? 'Alerta de Lluvia' : 'Condiciones Faborables',
-            descripcion: weather.rainProbability >= 60
-              ? 'Se prevén precipitaciones en las próximas horas. Suspenda aplicaciones químicas foliares para evitar lavado del producto.'
-              : 'Tiempo propicio para actividades de campo y riego controlado en las primeras horas del día.',
-            prioridad: weather.rainProbability >= 60 ? 'alta' : 'baja',
-            categoria: 'CLIMA',
-          },
-        ],
-      };
-    }
-
-    return null;
-  }
-
-  // ─── ADVISORIES LOCALES INTELIGENTES BASADOS EN DATOS ────────────────────────
-
-  private generateSmartMockAdvisories(
-    inventory: any[],
-    finances: any[],
-    productions: any[],
-    weather: any,
-    fincas: any[]
-  ) {
-    const advisories = [];
-    const bajoStock = inventory.filter((i) => i.quantity <= i.minAlertQuantity);
-
-    // 1. Alerta de Inventario
-    if (bajoStock.length > 0) {
+    // Alerta de Stock
+    if (snapshot.inventarioBajoStock.length > 0) {
       advisories.push({
         id: 'adv-inv-1',
         type: 'WARNING',
         category: 'INVENTARIO',
-        title: `${bajoStock.length} Insumo(s) con Stock Bajo`,
-        message: `El producto "${bajoStock[0].name}" tiene solo ${bajoStock[0].quantity} ${bajoStock[0].unit} disponibles (mínimo recomendado: ${bajoStock[0].minAlertQuantity}). Reponga existencias para evitar interrupciones de campo.`,
+        title: `${snapshot.inventarioBajoStock.length} Insumo(s) en Nivel Crítico`,
+        message: `El producto "${snapshot.inventarioBajoStock[0].name}" tiene solo ${snapshot.inventarioBajoStock[0].quantity} ${snapshot.inventarioBajoStock[0].unit} disponibles. Reponga existencias para no detener labores.`,
       });
     } else {
       advisories.push({
         id: 'adv-inv-ok',
         type: 'INFO',
         category: 'INVENTARIO',
-        title: 'Inventario Abastecido',
-        message: `Los ${inventory.length} insumos registrados en bodega cuentan con niveles superiores a su umbral de seguridad.`,
+        title: 'Bodega Abastecida',
+        message: `Todos los ${snapshot.inventario.length} insumos en inventario cuentan con existencias superiores a la cuota mínima.`,
       });
     }
 
-    // 2. Alerta de Clima Agrícola
-    if (weather.temperature >= 35) {
+    // Alerta de Clima
+    const w = snapshot.weather;
+    const temp = w?.temperature ?? 28;
+    const rainProb = w?.rainProbability ?? 20;
+
+    if (temp >= 35) {
       advisories.push({
         id: 'adv-clima-calor',
         type: 'CRITICAL',
         category: 'CLIMA',
-        title: `Calor Extremo (${weather.temperature}°C) en la Zona`,
-        message: 'Elevada evapotranspiración. Programe el riego por goteo exclusivamente antes de las 7:00 AM o después de las 6:30 PM para maximizar la absorción radicular.',
+        title: `Calor Intenso en el Cesar (${temp}°C)`,
+        message: 'Elevada evapotranspiración. Programe el riego por goteo exclusivamente antes de las 7:00 AM o al atardecer.',
       });
-    } else if (weather.rainProbability >= 65) {
+    } else if (rainProb >= 60) {
       advisories.push({
         id: 'adv-clima-lluvia',
         type: 'WARNING',
         category: 'CLIMA',
-        title: `Precipitaciones Previstas (${weather.rainProbability}%)`,
-        message: 'Probabilidad alta de lluvias. Suspenda labores de fumigación foliar y asegure canales de evacuación en lotes bajos.',
+        title: `Lluvias Previstas (${rainProb}%)`,
+        message: 'Suspenda fumigaciones foliares para evitar lavado de producto por precipitación.',
       });
     } else {
       advisories.push({
-        id: 'adv-clima-optimo',
+        id: 'adv-clima-ok',
         type: 'INFO',
         category: 'CLIMA',
-        title: 'Condiciones Climáticas Estables',
-        message: `Temperatura de ${weather.temperature}°C y viento a ${weather.windSpeed} km/h. Condiciones favorables para labores de campo y monitoreo fitosanitario.`,
+        title: 'Condiciones Agrometeorológicas Óptimas',
+        message: `${temp}°C y viento a ${w?.windSpeed ?? 10} km/h. Condiciones favorables para monitoreo de plagas y labores de campo.`,
       });
     }
 
-    // 3. Alerta de Producción o Finanzas
-    if (productions.length > 0) {
+    // Alerta de Producción o Finanzas
+    if (snapshot.produccionesActivas.length > 0) {
       advisories.push({
-        id: 'adv-prod-1',
+        id: 'adv-prod-act',
         type: 'INFO',
         category: 'CULTIVO',
-        title: `Seguimiento a ${productions[0].name}`,
-        message: `La producción en el lote "${productions[0].lote?.name || 'principal'}" de ${productions[0].lote?.finca?.name || 'su predio'} se encuentra activa. Mantenga actualizado el diario de campo.`,
+        title: `Monitoreo a ${snapshot.produccionesActivas[0].name}`,
+        message: `Producción activa en el lote "${snapshot.produccionesActivas[0].lote?.name || 'Principal'}". Registre las labores en el diario de campo.`,
       });
     } else {
       advisories.push({
-        id: 'adv-prod-vacia',
+        id: 'adv-prod-0',
         type: 'INFO',
         category: 'CULTIVO',
-        title: 'Planificación de Nuevos Lotes',
-        message: `Cuenta con ${fincas.length} finca(s) registradas. Inicie un nuevo ciclo agrícola o ganadero desde el módulo de Producciones.`,
+        title: 'Planificación de Lotes',
+        message: `Cuentas con ${snapshot.fincas.length} finca(s). Registra un nuevo ciclo productivo en el módulo de Producciones.`,
       });
     }
 
     return advisories;
   }
 
-  private generateSmartFallback(
-    consulta: string,
-    inventory: any[],
-    finances: any[],
-    productions: any[],
-    weather: any,
-    contexto: any,
-    fincas: any[]
-  ) {
-    const q = (consulta || '').toLowerCase();
-    const fincaNombre = contexto?.finca?.nombre || fincas[0]?.name || 'su predio';
-
-    if (q.includes('riego') || q.includes('agua') || q.includes('hídrico')) {
-      return {
-        resumen: `Bajo una temperatura de ${weather.temperature}°C y humedad del ${weather.humidity}% en ${fincaNombre}, el riego por goteo temprano es fundamental para reducir pérdidas por evaporación en el Cesar.`,
-        recomendaciones: [
-          {
-            titulo: 'Riego Temprano Programado',
-            descripcion: 'Inicie el suministro hídrico entre las 5:00 AM y 7:00 AM para asegurar una penetración radicular óptima.',
-            prioridad: 'alta',
-            categoria: 'RIEGO',
-          },
-          {
-            titulo: 'Conservación de Humedad con Cobertura',
-            descripcion: 'Aplique cobertura vegetal o rastrojo sobre la cama de siembra para disminuir la temperatura edáfica.',
-            prioridad: 'media',
-            categoria: 'SUELO',
-          },
-        ],
-      };
-    }
-
-    if (q.includes('plaga') || q.includes('enfermedad') || q.includes('hongo')) {
-      return {
-        resumen: `En la región del Cesar, las temperaturas de ${weather.temperature}°C con vientos de ${weather.windSpeed} km/h predisponen a ataques de insectos chupadores (trips, ácaros). Se aconseja inspección fitosanitaria semanal.`,
-        recomendaciones: [
-          {
-            titulo: 'Monitoreo Sistemático de Campo',
-            descripcion: 'Revise 25 plantas por lote en cuadrícula o patrón en W, examinando el envés de hojas tiernas.',
-            prioridad: 'alta',
-            categoria: 'PLAGAS',
-          },
-          {
-            titulo: 'Manejo Preventivo y Selectivo',
-            descripcion: 'Emplee primero productos biológicos o sales potásicas antes de recurrir a moléculas de amplio espectro.',
-            prioridad: 'media',
-            categoria: 'PLAGAS',
-          },
-        ],
-      };
-    }
-
-    if (fincas.length === 0 && productions.length === 0) {
-      return {
-        resumen: 'No hay información suficiente para realizar esta consulta. Aún no tienes fincas ni producciones registradas en el sistema.',
-        recomendaciones: [
-          {
-            titulo: 'Registrar Predio Principal',
-            descripcion: 'Ingresa al módulo "Mis Fincas" para registrar las hectáreas y coordenadas de tu predio.',
-            prioridad: 'alta',
-            categoria: 'GENERAL',
-          },
-        ],
-      };
-    }
+  async getCustomRecomendaciones(orgId: string, consulta: string, contexto: any) {
+    const messages: ChatMessage[] = [{ role: 'user', content: consulta }];
+    const chatRes = await this.chat(orgId, messages, contexto?.finca?.id);
 
     return {
-      resumen: `Análisis técnico para ${fincaNombre}: Cuentas con ${fincas.length} predio(s) y ${productions.length} producción(es) activa(s). Con clima actual de ${weather.temperature}°C y humedad al ${weather.humidity}%, se recomienda mantener al día el inventario y los diarios de labor.`,
+      resumen: chatRes.text,
+      fuente: chatRes.fuente,
       recomendaciones: [
         {
-          titulo: 'Planificación Agronómica Integral',
-          descripcion: 'Revisa los lotes asignados y confirma la disponibilidad de insumos en bodega antes de programar jornales de campo.',
-          prioridad: 'media',
+          titulo: 'Análisis Integral del Asesor AgroIA',
+          descripcion: chatRes.text.slice(0, 300) + '...',
+          prioridad: 'alta',
           categoria: 'GENERAL',
         },
       ],

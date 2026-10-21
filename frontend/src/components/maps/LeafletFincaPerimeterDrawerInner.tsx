@@ -99,19 +99,32 @@ export default function LeafletFincaPerimeterDrawerInner({
   const initCenterLatRef = useRef(centerLat);
   const initCenterLngRef = useRef(centerLng);
 
+  const hasInitial = initialPoints && initialPoints.length >= 3;
   // Modo de interacción: 'pan' (arrastrar mapa libremente) o 'draw' (clic añade vértices)
-  const [drawMode, setDrawMode] = useState<'pan' | 'draw'>('pan');
+  // Si no hay puntos aún, iniciamos en modo 'draw' para que al hacer clic marque de inmediato el perímetro real
+  const [drawMode, setDrawMode] = useState<'pan' | 'draw'>(hasInitial ? 'pan' : 'draw');
 
   const [points, setPoints] = useState<{ lat: number; lng: number }[]>(() => {
     if (initialPoints && initialPoints.length >= 3) return initialPoints;
-    if (targetHectareas && targetHectareas > 0) {
-      return generateTargetSquare(centerLat, centerLng, targetHectareas);
-    }
     return [];
   });
 
   const [liveAreaHa, setLiveAreaHa] = useState<number>(() => calculatePolygonAreaHa(points));
   const [mapType, setMapType] = useState<'satellite' | 'streets'>('satellite');
+
+  // Sincronizar si initialPoints cambia desde el exterior
+  useEffect(() => {
+    if (initialPoints && initialPoints.length >= 3) {
+      setPoints(initialPoints);
+      setLiveAreaHa(calculatePolygonAreaHa(initialPoints));
+      if (mapInstanceRef.current) {
+        const bounds = L.latLngBounds(initialPoints.map((p) => [p.lat, p.lng]));
+        if (bounds.isValid()) {
+          mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
+        }
+      }
+    }
+  }, [initialPoints]);
 
   // Mantener refs sincronizadas (sin causar re-renders ni re-inits del mapa)
   useEffect(() => {

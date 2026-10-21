@@ -23,60 +23,94 @@ const statusStyles: Record<string, { fill: string; stroke: string; label: string
   RESERVA: { fill: '#166534', stroke: '#14532d', label: 'Reserva / Ronda Hídrica' },
 };
 
-interface BoundingBox {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-}
+// Recorte de polígono Sutherland-Hodgman contra un semiplano en 2D (Lat = eje 0, Lng = eje 1)
+function clipPolygonAgainstLine(
+  polygon: [number, number][],
+  axis: 0 | 1,
+  value: number,
+  isGreater: boolean
+): [number, number][] {
+  if (polygon.length === 0) return [];
+  const output: [number, number][] = [];
 
-// Algoritmo de partición proporcional 2D (KD-Tree / Treemap agrícola)
-function partitionProportional(
-  box: BoundingBox,
-  items: { id: string | number; areaHa: number }[]
-): Map<string | number, BoundingBox> {
-  const result = new Map<string | number, BoundingBox>();
+  const isInside = (pt: [number, number]) =>
+    isGreater ? pt[axis] >= value : pt[axis] <= value;
 
-  function subdivide(rect: BoundingBox, list: { id: string | number; areaHa: number }[]) {
-    if (list.length === 0) return;
-    if (list.length === 1) {
-      result.set(list[0].id, rect);
-      return;
-    }
+  const intersect = (
+    p1: [number, number],
+    p2: [number, number]
+  ): [number, number] => {
+    const dAxis = p2[axis] - p1[axis];
+    if (Math.abs(dAxis) < 1e-9) return p1;
+    const t = (value - p1[axis]) / dAxis;
+    const otherAxis = axis === 0 ? 1 : 0;
+    const otherVal = p1[otherAxis] + t * (p2[otherAxis] - p1[otherAxis]);
+    return axis === 0 ? [value, otherVal] : [otherVal, value];
+  };
 
-    const totalWeight = list.reduce((s, it) => s + Math.max(it.areaHa, 0.1), 0);
-    const halfWeight = totalWeight / 2;
-
-    let acc = 0;
-    let splitIdx = 1;
-    for (let i = 0; i < list.length - 1; i++) {
-      acc += Math.max(list[i].areaHa, 0.1);
-      if (acc >= halfWeight) {
-        splitIdx = i + 1;
-        break;
+  let prev = polygon[polygon.length - 1];
+  for (let i = 0; i < polygon.length; i++) {
+    const curr = polygon[i];
+    if (isInside(curr)) {
+      if (!isInside(prev)) {
+        output.push(intersect(prev, curr));
       }
+      output.push(curr);
+    } else if (isInside(prev)) {
+      output.push(intersect(prev, curr));
     }
-
-    const leftList = list.slice(0, splitIdx);
-    const rightList = list.slice(splitIdx);
-    const leftWeight = leftList.reduce((s, it) => s + Math.max(it.areaHa, 0.1), 0);
-    const ratio = Math.max(0.05, Math.min(0.95, leftWeight / totalWeight));
-
-    const width = rect.right - rect.left;
-    const height = rect.top - rect.bottom;
-
-    if (width >= height) {
-      const splitLng = rect.left + width * ratio;
-      subdivide({ top: rect.top, bottom: rect.bottom, left: rect.left, right: splitLng }, leftList);
-      subdivide({ top: rect.top, bottom: rect.bottom, left: splitLng, right: rect.right }, rightList);
-    } else {
-      const splitLat = rect.top - height * ratio;
-      subdivide({ top: rect.top, bottom: splitLat, left: rect.left, right: rect.right }, leftList);
-      subdivide({ top: splitLat, bottom: rect.bottom, left: rect.left, right: rect.right }, rightList);
-    }
+    prev = curr;
   }
 
-  subdivide(box, items);
+  return output;
+}
+
+// Subdivide el polígono real de la finca de forma proporcional a las hectáreas de cada parcela
+function partitionPolygonProportional(
+  fincaPolygon: [number, number][],
+  items: { id: string | number; areaHa: number }[],
+  bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }
+): Map<string | number, [number, number][]> {
+  const result = new Map<string | number, [number, number][]>();
+  if (items.length === 0) return result;
+
+  if (items.length === 1) {
+    result.set(items[0].id, fincaPolygon);
+    return result;
+  }
+
+  const { minLat, maxLat, minLng, maxLng } = bounds;
+  const widthLng = maxLng - minLng;
+  const heightLat = maxLat - minLat;
+
+  // Elegir eje de mayor longitud para trazar las divisiones
+  const axis: 0 | 1 = heightLat >= widthLng ? 0 : 1;
+  const minVal = axis === 0 ? minLat : minLng;
+  const maxVal = axis === 0 ? maxLat : maxLng;
+  const totalWeight = items.reduce((s, it) => s + Math.max(it.areaHa, 0.1), 0);
+
+  let currentVal = minVal;
+  const range = maxVal - minVal;
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const weight = Math.max(item.areaHa, 0.1);
+    const fraction = weight / totalWeight;
+    const nextVal = i === items.length - 1 ? maxVal : currentVal + range * fraction;
+
+    // Recortar estrictamente dentro del polígono delimitado de la finca
+    let slice = clipPolygonAgainstLine(fincaPolygon, axis, currentVal, true);
+    slice = clipPolygonAgainstLine(slice, axis, nextVal, false);
+
+    if (slice.length >= 3) {
+      result.set(item.id, slice);
+    } else {
+      result.set(item.id, fincaPolygon);
+    }
+
+    currentVal = nextVal;
+  }
+
   return result;
 }
 
@@ -171,48 +205,23 @@ export default function LeafletFincaParcelasMapInner({
   const totalLotesHa = useMemo(() => lotes.reduce((s, l) => s + (l.hectareas || 0), 0), [lotes]);
   const freeFincaHa = Math.max(0, parseFloat((fincaTotalHa - totalLotesHa).toFixed(2)));
 
-  // 3. Distribución PROPORCIONAL MATEMÁTICA: Cada lote cubre EXACTAMENTE su porción de las 23 ha
+  // 3. Distribución PROPORCIONAL EXACTA DENTRO DEL PERÍMETRO REAL DEL PREDIO
   const { parsedLotesWithCoords, freeAreaPolygon } = useMemo(() => {
-    const { minLat, maxLat, minLng, maxLng } = fincaBounds;
+    // Si la suma de lotes es menor que el área de la finca, incluimos el área libre como un ítem de partición
+    // para que los lotes NO rellenen la totalidad de la finca si miden menos.
+    const partitionItems: { id: string | number; areaHa: number }[] = lotes.map((l) => ({
+      id: l.id,
+      areaHa: Math.max(l.hectareas || 1, 0.1),
+    }));
 
-    // Margen interno de seguridad (8%) para respetar los cercos exteriores
-    const marginLat = (maxLat - minLat) * 0.08;
-    const marginLng = (maxLng - minLng) * 0.08;
-    const innerMinLat = minLat + marginLat;
-    const innerMaxLat = maxLat - marginLat;
-    const innerMinLng = minLng + marginLng;
-    const innerMaxLng = maxLng - marginLng;
-
-    const usableH = Math.max(innerMaxLat - innerMinLat, 0.0002);
-    const usableW = Math.max(innerMaxLng - innerMinLng, 0.0002);
-
-    // Fracción total que ocupan todos los lotes combinados dentro de la finca
-    const lotesShareRatio = Math.min(1.0, Math.max(0.05, totalLotesHa / fincaTotalHa));
-
-    // Sector ocupado por los lotes y sector libre
-    let lotesBox: BoundingBox;
-    let freeBox: BoundingBox | null = null;
-
-    if (lotesShareRatio >= 0.96 || lotes.length === 0) {
-      // Los lotes ocupan casi toda la finca (100%)
-      lotesBox = { top: innerMaxLat, bottom: innerMinLat, left: innerMinLng, right: innerMaxLng };
-    } else {
-      // La finca se divide proporcionalmente entre el sector de lotes y el área libre/reserva
-      // Dividimos a lo largo de la dimensión mayor
-      if (usableW >= usableH) {
-        const splitLng = innerMinLng + usableW * lotesShareRatio;
-        lotesBox = { top: innerMaxLat, bottom: innerMinLat, left: innerMinLng, right: splitLng };
-        freeBox = { top: innerMaxLat, bottom: innerMinLat, left: splitLng, right: innerMaxLng };
-      } else {
-        const splitLat = innerMaxLat - usableH * lotesShareRatio;
-        lotesBox = { top: innerMaxLat, bottom: splitLat, left: innerMinLng, right: innerMaxLng };
-        freeBox = { top: splitLat, bottom: innerMinLat, left: innerMinLng, right: innerMaxLng };
-      }
+    if (freeFincaHa > 0.1) {
+      partitionItems.push({
+        id: '__FREE_AREA__',
+        areaHa: freeFincaHa,
+      });
     }
 
-    // Particionamos el sector de lotes de forma proporcional según las hectáreas de cada uno
-    const partitionItems = lotes.map((l) => ({ id: l.id, areaHa: l.hectareas || 1 }));
-    const boxMap = partitionProportional(lotesBox, partitionItems);
+    const polygonMap = partitionPolygonProportional(effectiveFincaPerimeter, partitionItems, fincaBounds);
 
     const lotesResult = lotes.map((lote) => {
       let coords: [number, number][] | null = null;
@@ -239,50 +248,27 @@ export default function LeafletFincaParcelasMapInner({
         }
       }
 
-      // Si no tiene coordenadas propias, aplicamos la geometría proporcional exacta
+      // Si no tiene coordenadas propias, adopta su porción proporcional exacta dentro del perímetro
       if (!coords || coords.length < 3) {
-        const rect = boxMap.get(lote.id) || lotesBox;
-        const rectH = rect.top - rect.bottom;
-        const rectW = rect.right - rect.left;
-
-        // Brecha sutil de callejón/alambrado (3%)
-        const gapLat = rectH * 0.03;
-        const gapLng = rectW * 0.03;
-
-        coords = [
-          [rect.top - gapLat, rect.left + gapLng],
-          [rect.top - gapLat, rect.right - gapLng],
-          [rect.bottom + gapLat, rect.right - gapLng],
-          [rect.bottom + gapLat, rect.left + gapLng],
-        ];
+        coords = polygonMap.get(lote.id) || null;
       }
 
-      const percentOfFinca = (( (lote.hectareas || 1) / fincaTotalHa ) * 100).toFixed(1);
+      const percentOfFinca = (((lote.hectareas || 1) / fincaTotalHa) * 100).toFixed(1);
 
       return {
         ...lote,
-        polygonCoords: coords,
+        polygonCoords: coords || effectiveFincaPerimeter,
         percentOfFinca,
       };
     });
 
-    let freePolyCoords: [number, number][] | null = null;
-    if (freeBox && freeFincaHa > 0.1) {
-      const gapLat = (freeBox.top - freeBox.bottom) * 0.03;
-      const gapLng = (freeBox.right - freeBox.left) * 0.03;
-      freePolyCoords = [
-        [freeBox.top - gapLat, freeBox.left + gapLng],
-        [freeBox.top - gapLat, freeBox.right - gapLng],
-        [freeBox.bottom + gapLat, freeBox.right - gapLng],
-        [freeBox.bottom + gapLat, freeBox.left + gapLng],
-      ];
-    }
+    const freePolyCoords = polygonMap.get('__FREE_AREA__') || null;
 
     return {
       parsedLotesWithCoords: lotesResult,
       freeAreaPolygon: freePolyCoords,
     };
-  }, [lotes, fincaBounds, fincaTotalHa, totalLotesHa, freeFincaHa]);
+  }, [lotes, effectiveFincaPerimeter, fincaBounds, fincaTotalHa, freeFincaHa]);
 
   // Inicializar Leaflet y ResizeObserver
   useEffect(() => {
