@@ -101,6 +101,142 @@ function StatCard({ label, value, subtitle, icon, color, trend, onClick }: StatC
   );
 }
 
+
+// ─── Actividad Productiva Widget (Limpio, Responsivo, Sin Emojis) ─────────────
+
+const CROP_TYPE_META: Record<string, { label: string; categoria: string; color: string }> = {
+  AGRICOLA_ARROZ: { label: 'Arroz', categoria: 'Agrícola', color: '#10b981' },
+  AGRICOLA_MAIZ: { label: 'Maíz Tecnificado', categoria: 'Agrícola', color: '#f59e0b' },
+  AGRICOLA_SORGO: { label: 'Sorgo', categoria: 'Agrícola', color: '#84cc16' },
+  AGRICOLA_PALMA: { label: 'Palma de Aceite', categoria: 'Agrícola', color: '#06b6d4' },
+  PECUARIA_GANADO: { label: 'Ganadería Bovina', categoria: 'Pecuaria', color: '#38bdf8' },
+  AGRICOLA_CAFE: { label: 'Café Especial', categoria: 'Agrícola', color: '#ec4899' },
+  AGRICOLA_YUCA: { label: 'Yuca Industrial', categoria: 'Agrícola', color: '#a855f7' },
+  PECUARIA_PORCINO: { label: 'Porcicultura', categoria: 'Pecuaria', color: '#f43f5e' },
+  PECUARIA_AVICOLA: { label: 'Avicultura', categoria: 'Pecuaria', color: '#eab308' },
+};
+
+function getCropMeta(rawName: string, index: number) {
+  if (CROP_TYPE_META[rawName]) return CROP_TYPE_META[rawName];
+  const fallbackColors = ['#10b981', '#38bdf8', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+  const color = fallbackColors[index % fallbackColors.length];
+  const cleanLabel = (rawName || 'Otro')
+    .replace(/^AGRICOLA_/, '')
+    .replace(/^PECUARIA_/, '')
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const categoria = (rawName || '').startsWith('PECUARIA') ? 'Pecuaria' : 'Agrícola';
+  return { label: cleanLabel, categoria, color };
+}
+
+function ActividadProductivaWidget({
+  distribProds,
+  loading,
+  title = 'Actividad Productiva',
+  subtitle = 'Distribución por tipo de producción',
+}: {
+  distribProds: Array<{ name: string; value: number }>;
+  loading?: boolean;
+  title?: string;
+  subtitle?: string;
+}) {
+  const total = distribProds.reduce((sum, item) => sum + (item.value || 0), 0);
+
+  return (
+    <div className="card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div>
+          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>{title}</h3>
+          <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{subtitle}</p>
+        </div>
+        {total > 0 && (
+          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 9999, background: 'rgba(16,185,129,0.12)', color: '#34d399', fontWeight: 600, border: '1px solid rgba(16,185,129,0.2)' }}>
+            {total} {total === 1 ? 'ciclo activo' : 'ciclos activos'}
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="skeleton" style={{ height: 160, borderRadius: 10 }} />
+      ) : distribProds.length === 0 ? (
+        <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
+          <div><Sprout size={32} style={{ margin: '0 auto 8px', opacity: 0.25 }} /><p>Sin ciclos productivos activos</p></div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Barra de distribución porcentual proporcional */}
+          <div style={{ display: 'flex', width: '100%', height: 8, borderRadius: 9999, overflow: 'hidden', background: 'rgba(255,255,255,0.06)', gap: 2 }}>
+            {distribProds.map((item, i) => {
+              const meta = getCropMeta(item.name, i);
+              const pct = total > 0 ? (item.value / total) * 100 : 0;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    width: `${pct}%`,
+                    background: meta.color,
+                    borderRadius: 2,
+                    transition: 'width 0.3s ease',
+                  }}
+                  title={`${meta.label}: ${item.value} (${Math.round(pct)}%)`}
+                />
+              );
+            })}
+          </div>
+
+          {/* Desglose responsivo de rubros productivos */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 2 }}>
+            {distribProds.map((item, i) => {
+              const meta = getCropMeta(item.name, i);
+              const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                      <span style={{ width: 9, height: 9, borderRadius: '50%', background: meta.color, flexShrink: 0 }} />
+                      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {meta.label}
+                      </span>
+                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)' }}>
+                        {meta.categoria}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                      <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                        {item.value} {item.value === 1 ? 'lote' : 'lotes'}
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: meta.color, minWidth: 32, textAlign: 'right' }}>
+                        {pct}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ width: '100%', height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: meta.color, borderRadius: 2 }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Dashboard AGRONOMO ───────────────────────────────────────────────────────
 
 function AgronomoDashboard({ data }: { data: DashboardData }) {
@@ -122,50 +258,30 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
         </div>
       )}
 
-      {/* Fila: gráfica + clima + AgroIA */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20, marginBottom: 24, alignItems: 'start' }}>
-        <div className="card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>Tipos de Cultivo</h3>
-          <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 16 }}>Distribución por especie</p>
-          {loading ? (
-            <div className="skeleton" style={{ height: 200, borderRadius: 12 }} />
-          ) : (distribProds as Array<{ name: string; value: number }>).length === 0 ? (
-            <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
-              <div><Sprout size={32} style={{ margin: '0 auto 8px', opacity: 0.3 }} /><p>Sin producciones registradas</p></div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <ResponsiveContainer width={120} height={120}>
-                <PieChart>
-                  <Pie data={distribProds as Array<{ name: string; value: number }>} innerRadius={35} outerRadius={55} paddingAngle={4} dataKey="value">
-                    {(distribProds as Array<{ name: string; value: number }>).map((_, index) => (<Cell key={index} fill={COLORS[index % COLORS.length]} />))}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', fontSize: 12 }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {(distribProds as Array<{ name: string; value: number }>).map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
-                    <span style={{ color: 'var(--color-text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
-                    <span style={{ color: 'var(--color-text)', fontWeight: 700 }}>{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+      {/* Fila: actividad productiva + accesos y clima/AgroIA */}
+      <div className="dashboard-charts-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <ActividadProductivaWidget
+            distribProds={distribProds as Array<{ name: string; value: number }>}
+            loading={loading}
+            title="Tipos de Cultivo"
+            subtitle="Distribución por especie y explotación"
+          />
 
           {/* Accesos rápidos */}
-          <div style={{ marginTop: 20, borderTop: '1px solid var(--color-border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              { label: 'Ver Fincas y Parcelas', href: '/dashboard/fincas', icon: <MapPin size={14} /> },
-              { label: 'Gestionar Producciones', href: '/dashboard/producciones', icon: <Sprout size={14} /> },
-              { label: 'Revisar Inventario', href: '/dashboard/inventario', icon: <Package size={14} /> },
-            ].map((item) => (
-              <a key={item.href} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 8, color: 'var(--color-text)', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>
-                <span style={{ color: 'var(--color-primary)' }}>{item.icon}</span>{item.label}
-              </a>
-            ))}
+          <div className="card" style={{ padding: '18px 20px' }}>
+            <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--color-text-muted)' }}>Módulos de Campo</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+              {[
+                { label: 'Ver Fincas y Parcelas', href: '/dashboard/fincas', icon: <MapPin size={14} /> },
+                { label: 'Gestionar Producciones', href: '/dashboard/producciones', icon: <Sprout size={14} /> },
+                { label: 'Revisar Inventario', href: '/dashboard/inventario', icon: <Package size={14} /> },
+              ].map((item) => (
+                <a key={item.href} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 8, color: 'var(--color-text)', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>
+                  <span style={{ color: 'var(--color-primary)' }}>{item.icon}</span>{item.label}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -331,19 +447,19 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
 
       {/* ── 3. FILA PRINCIPAL: GRÁFICA FINANCIERA + CLIMA & AGROIA ─────────
               La gráfica ocupa el espacio principal; clima y AgroIA van en
-              una columna derecha apilada, sin huecos.                        */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 290px', gap: 20, marginBottom: 24, alignItems: 'start' }}>
+              una columna derecha apilada, con colapso responsivo en móvil.    */}
+      <div className="dashboard-charts-grid">
 
         {/* Gráfica ingresos vs gastos */}
-        <div className="card" style={{ padding: '22px 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div className="card" style={{ padding: '22px 24px', minWidth: 0, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
             <div>
               <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>Ingresos vs Gastos</h3>
               <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Histórico financiero — últimos 6 meses</p>
             </div>
             <div style={{ display: 'flex', gap: 12, fontSize: 11 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-text-muted)' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} /> Ingresos
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} /> Ingresos
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-text-muted)' }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} /> Gastos
@@ -352,30 +468,37 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
           </div>
 
           {loading ? (
-            <div className="skeleton" style={{ height: 200, borderRadius: 10 }} />
-          ) : !resumenFinanciero || (resumenFinanciero as any[]).length === 0 || (resumenFinanciero as any[]).every((m: any) => m.ingresos === 0 && m.gastos === 0) ? (
-            <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
+            <div className="skeleton" style={{ height: 210, borderRadius: 10 }} />
+          ) : !resumenFinanciero || (resumenFinanciero as any[]).length === 0 || (resumenFinanciero as any[]).every((m: any) => (m.ingresos || 0) === 0 && (m.gastos || 0) === 0) ? (
+            <div style={{ height: 210, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
               <div><BarChart3 size={32} style={{ margin: '0 auto 8px', opacity: 0.25 }} /><p>Sin datos financieros registrados</p></div>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={resumenFinanciero as Array<{ mes: string; ingresos: number; gastos: number }>}>
-                <defs>
-                  <linearGradient id="gi2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.3} /><stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gg2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} /><stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(42,61,42,0.4)" />
-                <XAxis dataKey="mes" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1e6).toFixed(0)}M`} />
-                <Tooltip contentStyle={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 10, color: 'var(--color-text)', fontSize: 12 }} formatter={(v) => [formatCOP(Number(v || 0))]} />
-                <Area type="monotone" dataKey="ingresos" name="Ingresos" stroke="#16a34a" strokeWidth={2} fill="url(#gi2)" />
-                <Area type="monotone" dataKey="gastos" name="Gastos" stroke="#ef4444" strokeWidth={2} fill="url(#gg2)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div style={{ width: '100%', height: 210, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={resumenFinanciero as Array<{ mes: string; ingresos: number; gastos: number }>} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gi2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="gg2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                  <XAxis dataKey="mes" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} />
+                  <Tooltip
+                    contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8, color: '#f8fafc', fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
+                    formatter={(v: any) => [formatCOP(Number(v || 0))]}
+                  />
+                  <Area type="monotone" dataKey="ingresos" name="Ingresos" stroke="#10b981" strokeWidth={2.5} fill="url(#gi2)" dot={{ r: 3, fill: '#10b981' }} activeDot={{ r: 5 }} />
+                  <Area type="monotone" dataKey="gastos" name="Gastos" stroke="#ef4444" strokeWidth={2.5} fill="url(#gg2)" dot={{ r: 3, fill: '#ef4444' }} activeDot={{ r: 5 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           )}
 
           {/* Resumen de balance debajo de la gráfica */}
@@ -403,41 +526,16 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
       </div>
 
       {/* ── 4. FILA: DISTRIBUCIÓN PRODUCTIVA + ACTIVIDAD RECIENTE ──────────
-              Dos tarjetas iguales lado a lado, sin huecos.                   */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+              Dos tarjetas iguales lado a lado, responsivas en móvil.        */}
+      <div className="dashboard-two-col-grid">
 
-        {/* Distribución de producciones */}
-        <div className="card" style={{ padding: '22px 24px' }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>Actividad Productiva</h3>
-          <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 16 }}>Distribución por tipo de producción</p>
-          {loading ? (
-            <div className="skeleton" style={{ height: 160, borderRadius: 10 }} />
-          ) : (distribProds as Array<{ name: string; value: number }>).length === 0 ? (
-            <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
-              <div><Sprout size={32} style={{ margin: '0 auto 8px', opacity: 0.25 }} /><p>Sin ciclos productivos activos</p></div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <ResponsiveContainer width={110} height={110}>
-                <PieChart>
-                  <Pie data={distribProds as Array<{ name: string; value: number }>} innerRadius={32} outerRadius={50} paddingAngle={4} dataKey="value">
-                    {(distribProds as Array<{ name: string; value: number }>).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text)', fontSize: 12 }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {(distribProds as Array<{ name: string; value: number }>).map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length], flexShrink: 0 }} />
-                    <span style={{ color: 'var(--color-text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
-                    <span style={{ color: 'var(--color-text)', fontWeight: 700 }}>{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Distribución de producciones modernizada */}
+        <ActividadProductivaWidget
+          distribProds={distribProds as Array<{ name: string; value: number }>}
+          loading={loading}
+          title="Actividad Productiva"
+          subtitle="Distribución por tipo de producción"
+        />
 
         {/* Actividad financiera reciente */}
         <div className="card" style={{ padding: '22px 24px' }}>
@@ -543,30 +641,68 @@ export default function DashboardPage() {
       const transacciones = finanzasRes.status === 'fulfilled' ? (finanzasRes.value.data || []) : [];
       const resumen = resumenRes.status === 'fulfilled' ? resumenRes.value.data : null;
 
-      let totalIngresos = resumen?.totalIngresos || 0;
-      let totalGastos = resumen?.totalGastos || 0;
-      let meses: any[] = resumen?.resumenMensual || [];
+      let totalIngresos = Number(resumen?.totalIngresos ?? resumen?.totalIncome ?? 0);
+      let totalGastos = Number(resumen?.totalGastos ?? resumen?.totalExpenses ?? 0);
+      let meses: any[] = Array.isArray(resumen?.resumenMensual) ? resumen.resumenMensual : [];
 
-      if (meses.length === 0 && transacciones.length > 0) {
-        totalIngresos = transacciones.filter((t: any) => t.tipo === 'INGRESO').reduce((s: number, t: any) => s + (t.monto || 0), 0);
-        totalGastos = transacciones.filter((t: any) => t.tipo === 'GASTO').reduce((s: number, t: any) => s + (t.monto || 0), 0);
+      // Si meses está vacío o todos los meses son 0, pero existen transacciones en finanzasApi.getAll(),
+      // realizamos agregación mensual inteligente del lado del cliente
+      const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const allZeros = meses.length === 0 || meses.every((m: any) => (m.ingresos || 0) === 0 && (m.gastos || 0) === 0);
+
+      if (allZeros && transacciones.length > 0) {
+        const monthlyBuckets: Record<string, { mes: string; sortKey: string; ingresos: number; gastos: number }> = {};
+        for (const t of transacciones) {
+          const rawDate = t.fecha || t.date;
+          const d = rawDate ? new Date(rawDate) : null;
+          if (d && !isNaN(d.getTime())) {
+            const sortKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const label = monthNames[d.getMonth()];
+            if (!monthlyBuckets[sortKey]) {
+              monthlyBuckets[sortKey] = { mes: label, sortKey, ingresos: 0, gastos: 0 };
+            }
+            const monto = Number(t.monto ?? t.amount ?? 0);
+            const tipo = String(t.tipo || t.type || '').toUpperCase();
+            if (tipo === 'INGRESO') {
+              monthlyBuckets[sortKey].ingresos += monto;
+            } else if (tipo === 'GASTO') {
+              monthlyBuckets[sortKey].gastos += monto;
+            }
+          }
+        }
+        const sorted = Object.values(monthlyBuckets).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+        if (sorted.length > 0) {
+          meses = sorted.slice(-6);
+        }
+      }
+
+      if (totalIngresos === 0 && totalGastos === 0 && transacciones.length > 0) {
+        totalIngresos = transacciones
+          .filter((t: any) => String(t.tipo || t.type || '').toUpperCase() === 'INGRESO')
+          .reduce((s: number, t: any) => s + Number(t.monto ?? t.amount ?? 0), 0);
+        totalGastos = transacciones
+          .filter((t: any) => String(t.tipo || t.type || '').toUpperCase() === 'GASTO')
+          .reduce((s: number, t: any) => s + Number(t.monto ?? t.amount ?? 0), 0);
       }
 
       const recientes: MovimientoReciente[] = transacciones
         .slice()
-        .sort((a: any, b: any) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+        .sort((a: any, b: any) => new Date(b.fecha || b.date).getTime() - new Date(a.fecha || a.date).getTime())
         .slice(0, 5)
         .map((t: any) => ({
           id: t.id,
-          tipo: t.tipo,
-          titulo: t.concepto || t.categoria || 'Movimiento',
-          detalle: t.finca?.nombre || t.categoria || '',
-          monto: t.monto || 0,
-          fecha: t.fecha,
+          tipo: (t.tipo || t.type || 'INGRESO') as 'INGRESO' | 'GASTO',
+          titulo: t.concepto || t.description || t.descripcion || t.categoria || t.category || 'Movimiento',
+          detalle: t.finca?.nombre || t.finca?.name || t.categoria || t.category || '',
+          monto: Number(t.monto ?? t.amount ?? 0),
+          fecha: t.fecha || t.date,
         }));
 
       const tiposMap: Record<string, number> = {};
-      (prods as Array<{ tipo: string }>).forEach((p) => { tiposMap[p.tipo] = (tiposMap[p.tipo] || 0) + 1; });
+      (prods as Array<{ tipo?: string; type?: string }>).forEach((p) => {
+        const tKey = p.tipo || p.type || 'OTRO';
+        tiposMap[tKey] = (tiposMap[tKey] || 0) + 1;
+      });
 
       setData({
         fincas: fincas.length,

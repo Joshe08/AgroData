@@ -608,13 +608,34 @@ body {
 
 /* ─── Dashboard Responsive Grid ─────────────────────────────────────────── */
 
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  margin-bottom: 24px;
+  align-items: start;
+}
+
+.dashboard-two-col-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 960px) {
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-two-col-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 @media (max-width: 900px) {
   .dashboard-kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-  }
-
-  .dashboard-charts-grid {
-    grid-template-columns: 1fr !important;
   }
 }
 

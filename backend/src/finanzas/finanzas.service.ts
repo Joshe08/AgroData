@@ -129,13 +129,19 @@ export class FinanzasService {
     const incomeByCategory: Record<string, number> = {};
     const monthlyData: Record<string, { mes: string; ingresos: number; gastos: number }> = {};
 
-    // Inicializar los últimos 6 meses en 0 para mantener la estructura visual
+    const formatter = new Intl.DateTimeFormat('es', { month: 'short' });
+
+    // Inicializar los últimos 6 meses en 0 para mantener la estructura visual base
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const formatter = new Intl.DateTimeFormat('es', { month: 'short' });
-      monthlyData[key] = { mes: formatter.format(d).replace('.', ''), ingresos: 0, gastos: 0 };
+      const rawMes = formatter.format(d).replace('.', '').trim();
+      monthlyData[key] = {
+        mes: rawMes.charAt(0).toUpperCase() + rawMes.slice(1),
+        ingresos: 0,
+        gastos: 0,
+      };
     }
 
     for (const t of transactions) {
@@ -146,16 +152,37 @@ export class FinanzasService {
         expensesByCategory[cat] = (expensesByCategory[cat] || 0) + t.amount;
       }
 
-      // Procesar por mes real
+      // Procesar por mes real garantizando que ninguna transacción quede huérfana
       const date = new Date(t.date);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      if (monthlyData[key]) {
+      if (!isNaN(date.getTime())) {
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (!monthlyData[key]) {
+          const rawMes = formatter.format(date).replace('.', '').trim();
+          monthlyData[key] = {
+            mes: rawMes.charAt(0).toUpperCase() + rawMes.slice(1),
+            ingresos: 0,
+            gastos: 0,
+          };
+        }
         if (t.type === 'INGRESO') {
           monthlyData[key].ingresos += t.amount;
         } else {
           monthlyData[key].gastos += t.amount;
         }
       }
+    }
+
+    // Ordenar cronológicamente y tomar los últimos 6 meses relevantes
+    const sortedKeys = Object.keys(monthlyData).sort();
+    const activeKeysWithData = sortedKeys.filter(k => monthlyData[k].ingresos > 0 || monthlyData[k].gastos > 0);
+    
+    let finalKeys;
+    if (activeKeysWithData.length > 0) {
+      const lastActiveIndex = sortedKeys.indexOf(activeKeysWithData[activeKeysWithData.length - 1]);
+      const startIndex = Math.max(0, lastActiveIndex - 5);
+      finalKeys = sortedKeys.slice(startIndex, startIndex + 6);
+    } else {
+      finalKeys = sortedKeys.slice(-6);
     }
 
     return {
@@ -168,7 +195,7 @@ export class FinanzasService {
       incomeByCategory,
       expensesByCategory,
       transactionCount: transactions.length,
-      resumenMensual: Object.values(monthlyData),
+      resumenMensual: finalKeys.map(k => monthlyData[k]),
     };
   }
 }

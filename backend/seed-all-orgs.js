@@ -319,17 +319,23 @@ async function seedAllOrgs() {
     }
     console.log(`    + Inventario poblado`);
 
-    // 6. Finanzas
+    // 6. Finanzas (distribuidas en los últimos 6 meses para visualización en dashboard)
+    const nowRef = new Date();
+    const getMonthDate = (monthsAgo, day) => new Date(nowRef.getFullYear(), nowRef.getMonth() - monthsAgo, day, 10, 0, 0);
+
     const finanzasItems = [
-      { type: 'INGRESO', category: 'VENTA_COSECHA', amount: 32500000, description: 'Venta arroz cosecha 2025-B al molino del Cesar', date: new Date('2026-01-15'), fincaIdx: 0 },
-      { type: 'INGRESO', category: 'VENTA_COSECHA', amount: 18700000, description: 'Venta RFF palma de aceite - Palmeras Magdalena', date: new Date('2026-02-10'), fincaIdx: 1 },
-      { type: 'INGRESO', category: 'VENTA_GANADO', amount: 24000000, description: 'Venta 8 novillas de levante - Feria ganadera Valledupar', date: new Date('2026-03-05'), fincaIdx: 2 },
-      { type: 'INGRESO', category: 'VENTA_COSECHA', amount: 9800000, description: 'Venta maíz tecnificado - Coagro Cesar', date: new Date('2026-04-20'), fincaIdx: 0 },
-      { type: 'GASTO', category: 'INSUMOS', amount: 8750000, description: 'Compra fertilizantes temporada arroz 2026-A', date: new Date('2026-02-20'), fincaIdx: 0 },
-      { type: 'GASTO', category: 'MANO_DE_OBRA', amount: 5600000, description: 'Pago jornales - preparación suelo y siembra', date: new Date('2026-03-15'), fincaIdx: 0 },
-      { type: 'GASTO', category: 'COMBUSTIBLE', amount: 2100000, description: 'ACPM para tractores y bombas de riego', date: new Date('2026-03-31'), fincaIdx: 0 },
-      { type: 'GASTO', category: 'MANTENIMIENTO', amount: 3800000, description: 'Mantenimiento tractor John Deere 5075E', date: new Date('2026-02-05'), fincaIdx: 0 },
-      { type: 'GASTO', category: 'MANO_DE_OBRA', amount: 7200000, description: 'Nómina empleados - Marzo 2026', date: new Date('2026-03-31'), fincaIdx: 0 },
+      { type: 'INGRESO', category: 'VENTA_COSECHA', amount: 28500000, description: 'Venta lote arroz ciclo temprano al molino del Cesar', date: getMonthDate(5, 14), fincaIdx: 0 },
+      { type: 'GASTO', category: 'INSUMOS', amount: 8200000, description: 'Compra de fertilizantes y semillas certificadas', date: getMonthDate(5, 20), fincaIdx: 0 },
+      { type: 'INGRESO', category: 'VENTA_GANADO', amount: 21000000, description: 'Comercialización novillos ceba - Feria ganadera Valledupar', date: getMonthDate(4, 18), fincaIdx: 1 },
+      { type: 'GASTO', category: 'MANO_DE_OBRA', amount: 6900000, description: 'Pago labores preparación y siembra', date: getMonthDate(4, 25), fincaIdx: 0 },
+      { type: 'INGRESO', category: 'VENTA_COSECHA', amount: 24800000, description: 'Venta fruto palma RFF - Palmeras Magdalena', date: getMonthDate(3, 10), fincaIdx: 1 },
+      { type: 'GASTO', category: 'COMBUSTIBLE', amount: 4800000, description: 'Suministro ACPM bombas de riego y maquinaria', date: getMonthDate(3, 18), fincaIdx: 0 },
+      { type: 'INGRESO', category: 'VENTA_COSECHA', amount: 31200000, description: 'Venta maíz tecnificado granel - Coagro Cesar', date: getMonthDate(2, 22), fincaIdx: 0 },
+      { type: 'GASTO', category: 'MANTENIMIENTO', amount: 7600000, description: 'Overhaul y mantenimiento preventivo maquinaria', date: getMonthDate(2, 28), fincaIdx: 0 },
+      { type: 'INGRESO', category: 'VENTA_GANADO', amount: 27400000, description: 'Subasta terneros destete alta genética', date: getMonthDate(1, 16), fincaIdx: 1 },
+      { type: 'GASTO', category: 'INSUMOS', amount: 9300000, description: 'Control fitosanitario foliares y bioestimulantes', date: getMonthDate(1, 24), fincaIdx: 0 },
+      { type: 'INGRESO', category: 'VENTA_COSECHA', amount: 34500000, description: 'Liquidación comercialización cosecha actual', date: getMonthDate(0, 12), fincaIdx: 0 },
+      { type: 'GASTO', category: 'MANO_DE_OBRA', amount: 11200000, description: 'Nómina quincenal operarios y jornaleros', date: getMonthDate(0, 19), fincaIdx: 0 },
     ];
 
     const finCount = await prisma.finanza.count({ where: { organizationId: org.id } });
