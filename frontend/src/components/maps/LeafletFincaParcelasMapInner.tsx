@@ -565,6 +565,7 @@ export default function LeafletFincaParcelasMapInner({
 
       {/* Indicador de Cabida Proporcional de la Finca */}
       <div
+        className="map-finca-badge"
         style={{
           position: 'absolute',
           top: 14,
@@ -596,6 +597,7 @@ export default function LeafletFincaParcelasMapInner({
 
       {/* Selector de Capas Flotante */}
       <div
+        className="map-layer-selector"
         style={{
           position: 'absolute',
           top: 14,
@@ -648,6 +650,7 @@ export default function LeafletFincaParcelasMapInner({
 
       {/* Leyenda Agronómica Flotante */}
       <div
+        className="map-legend-box"
         style={{
           position: 'absolute',
           bottom: 14,

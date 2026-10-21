@@ -428,7 +428,7 @@ function FincaModal({
           </div>
 
           {/* Ubicación Política */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          <div className="form-grid-3-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
             <div>
               <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Departamento</label>
               <input
@@ -574,7 +574,7 @@ function FincaModal({
 
             {showAdvanced && (
               <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="form-grid-2-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                   <div>
                     <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Suelo Predominante</label>
                     <select
@@ -601,7 +601,7 @@ function FincaModal({
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="form-grid-2-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                   <div>
                     <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Sistema de Riego</label>
                     <select
@@ -983,7 +983,7 @@ function LoteAgronomicModal({
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="form-grid-2-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
                 Área (Hectáreas) *
@@ -1126,7 +1126,7 @@ function LoteAgronomicModal({
           </div>
 
           {/* Edafología */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="form-grid-2-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
                 Textura del Suelo
@@ -1187,7 +1187,7 @@ function LoteAgronomicModal({
           </div>
 
           {/* Riego y Topografía */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="form-grid-2-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
                 Topografía / Pendiente
@@ -1586,7 +1586,7 @@ export default function FincasPage() {
   );
 
   return (
-    <div style={{ maxWidth: 1240, margin: '0 auto', paddingBottom: 40 }}>
+    <div className="fincas-container" style={{ maxWidth: 1240, margin: '0 auto', paddingBottom: 40, width: '100%', minWidth: 0 }}>
       {/* Header */}
       <div
         style={{
@@ -1621,22 +1621,22 @@ export default function FincasPage() {
 
       {/* Switcher de Vistas */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ position: 'relative', flex: 1, maxWidth: 360, minWidth: 220 }}>
+        <div className="fincas-search-box" style={{ position: 'relative', flex: 1, maxWidth: 360, minWidth: 200, width: '100%' }}>
           <Search
             size={16}
             style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }}
           />
           <input
             className="input-field"
-            style={{ paddingLeft: 38 }}
+            style={{ paddingLeft: 38, width: '100%' }}
             placeholder="Buscar por predio o vereda..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        {/* View Mode Toggle Buttons con 3 modos */}
-        <div style={{ display: 'flex', background: 'var(--color-surface-2)', padding: 4, borderRadius: 10, border: '1px solid var(--color-border)', gap: 4 }}>
+        {/* View Mode Toggle Buttons */}
+        <div className="fincas-view-switcher" style={{ display: 'flex', background: 'var(--color-surface-2)', padding: 4, borderRadius: 10, border: '1px solid var(--color-border)', gap: 4 }}>
           <button
             type="button"
             onClick={() => setViewMode('grid')}
@@ -1644,7 +1644,7 @@ export default function FincasPage() {
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '6px 12px',
+              padding: '7px 14px',
               borderRadius: 8,
               border: 'none',
               cursor: 'pointer',
@@ -1667,7 +1667,7 @@ export default function FincasPage() {
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '6px 14px',
+              padding: '7px 14px',
               borderRadius: 8,
               border: 'none',
               cursor: 'pointer',
@@ -1680,7 +1680,7 @@ export default function FincasPage() {
             }}
           >
             <Layers size={15} />
-            <span>Visor de Parcelas y Lotes</span>
+            <span>Visor de Parcelas</span>
           </button>
         </div>
       </div>
@@ -1689,30 +1689,18 @@ export default function FincasPage() {
       {viewMode === 'parcelas' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Barra de Selección y Métricas de la Finca */}
-          <div
-            className="card"
-            style={{
-              padding: '16px 20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 16,
-              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%)',
-              border: '1px solid rgba(34, 197, 94, 0.2)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(34, 197, 94, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22c55e' }}>
+          <div className="card fincas-toolbar-card">
+            <div className="fincas-toolbar-finca-selector" style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(34, 197, 94, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22c55e', flexShrink: 0 }}>
                 <Layers size={22} />
               </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#34d399', textTransform: 'uppercase', display: 'block' }}>
-                  Finca Activa en Visor Satelital:
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: '#34d399', textTransform: 'uppercase', display: 'block', letterSpacing: '0.04em' }}>
+                  Finca Activa en Visor:
                 </label>
                 <select
                   className="input-field"
-                  style={{ marginTop: 2, padding: '4px 10px', fontSize: 14, fontWeight: 600, minWidth: 220 }}
+                  style={{ marginTop: 2, padding: '5px 10px', fontSize: 13, fontWeight: 600, width: '100%', minWidth: 160 }}
                   value={selectedFincaIdForMap || ''}
                   onChange={(e) => setSelectedFincaIdForMap(e.target.value)}
                 >
@@ -1724,63 +1712,71 @@ export default function FincasPage() {
             </div>
 
             {currentMapFinca && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <div style={{ fontSize: 12 }}>
-                  <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Superficie Predio</span>
-                  <span style={{ fontWeight: 700, color: 'var(--color-text)', fontSize: 14 }}>{currentMapFinca.hectareas} ha</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', flex: 1, justifyContent: 'space-between', minWidth: 0, width: '100%' }}>
+                <div className="fincas-kpi-strip">
+                  <div style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span style={{ color: 'var(--color-text-subtle)', display: 'block', fontSize: 10, textTransform: 'uppercase' }}>Superficie</span>
+                    <span style={{ fontWeight: 700, color: 'var(--color-text)', fontSize: 13 }}>{currentMapFinca.hectareas} ha</span>
+                  </div>
+                  <div style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span style={{ color: 'var(--color-text-subtle)', display: 'block', fontSize: 10, textTransform: 'uppercase' }}>Parcelado</span>
+                    <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: 13 }}>
+                      {mapViewerLotes.reduce((sum, l) => sum + (l.hectareas || 0), 0)} ha
+                    </span>
+                  </div>
+                  <div style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span style={{ color: 'var(--color-text-subtle)', display: 'block', fontSize: 10, textTransform: 'uppercase' }}>Área Libre</span>
+                    <span style={{ fontWeight: 700, color: '#34d399', fontSize: 13 }}>
+                      {Math.max(0, parseFloat((currentMapFinca.hectareas - mapViewerLotes.reduce((sum, l) => sum + (l.hectareas || 0), 0)).toFixed(2)))} ha
+                    </span>
+                  </div>
                 </div>
-                <div style={{ fontSize: 12 }}>
-                  <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Parcelado</span>
-                  <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: 14 }}>
-                    {mapViewerLotes.reduce((sum, l) => sum + (l.hectareas || 0), 0)} ha ({mapViewerLotes.length} {mapViewerLotes.length === 1 ? 'lote' : 'lotes'})
-                  </span>
+
+                <div className="fincas-toolbar-actions">
+                  <button
+                    type="button"
+                    onClick={() => setPerimeterModalFinca(currentMapFinca)}
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '7px 12px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+                    title="Delimitar zona geográfica del predio mediante puntos manuales"
+                  >
+                    <Compass size={14} />
+                    <span>Delimitar Finca</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLoteModalData({ isOpen: true, fincaId: currentMapFinca.id })}
+                    className="btn-primary"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '7px 12px', background: '#22c55e' }}
+                  >
+                    <Plus size={14} /> <span>Nueva Parcela</span>
+                  </button>
                 </div>
-                <div style={{ fontSize: 12 }}>
-                  <span style={{ color: 'var(--color-text-subtle)', display: 'block' }}>Área Libre</span>
-                  <span style={{ fontWeight: 700, color: '#34d399', fontSize: 14 }}>
-                    {Math.max(0, parseFloat((currentMapFinca.hectareas - mapViewerLotes.reduce((sum, l) => sum + (l.hectareas || 0), 0)).toFixed(2)))} ha
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setPerimeterModalFinca(currentMapFinca)}
-                  className="btn-secondary"
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '7px 12px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.4)' }}
-                  title="Delimitar zona geográfica del predio mediante puntos manuales"
-                >
-                  <Compass size={14} />
-                  <span>Delimitar Zona Finca</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLoteModalData({ isOpen: true, fincaId: currentMapFinca.id })}
-                  className="btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '7px 12px', background: '#22c55e' }}
-                >
-                  <Plus size={14} /> Nueva Parcela
-                </button>
               </div>
             )}
           </div>
 
           {/* Grid: Mapa Satelital + Ficha Agronómica Flotante */}
-          <div style={{ display: 'grid', gridTemplateColumns: currentMapFinca ? '1fr 340px' : '1fr', gap: 16, alignItems: 'start' }}>
+          <div className="fincas-map-viewer-grid">
             {/* Mapa de Parcelas y Zona Perimetral */}
-            {currentMapFinca ? (
-              <FincaParcelasMap
-                finca={currentMapFinca}
-                lotes={mapViewerLotes}
-                selectedLoteId={selectedLoteInMap?.id}
-                onSelectLote={(l) => setSelectedLoteInMap(l)}
-                height="560px"
-              />
-            ) : (
-              <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                No tienes predios registrados para inspeccionar parcelas.
-              </div>
-            )}
+            <div style={{ minWidth: 0, width: '100%' }}>
+              {currentMapFinca ? (
+                <FincaParcelasMap
+                  finca={currentMapFinca}
+                  lotes={mapViewerLotes}
+                  selectedLoteId={selectedLoteInMap?.id}
+                  onSelectLote={(l) => setSelectedLoteInMap(l)}
+                  height="clamp(380px, 55vh, 560px)"
+                />
+              ) : (
+                <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                  No tienes predios registrados para inspeccionar parcelas.
+                </div>
+              )}
+            </div>
 
             {/* Panel Agronómico de Parcela */}
+            <div style={{ minWidth: 0, width: '100%' }}>
             {selectedLoteInMap ? (
               <div
                 className="card"
@@ -1965,6 +1961,7 @@ export default function FincasPage() {
                 </p>
               </div>
             )}
+            </div>
           </div>
         </div>
       )}
@@ -2141,11 +2138,13 @@ export default function FincasPage() {
                                       fontSize: 12,
                                     }}
                                   >
-                                    <div style={{ overflow: 'hidden', paddingRight: 6 }}>
-                                      <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lote.nombre}</span>
-                                      <span style={{ color: 'var(--color-text-subtle)', marginLeft: 8 }}>{lote.hectareas} ha</span>
+                                    <div style={{ overflow: 'hidden', paddingRight: 6, minWidth: 0, flex: 1 }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                        <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lote.nombre}</span>
+                                        <span style={{ color: 'var(--color-text-subtle)', fontSize: 11 }}>({lote.hectareas} ha)</span>
+                                      </div>
                                       {lote.cultivoActual && (
-                                        <span style={{ color: '#22c55e', marginLeft: 8, fontSize: 11 }}>• {lote.cultivoActual}</span>
+                                        <div style={{ color: '#22c55e', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lote.cultivoActual}</div>
                                       )}
                                     </div>
                                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>

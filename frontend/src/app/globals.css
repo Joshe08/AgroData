@@ -644,3 +644,150 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* ─── Mis Fincas Module Responsive Styling ──────────────────────────────── */
+
+.fincas-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  width: 100%;
+}
+
+.fincas-map-viewer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+}
+
+.fincas-toolbar-card {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.fincas-kpi-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.form-grid-3-responsive {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.form-grid-2-responsive {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1024px) {
+  .fincas-map-viewer-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .fincas-toolbar-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 14px !important;
+    gap: 12px !important;
+  }
+
+  .fincas-toolbar-finca-selector {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .fincas-toolbar-finca-selector select {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .fincas-kpi-strip {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .fincas-toolbar-actions {
+    display: flex !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .fincas-toolbar-actions button {
+    flex: 1 1 auto !important;
+    justify-content: center !important;
+  }
+
+  .fincas-view-switcher {
+    width: 100% !important;
+  }
+
+  .fincas-view-switcher button {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  .fincas-search-box {
+    max-width: 100% !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .form-grid-3-responsive {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-grid-2-responsive {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .map-finca-badge {
+    top: 50px !important;
+    left: 8px !important;
+    right: 8px !important;
+    max-width: calc(100% - 16px) !important;
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+
+  .map-layer-selector {
+    top: 8px !important;
+    right: 8px !important;
+  }
+
+  .map-layer-selector button {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .map-legend-box {
+    bottom: 8px !important;
+    left: 8px !important;
+    max-width: calc(100% - 16px) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .fincas-kpi-strip {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
