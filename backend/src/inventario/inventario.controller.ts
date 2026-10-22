@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { InventarioService } from './inventario.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('inventario')
 @ApiBearerAuth()
@@ -11,15 +11,17 @@ export class InventarioController {
   constructor(private inventarioService: InventarioService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Obtener todo el inventario de la organización' })
-  async findAll(@Request() req: any) {
-    return this.inventarioService.findAll(req.user.orgId);
+  @ApiOperation({ summary: 'Obtener el inventario de la organización (opcionalmente filtrado por finca)' })
+  @ApiQuery({ name: 'fincaId', required: false, description: 'ID de la finca para filtrar la bodega' })
+  async findAll(@Request() req: any, @Query('fincaId') fincaId?: string) {
+    return this.inventarioService.findAll(req.user.orgId, fincaId);
   }
 
   @Get('alertas')
   @ApiOperation({ summary: 'Obtener items de inventario con stock bajo' })
-  async findAlertas(@Request() req: any) {
-    return this.inventarioService.findAlertas(req.user.orgId);
+  @ApiQuery({ name: 'fincaId', required: false, description: 'ID de la finca para filtrar alertas' })
+  async findAlertas(@Request() req: any, @Query('fincaId') fincaId?: string) {
+    return this.inventarioService.findAlertas(req.user.orgId, fincaId);
   }
 
   @Get(':id')

@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { inventarioApi, fincasApi } from '@/lib/api';
 import { useToastStore } from '@/store/toastStore';
 import {
   Package, Plus, Edit3, Trash2, Search, X, AlertTriangle,
   ShieldAlert, ArrowUpCircle, ArrowDownCircle, RefreshCw,
-  TrendingDown, TrendingUp, Boxes,
+  TrendingDown, TrendingUp, Boxes, MapPin, Building2,
 } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
@@ -20,12 +20,13 @@ interface Item {
   costo?: number;
   proveedor?: string;
   fincaId: string | number;
-  finca?: { id: string | number; nombre: string };
+  finca?: { id: string | number; nombre?: string; name?: string; ubicacion?: string; location?: string };
 }
 
 interface Finca {
   id: string | number;
   nombre: string;
+  ubicacion?: string;
 }
 
 const CATEGORIAS: Record<string, string> = {
@@ -220,11 +221,13 @@ function AjusteModal({
 function ItemModal({
   item,
   fincas,
+  initialFincaId,
   onClose,
   onSave,
 }: {
   item?: Item;
   fincas: Finca[];
+  initialFincaId?: string;
   onClose: () => void;
   onSave: () => void;
 }) {
@@ -236,7 +239,7 @@ function ItemModal({
     stockMinimo: item?.stockMinimo?.toString() || '5',
     costo: item?.costo?.toString() || '',
     proveedor: item?.proveedor || '',
-    fincaId: item?.fincaId?.toString() || fincas[0]?.id?.toString() || '',
+    fincaId: item?.fincaId?.toString() || initialFincaId || fincas[0]?.id?.toString() || '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -248,6 +251,10 @@ function ItemModal({
     }
     if (!form.cantidad || parseFloat(form.cantidad) < 0) {
       useToastStore.getState().warning('Ingresa una cantidad válida.');
+      return;
+    }
+    if (!form.fincaId) {
+      useToastStore.getState().warning('Debes seleccionar la Finca o Bodega donde se almacena el insumo.');
       return;
     }
     setLoading(true);
@@ -305,7 +312,7 @@ function ItemModal({
             </div>
 
             <div>
-              <label style={labelStyle}>Finca / Bodega *</label>
+              <label style={labelStyle}>Finca / Bodega asignada *</label>
               <select className="input-field" value={form.fincaId} onChange={e => setForm(f => ({ ...f, fincaId: e.target.value }))} required>
                 {fincas.map(fi => (<option key={fi.id} value={fi.id}>{fi.nombre}</option>))}
               </select>
@@ -351,7 +358,7 @@ function ItemModal({
   );
 }
 
-// ─── Página Principal ─────────────────────────────────────────────────────────
+// ─── Página Principal con Filtro por Finca ───────────────────────────────────
 
 export default function InventarioPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -360,6 +367,7 @@ export default function InventarioPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
+  const [filtroFinca, setFiltroFinca] = useState<string>(''); // '' = Todas las fincas
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<Item | undefined>();
   const [ajusteItem, setAjusteItem] = useState<Item | null>(null);
@@ -367,6 +375,7 @@ export default function InventarioPage() {
     isOpen: boolean; id: string | number | null; name: string; loading: boolean;
   }>({ isOpen: false, id: null, name: '', loading: false });
 
+  // Cargar datos (soporta filtro por finca tanto en request como en memoria)
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -401,96 +410,279 @@ export default function InventarioPage() {
     }
   };
 
-  const filtered = items.filter(i => {
-    const matchSearch =
-      (i.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
-      (i.proveedor || '').toLowerCase().includes(search.toLowerCase());
-    const matchCat = filtroCategoria ? i.categoria === filtroCategoria : true;
-    return matchSearch && matchCat;
-  });
+  // Obtener nombre seguro de la finca para cada item
+  const getFincaNombre = useCallback((item: Item) => {
+    if (item.finca?.nombre) return item.finca.nombre;
+    if (item.finca?.name) return item.finca.name;
+    const match = fincas.find(f => String(f.id) === String(item.fincaId));
+    if (match) return match.nombre;
+    if (item.fincaId) return `Finca #${item.fincaId}`;
+    return 'Bodega Central';
+  }, [fincas]);
+
+  // Filtrado reactivo en tiempo real (por Finca, Búsqueda y Categoría)
+  const filtered = useMemo(() => {
+    return items.filter(i => {
+      // Filtro de Finca
+      const matchFinca = filtroFinca
+        ? String(i.fincaId) === String(filtroFinca) || String(i.finca?.id) === String(filtroFinca)
+        : true;
+
+      // Filtro de Búsqueda
+      const nombreFinca = getFincaNombre(i).toLowerCase();
+      const matchSearch =
+        (i.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
+        (i.proveedor || '').toLowerCase().includes(search.toLowerCase()) ||
+        nombreFinca.includes(search.toLowerCase());
+
+      // Filtro de Categoría
+      const matchCat = filtroCategoria ? i.categoria === filtroCategoria : true;
+
+      return matchFinca && matchSearch && matchCat;
+    });
+  }, [items, filtroFinca, search, filtroCategoria, getFincaNombre]);
+
+  // Alertas específicas para la finca seleccionada (o globales si es "")
+  const alertasFiltradas = useMemo(() => {
+    if (!filtroFinca) return alertas;
+    return alertas.filter(a => String(a.fincaId) === String(filtroFinca) || String(a.finca?.id) === String(filtroFinca));
+  }, [alertas, filtroFinca]);
 
   const isBajoStock = (item: Item) => item.stockMinimo != null && item.cantidad <= item.stockMinimo;
 
-  // Resumen KPI
-  const totalItems = items.length;
-  const totalBajoStock = alertas.length;
-  const totalValor = items.reduce((s, i) => s + (i.cantidad * (i.costo || 0)), 0);
+  // Resumen KPI recalculado según la Finca seleccionada
+  const totalItems = filtered.length;
+  const totalBajoStock = filtered.filter(isBajoStock).length;
+  const totalValor = filtered.reduce((s, i) => s + (i.cantidad * (i.costo || 0)), 0);
   const formatCOP = (v: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
 
+  const fincaSeleccionadaObj = fincas.find(f => String(f.id) === String(filtroFinca));
+
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
+    <div style={{ maxWidth: 1240, margin: '0 auto', paddingBottom: 40 }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 className="font-display" style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Inventario de Insumos</h1>
+          <h1 className="font-display" style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>
+            Inventario de Insumos
+          </h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>
-            {totalItems} productos registrados · {alertas.length} alertas de abastecimiento
+            {filtroFinca
+              ? `Bodega: ${fincaSeleccionadaObj?.nombre || 'Finca seleccionada'} · ${totalItems} insumos registrados`
+              : `Consolidado general · ${totalItems} productos en todas las fincas`}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button onClick={loadData} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
             <RefreshCw size={14} /> Actualizar
           </button>
-          <button onClick={() => { setEditItem(undefined); setModalOpen(true); }} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={() => { setEditItem(undefined); setModalOpen(true); }}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+          >
             <Plus size={18} /> Registrar Insumo
           </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
+      {/* Selector Rápido de Fincas (Pestañas / Pills superiores) */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          overflowX: 'auto',
+          paddingBottom: 8,
+          marginBottom: 16,
+          scrollbarWidth: 'thin',
+        }}
+      >
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 4, marginRight: 4, flexShrink: 0 }}>
+          <Building2 size={15} color="var(--color-primary)" /> Bodegas:
+        </span>
+
+        {/* Botón Todas las Fincas */}
+        <button
+          type="button"
+          onClick={() => setFiltroFinca('')}
+          style={{
+            padding: '6px 14px',
+            borderRadius: 20,
+            fontSize: 12.5,
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: '1px solid',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.15s ease',
+            background: filtroFinca === '' ? 'var(--color-primary)' : 'var(--color-surface)',
+            color: filtroFinca === '' ? '#ffffff' : 'var(--color-text)',
+            borderColor: filtroFinca === '' ? 'var(--color-primary)' : 'var(--color-border)',
+            boxShadow: filtroFinca === '' ? '0 2px 8px rgba(16, 185, 129, 0.3)' : 'none',
+          }}
+        >
+          🏢 Todas las Fincas ({items.length})
+        </button>
+
+        {/* Botones por cada finca */}
+        {fincas.map(f => {
+          const isActiva = String(filtroFinca) === String(f.id);
+          const cantidadFinca = items.filter(it => String(it.fincaId) === String(f.id) || String(it.finca?.id) === String(f.id)).length;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setFiltroFinca(String(f.id))}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 20,
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+                border: '1px solid',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: isActiva ? 'var(--color-primary)' : 'var(--color-surface)',
+                color: isActiva ? '#ffffff' : 'var(--color-text)',
+                borderColor: isActiva ? 'var(--color-primary)' : 'var(--color-border)',
+                boxShadow: isActiva ? '0 2px 8px rgba(16, 185, 129, 0.3)' : 'none',
+              }}
+            >
+              <MapPin size={13} color={isActiva ? '#ffffff' : 'var(--color-primary)'} />
+              <span>{f.nombre}</span>
+              <span
+                style={{
+                  fontSize: 11,
+                  padding: '1px 6px',
+                  borderRadius: 10,
+                  background: isActiva ? 'rgba(255,255,255,0.25)' : 'var(--color-surface-2)',
+                  color: isActiva ? '#ffffff' : 'var(--color-text-muted)',
+                  fontWeight: 700,
+                }}
+              >
+                {cantidadFinca}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* KPI Cards (Adaptadas a la finca seleccionada) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14, marginBottom: 20 }}>
         <div className="card" style={{ padding: '16px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <Boxes size={18} color="#0ea5e9" />
-            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 500 }}>Total productos</span>
+            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+              {filtroFinca ? 'Insumos en bodega' : 'Total productos'}
+            </span>
           </div>
           <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-text)' }}>{totalItems}</div>
+          {filtroFinca && (
+            <div style={{ fontSize: 11, color: 'var(--color-primary)', marginTop: 4, fontWeight: 600 }}>
+              ✓ Bodega: {fincaSeleccionadaObj?.nombre}
+            </div>
+          )}
         </div>
-        <div className="card" style={{ padding: '16px 18px', borderColor: totalBajoStock > 0 ? 'rgba(239,68,68,0.3)' : undefined }}>
+
+        <div className="card" style={{ padding: '16px 18px', borderColor: totalBajoStock > 0 ? 'rgba(239,68,68,0.4)' : undefined }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <TrendingDown size={18} color={totalBajoStock > 0 ? '#f87171' : '#10b981'} />
-            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 500 }}>Stock bajo</span>
+            <TrendingDown size={18} color={totalBajoStock > 0 ? '#ef4444' : '#10b981'} />
+            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 500 }}>Stock bajo / Crítico</span>
           </div>
-          <div style={{ fontSize: 26, fontWeight: 700, color: totalBajoStock > 0 ? '#f87171' : '#10b981' }}>{totalBajoStock}</div>
+          <div style={{ fontSize: 26, fontWeight: 700, color: totalBajoStock > 0 ? '#ef4444' : '#10b981' }}>{totalBajoStock}</div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
+            {totalBajoStock > 0 ? 'Requieren compra urgente' : 'Abastecimiento en orden'}
+          </div>
         </div>
+
         <div className="card" style={{ padding: '16px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <TrendingUp size={18} color="#10b981" />
-            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 500 }}>Valor estimado</span>
+            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 500 }}>Valor estimado bodega</span>
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>{formatCOP(totalValor)}</div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
+            Inversión en insumos activos
+          </div>
         </div>
       </div>
 
-      {/* Alerta crítica */}
-      {alertas.length > 0 && (
+      {/* Alerta crítica (filtrada por finca) */}
+      {alertasFiltradas.length > 0 && (
         <div className="alert-inline alert-inline-danger" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <ShieldAlert size={20} style={{ flexShrink: 0 }} />
+          <ShieldAlert size={22} style={{ flexShrink: 0 }} />
           <div>
             <div style={{ fontWeight: 700, fontSize: 13 }}>
-              {alertas.length} insumo(s) con existencia crítica por debajo del stock mínimo
+              {alertasFiltradas.length} insumo(s) con existencia crítica por debajo del stock mínimo {filtroFinca ? `en ${fincaSeleccionadaObj?.nombre}` : ''}
             </div>
-            <div style={{ fontSize: 12, marginTop: 2, opacity: 0.9 }}>
-              {(alertas as Item[]).map(a => a.nombre).slice(0, 5).join(', ')}
+            <div style={{ fontSize: 12, marginTop: 2, opacity: 0.95 }}>
+              {(alertasFiltradas as Item[]).map(a => a.nombre).slice(0, 6).join(', ')}
             </div>
           </div>
         </div>
       )}
 
-      {/* Filtros */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+      {/* Barra de Filtros */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Buscador */}
+        <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
           <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
-          <input className="input-field" style={{ paddingLeft: 38 }} placeholder="Buscar por producto o proveedor..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input
+            className="input-field"
+            style={{ paddingLeft: 38 }}
+            placeholder="Buscar por producto, proveedor o finca..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
-        <select className="input-field" style={{ width: 'auto', minWidth: 200 }} value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)}>
-          <option value="">Todas las categorías</option>
-          {Object.keys(CATEGORIAS).map(c => (<option key={c} value={c}>{CATEGORIAS[c]}</option>))}
-        </select>
+
+        {/* Filtro de Finca / Bodega en Dropdown */}
+        <div style={{ minWidth: 200 }}>
+          <select
+            className="input-field"
+            value={filtroFinca}
+            onChange={e => setFiltroFinca(e.target.value)}
+          >
+            <option value="">🏢 Todas las fincas (Consolidado)</option>
+            {fincas.map(fi => (
+              <option key={fi.id} value={fi.id}>📍 {fi.nombre}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Filtro de Categoría */}
+        <div style={{ minWidth: 190 }}>
+          <select
+            className="input-field"
+            value={filtroCategoria}
+            onChange={e => setFiltroCategoria(e.target.value)}
+          >
+            <option value="">Todas las categorías</option>
+            {Object.keys(CATEGORIAS).map(c => (
+              <option key={c} value={c}>{CATEGORIAS[c]}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Limpiar filtros si hay alguno activo */}
+        {(filtroFinca || filtroCategoria || search) && (
+          <button
+            type="button"
+            onClick={() => { setFiltroFinca(''); setFiltroCategoria(''); setSearch(''); }}
+            className="btn-secondary"
+            style={{ fontSize: 12, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 4 }}
+            title="Restablecer filtros"
+          >
+            <X size={14} /> Limpiar
+          </button>
+        )}
       </div>
 
-      {/* Tabla */}
+      {/* Tabla de Insumos */}
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[...Array(5)].map((_, i) => (<div key={i} className="skeleton" style={{ height: 56, borderRadius: 10 }} />))}
@@ -499,9 +691,15 @@ export default function InventarioPage() {
         <div className="card" style={{ overflow: 'hidden', padding: 0 }}>
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px', color: 'var(--color-text-subtle)' }}>
-              <Package size={40} style={{ margin: '0 auto 12px', opacity: 0.2 }} />
-              <p style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>No hay insumos registrados en esta categoría</p>
-              <p style={{ fontSize: 13, marginTop: 4 }}>Haz clic en "Registrar Insumo" para agregar el primero.</p>
+              <Package size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+              <p style={{ fontWeight: 600, color: 'var(--color-text-muted)', fontSize: 15 }}>
+                No hay insumos registrados {filtroFinca ? `en ${fincaSeleccionadaObj?.nombre}` : 'con los filtros actuales'}
+              </p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>
+                {filtroFinca
+                  ? `Haz clic en "Registrar Insumo" para almacenar productos en la bodega de ${fincaSeleccionadaObj?.nombre}.`
+                  : 'Haz clic en "Registrar Insumo" para agregar el primero.'}
+              </p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -519,69 +717,122 @@ export default function InventarioPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(item => (
-                    <tr key={item.id} style={{ background: isBajoStock(item) ? 'rgba(239,68,68,0.03)' : undefined }}>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: CAT_COLORS[item.categoria] || '#94a3b8', flexShrink: 0 }} />
-                          <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{item.nombre}</span>
-                        </div>
-                      </td>
-                      <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
-                        {CATEGORIAS[item.categoria] || item.categoria}
-                      </td>
-                      <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
-                        {item.finca?.nombre || `Finca #${item.fincaId}`}
-                      </td>
-                      <td>
-                        <span style={{ fontWeight: 700, color: isBajoStock(item) ? '#f87171' : 'var(--color-text)', fontSize: 15 }}>
-                          {item.cantidad}
-                        </span>
-                        <span style={{ fontSize: 11, color: 'var(--color-text-muted)', marginLeft: 4 }}>{item.unidad}</span>
-                      </td>
-                      <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
-                        {item.stockMinimo != null ? `${item.stockMinimo} ${item.unidad}` : '—'}
-                      </td>
-                      <td>
-                        {isBajoStock(item) ? (
-                          <span className="badge badge-danger" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <AlertTriangle size={11} /> Stock bajo
+                  {filtered.map(item => {
+                    const fincaNombre = getFincaNombre(item);
+                    const bajoStock = isBajoStock(item);
+
+                    return (
+                      <tr key={item.id} style={{ background: bajoStock ? 'rgba(239,68,68,0.03)' : undefined }}>
+                        {/* Nombre del insumo */}
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ width: 9, height: 9, borderRadius: '50%', background: CAT_COLORS[item.categoria] || '#94a3b8', flexShrink: 0 }} />
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{item.nombre}</div>
+                              {item.costo ? (
+                                <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                                  {formatCOP(item.costo)} / {item.unidad}
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Categoría */}
+                        <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
+                          {CATEGORIAS[item.categoria] || item.categoria}
+                        </td>
+
+                        {/* Finca / Bodega asignada */}
+                        <td>
+                          <div
+                            onClick={() => {
+                              if (item.fincaId) setFiltroFinca(String(item.fincaId));
+                            }}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              padding: '3px 8px',
+                              borderRadius: 8,
+                              background: 'rgba(16, 185, 129, 0.08)',
+                              border: '1px solid rgba(16, 185, 129, 0.2)',
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: 'var(--color-primary)',
+                              cursor: 'pointer',
+                            }}
+                            title="Filtrar por esta finca"
+                          >
+                            <MapPin size={12} />
+                            <span>{fincaNombre}</span>
+                          </div>
+                        </td>
+
+                        {/* Existencias */}
+                        <td>
+                          <span style={{ fontWeight: 700, color: bajoStock ? '#ef4444' : 'var(--color-text)', fontSize: 15 }}>
+                            {item.cantidad}
                           </span>
-                        ) : (
-                          <span className="badge badge-success">Abastecido</span>
-                        )}
-                      </td>
-                      <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
-                        {item.proveedor || '—'}
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                          {/* Entrada */}
-                          <button
-                            onClick={() => setAjusteItem(item)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#10b981', padding: 6, borderRadius: 8 }}
-                            title="Registrar entrada / salida de stock"
-                          >
-                            <ArrowUpCircle size={15} />
-                          </button>
-                          <button
-                            onClick={() => { setEditItem(item); setModalOpen(true); }}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 8 }}
-                            title="Editar"
-                          >
-                            <Edit3 size={14} />
-                          </button>
-                          <button
-                            onClick={() => setDeleteModal({ isOpen: true, id: item.id, name: item.nombre, loading: false })}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 8 }}
-                            title="Eliminar"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          <span style={{ fontSize: 11, color: 'var(--color-text-muted)', marginLeft: 4 }}>{item.unidad}</span>
+                        </td>
+
+                        {/* Stock Mínimo */}
+                        <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
+                          {item.stockMinimo != null ? `${item.stockMinimo} ${item.unidad}` : '—'}
+                        </td>
+
+                        {/* Estado de Abastecimiento */}
+                        <td>
+                          {bajoStock ? (
+                            <span className="badge badge-danger" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <AlertTriangle size={11} /> Stock bajo
+                            </span>
+                          ) : (
+                            <span className="badge badge-success">Abastecido</span>
+                          )}
+                        </td>
+
+                        {/* Proveedor */}
+                        <td style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
+                          {item.proveedor || '—'}
+                        </td>
+
+                        {/* Acciones */}
+                        <td>
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                            {/* Ajuste de Stock (Entrada / Salida) */}
+                            <button
+                              onClick={() => setAjusteItem(item)}
+                              className="btn-secondary"
+                              style={{ padding: '5px 10px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                              title="Registrar entrada o salida física de bodega"
+                            >
+                              <Boxes size={13} /> Ajustar
+                            </button>
+
+                            {/* Editar */}
+                            <button
+                              onClick={() => { setEditItem(item); setModalOpen(true); }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 6 }}
+                              title="Editar producto"
+                            >
+                              <Edit3 size={15} />
+                            </button>
+
+                            {/* Eliminar */}
+                            <button
+                              onClick={() => setDeleteModal({ isOpen: true, id: item.id, name: item.nombre, loading: false })}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', padding: 6, borderRadius: 6 }}
+                              title="Eliminar insumo"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -589,16 +840,7 @@ export default function InventarioPage() {
         </div>
       )}
 
-      {/* Modales */}
-      {modalOpen && (
-        <ItemModal
-          item={editItem}
-          fincas={fincas}
-          onClose={() => setModalOpen(false)}
-          onSave={loadData}
-        />
-      )}
-
+      {/* Modal Ajuste Entrada / Salida */}
       {ajusteItem && (
         <AjusteModal
           item={ajusteItem}
@@ -607,11 +849,23 @@ export default function InventarioPage() {
         />
       )}
 
+      {/* Modal Crear / Editar */}
+      {modalOpen && (
+        <ItemModal
+          item={editItem}
+          fincas={fincas}
+          initialFincaId={filtroFinca || undefined}
+          onClose={() => { setModalOpen(false); setEditItem(undefined); }}
+          onSave={loadData}
+        />
+      )}
+
+      {/* Modal Eliminar */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
         title="¿Eliminar insumo del inventario?"
         itemName={deleteModal.name}
-        description="Esta acción eliminará permanentemente el registro de este insumo de la bodega. No se puede deshacer."
+        description="Esta acción eliminará el producto y su historial de existencia de la bodega seleccionada."
         loading={deleteModal.loading}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteModal({ isOpen: false, id: null, name: '', loading: false })}

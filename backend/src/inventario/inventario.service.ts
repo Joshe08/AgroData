@@ -5,9 +5,14 @@ import { PrismaService } from '../prisma/prisma.service';
 export class InventarioService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(orgId: string) {
+  async findAll(orgId: string, fincaId?: string) {
+    const where: any = { organizationId: orgId };
+    if (fincaId && fincaId !== 'all' && String(fincaId).trim() !== '') {
+      where.fincaId = String(fincaId);
+    }
+
     return this.prisma.inventario.findMany({
-      where: { organizationId: orgId },
+      where,
       include: {
         finca: {
           select: { id: true, name: true, location: true },
@@ -28,8 +33,8 @@ export class InventarioService {
     });
   }
 
-  async findAlertas(orgId: string) {
-    const items = await this.findAll(orgId);
+  async findAlertas(orgId: string, fincaId?: string) {
+    const items = await this.findAll(orgId, fincaId);
     return items.filter((item) => item.quantity <= item.minAlertQuantity);
   }
 
