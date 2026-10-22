@@ -177,7 +177,7 @@ function AjusteModal({
             {nuevaCantidad !== null && (
               <div style={{ marginTop: 6, fontSize: 12, color: nuevaCantidad < 0 ? '#f87171' : nuevaCantidad <= (item.stockMinimo || 0) ? '#fbbf24' : '#10b981', fontWeight: 600 }}>
                 {nuevaCantidad < 0
-                  ? `⚠ Cantidad insuficiente (quedaría ${nuevaCantidad.toFixed(2)})`
+                  ? `Cantidad insuficiente (quedaría ${nuevaCantidad.toFixed(2)})`
                   : `Nuevo stock: ${nuevaCantidad.toFixed(2)} ${item.unidad}`}
               </div>
             )}
@@ -522,7 +522,7 @@ export default function InventarioPage() {
             boxShadow: filtroFinca === '' ? '0 2px 8px rgba(16, 185, 129, 0.3)' : 'none',
           }}
         >
-          🏢 Todas las Fincas ({items.length})
+          Todas las Fincas ({items.length})
         </button>
 
         {/* Botones por cada finca */}
@@ -583,7 +583,7 @@ export default function InventarioPage() {
           <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-text)' }}>{totalItems}</div>
           {filtroFinca && (
             <div style={{ fontSize: 11, color: 'var(--color-primary)', marginTop: 4, fontWeight: 600 }}>
-              ✓ Bodega: {fincaSeleccionadaObj?.nombre}
+              Bodega: {fincaSeleccionadaObj?.nombre}
             </div>
           )}
         </div>
@@ -647,9 +647,9 @@ export default function InventarioPage() {
             value={filtroFinca}
             onChange={e => setFiltroFinca(e.target.value)}
           >
-            <option value="">🏢 Todas las fincas (Consolidado)</option>
+            <option value="">Todas las fincas (Consolidado)</option>
             {fincas.map(fi => (
-              <option key={fi.id} value={fi.id}>📍 {fi.nombre}</option>
+              <option key={fi.id} value={fi.id}>{fi.nombre}</option>
             ))}
           </select>
         </div>
