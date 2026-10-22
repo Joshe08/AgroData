@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Layers, MapPin, Compass, Eye, CheckCircle2, AlertTriangle, Droplets, Info } from 'lucide-react';
+import { Layers, MapPin, Compass, Eye, CheckCircle2, AlertTriangle, Droplets, Info, Thermometer, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import { Finca, Lote } from '@/store/fincasStore';
 
 export interface FincaParcelasMapProps {
@@ -114,6 +114,151 @@ function partitionPolygonProportional(
   return result;
 }
 
+// ─── ANÁLISIS DE RIESGO AGRONÓMICO POR LOTE ─────────────────────────────────
+
+type RiskLevel = 'optimo' | 'atencion' | 'alerta' | 'critico';
+
+interface LoteRiskAnalysis {
+  loteId: string | number;
+  nombre: string;
+  level: RiskLevel;
+  score: number; // 0-100 donde 100 = mejor estado
+  color: string;
+  strokeColor: string;
+  alerts: string[];
+  recommendations: string[];
+}
+
+function calcularRiesgoLote(lote: Lote): LoteRiskAnalysis {
+  const alerts: string[] = [];
+  const recommendations: string[] = [];
+  let score = 100;
+
+  // Factor: Estado del lote
+  const statusScores: Record<string, number> = {
+    ACTIVO: 0,
+    RIEGO: -5,
+    PREPARACION: -10,
+    PASTOREO: -15,
+    DESCANSO: -20,
+    RESERVA: 0,
+  };
+  const statusPenalty = statusScores[lote.status || 'ACTIVO'] ?? -10;
+  score += statusPenalty;
+
+  if (lote.status === 'DESCANSO') {
+    alerts.push('Lote en barbecho: sin cobertura vegetal activa');
+    recommendations.push('Considere siembra de abono verde para recuperar materia orgánica');
+  }
+
+  // Factor: Tipo de suelo
+  const sueloBueno = ['FRANCO', 'FRANCO_LIMOSO', 'LIMOSO', 'ALUVIAL'];
+  const sueloDifícil = ['ARCILLOSO', 'ARENOSO', 'PEDREGOSO'];
+  const suelo = (lote as any).tipoSuelo || (lote as any).soilType || '';
+  if (sueloDifícil.includes(suelo)) {
+    score -= 15;
+    if (suelo === 'ARCILLOSO') {
+      alerts.push('Suelo arcilloso: riesgo de anegamiento y compactación');
+      recommendations.push('Implemente drenajes superficiales y subsolado cada 2 años');
+    } else if (suelo === 'ARENOSO') {
+      alerts.push('Suelo arenoso: baja retención hídrica');
+      recommendations.push('Aumente frecuencia de riego y aplique materia orgánica');
+    }
+  } else if (sueloBueno.includes(suelo)) {
+    score += 5;
+  }
+
+  // Factor: Sistema de riego
+  const riego = (lote as any).sistemaRiego || (lote as any).sistemaRiego || '';
+  if (!riego || riego === 'SECANO') {
+    score -= 10;
+    alerts.push('Sin sistema de riego tecnificado: dependencia de lluvia');
+    recommendations.push('Evalúe instalación de riego por goteo o aspersión para mayor control hídrico');
+  } else if (riego === 'GOTEO' || riego === 'ASPERSION') {
+    score += 8;
+    recommendations.push('Sistema de riego tecnificado activo: monitoree presión y filtros mensualmente');
+  }
+
+  // Factor: Cultivo activo
+  const cultivo = (lote as any).cultivoActual || '';
+  if (cultivo) {
+    // Cultivos de alto riesgo fitosanitario en el Cesar
+    const cultivosAltoRiesgo = ['cacao', 'cafe', 'platano', 'banano', 'aguacate'];
+    const cultivoLower = cultivo.toLowerCase();
+    if (cultivosAltoRiesgo.some((c) => cultivoLower.includes(c))) {
+      score -= 8;
+      alerts.push(`Cultivo ${cultivo}: alto riesgo fitosanitario estacional`);
+      recommendations.push(`Implemente monitoreo quincenal de plagas en ${cultivo} — revise el envés foliar`);
+    }
+  } else {
+    score -= 5;
+    alerts.push('Sin cultivo registrado en este lote');
+    recommendations.push('Registre el cultivo activo para habilitar el análisis fitosanitario completo');
+  }
+
+  // Factor: Área (lotes muy pequeños o muy grandes tienen riesgos)
+  const ha = lote.hectareas || 0;
+  if (ha < 1) {
+    score -= 5;
+    recommendations.push('Lote de área reducida: considere consolidación con parcelas adyacentes');
+  } else if (ha > 50) {
+    score -= 5;
+    alerts.push('Lote de gran extensión: dificultad de monitoreo uniforme');
+    recommendations.push('Divida el monitoreo fitosanitario en franjas de 10 ha para mayor precisión');
+  }
+
+  // Normalizar score
+  score = Math.max(0, Math.min(100, score));
+
+  // Clasificar nivel
+  let level: RiskLevel;
+  let color: string;
+  let strokeColor: string;
+
+  if (score >= 80) {
+    level = 'optimo';
+    color = '#22c55e';
+    strokeColor = '#15803d';
+  } else if (score >= 60) {
+    level = 'atencion';
+    color = '#eab308';
+    strokeColor = '#a16207';
+  } else if (score >= 40) {
+    level = 'alerta';
+    color = '#f97316';
+    strokeColor = '#c2410c';
+  } else {
+    level = 'critico';
+    color = '#ef4444';
+    strokeColor = '#b91c1c';
+  }
+
+  if (alerts.length === 0) {
+    alerts.push('Sin alertas activas');
+  }
+  if (recommendations.length === 0) {
+    recommendations.push('Continúe con el monitoreo y registros en el diario de campo');
+  }
+
+  return {
+    loteId: lote.id,
+    nombre: lote.nombre,
+    level,
+    score,
+    color,
+    strokeColor,
+    alerts,
+    recommendations,
+  };
+}
+
+const riskLevelConfig: Record<RiskLevel, { label: string; bg: string; text: string; border: string }> = {
+  optimo:   { label: 'Óptimo',      bg: 'rgba(34, 197, 94, 0.12)',  text: '#16a34a', border: 'rgba(34,197,94,0.35)' },
+  atencion: { label: 'Atención',    bg: 'rgba(234, 179, 8, 0.12)',  text: '#a16207', border: 'rgba(234,179,8,0.35)' },
+  alerta:   { label: 'Alerta',      bg: 'rgba(249, 115, 22, 0.12)', text: '#c2410c', border: 'rgba(249,115,22,0.35)' },
+  critico:  { label: 'Critico',     bg: 'rgba(239, 68, 68, 0.12)',  text: '#b91c1c', border: 'rgba(239,68,68,0.35)' },
+};
+
 // Genera un polígono cuadrangular base para una finca según sus hectáreas
 function generateFincaBasePolygon(centerLat: number, centerLng: number, ha: number): [number, number][] {
   const safeHa = ha && ha > 0 ? ha : 10;
@@ -143,6 +288,8 @@ export default function LeafletFincaParcelasMapInner({
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const [mapType, setMapType] = useState<'satellite' | 'streets'>('satellite');
   const [showLegend, setShowLegend] = useState(true);
+  const [showHeatAnalysis, setShowHeatAnalysis] = useState(false);
+  const [heatAnalysisOpen, setHeatAnalysisOpen] = useState(false);
 
   const lastFittedFincaIdRef = useRef<string | number | null>(null);
   const lastPerimeterHashRef = useRef<string>('');
@@ -199,6 +346,15 @@ export default function LeafletFincaParcelasMapInner({
 
     return { minLat, maxLat, minLng, maxLng, centroid };
   }, [effectiveFincaPerimeter]);
+
+  // Análisis de riesgo agronómico por lote
+  const loteRiskMap = useMemo<Map<string | number, LoteRiskAnalysis>>(() => {
+    const map = new Map<string | number, LoteRiskAnalysis>();
+    lotes.forEach((lote) => {
+      map.set(lote.id, calcularRiesgoLote(lote));
+    });
+    return map;
+  }, [lotes]);
 
   // Métricas de cabida de la finca
   const fincaTotalHa = Math.max(finca.hectareas || 10, 0.1);
@@ -463,24 +619,33 @@ export default function LeafletFincaParcelasMapInner({
     parsedLotesWithCoords.forEach((lote) => {
       const st = statusStyles[lote.status || 'ACTIVO'] || statusStyles.ACTIVO;
       const isSelected = String(selectedLoteId) === String(lote.id);
+      const risk = loteRiskMap.get(lote.id);
+
+      // En modo análisis de calor, usar colores de riesgo; de lo contrario colores de estado
+      const fillColor = showHeatAnalysis && risk ? risk.color : (isSelected ? '#38bdf8' : st.fill);
+      const strokeColor = showHeatAnalysis && risk ? risk.strokeColor : (isSelected ? '#38bdf8' : st.stroke);
+      const fillOpacity = showHeatAnalysis ? 0.55 : (isSelected ? 0.70 : 0.48);
+
+      const riskLabel = risk ? `| ${riskLevelConfig[risk.level].label} (${risk.score}/100)` : '';
 
       const polygon = L.polygon(lote.polygonCoords, {
-        color: isSelected ? '#38bdf8' : st.stroke,
+        color: strokeColor,
         weight: isSelected ? 3.5 : 2,
-        fillColor: isSelected ? '#38bdf8' : st.fill,
-        fillOpacity: isSelected ? 0.70 : 0.48,
+        fillColor: fillColor,
+        fillOpacity: fillOpacity,
         dashArray: isSelected ? '4, 4' : undefined,
       });
 
       polygon.bindTooltip(
         `
-        <div style="font-family: Inter, sans-serif; padding: 2px; max-width: 200px; box-sizing: border-box; word-break: break-word;">
+        <div style="font-family: Inter, sans-serif; padding: 2px; max-width: 220px; box-sizing: border-box; word-break: break-word;">
           <div style="font-weight: 700; color: #0f172a; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${lote.nombre}</div>
           <div style="font-size: 11px; color: #475569; margin-top: 2px;">
             <strong>${lote.hectareas} ha</strong> (${lote.percentOfFinca}% de finca) • ${st.label}
           </div>
           ${lote.cultivoActual ? `<div style="font-size: 11px; color: #15803d; font-weight: 600; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Cultivo: ${lote.cultivoActual}</div>` : ''}
           ${lote.tipoSuelo ? `<div style="font-size: 10px; color: #64748b; margin-top: 2px;">Suelo: ${lote.tipoSuelo}</div>` : ''}
+          ${risk && showHeatAnalysis ? `<div style="font-size: 10px; font-weight: 700; margin-top: 4px; padding: 2px 6px; border-radius: 4px; background: ${riskLevelConfig[risk.level].bg}; color: ${riskLevelConfig[risk.level].text};">Indice de salud: ${risk.score}/100 — ${riskLevelConfig[risk.level].label}</div>` : ''}
         </div>
         `,
         {
@@ -499,12 +664,12 @@ export default function LeafletFincaParcelasMapInner({
         icon: L.divIcon({
           className: 'lote-center-label',
           html: `
-            <div style="background: rgba(15, 23, 42, 0.90); backdrop-filter: blur(4px); border: 1px solid ${isSelected ? '#38bdf8' : st.stroke}; border-radius: 5px; padding: 2px 4px; color: #ffffff; text-align: center; max-width: 86px; box-sizing: border-box; overflow: hidden; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+            <div style="background: rgba(15, 23, 42, 0.90); backdrop-filter: blur(4px); border: 1px solid ${isSelected ? '#38bdf8' : (showHeatAnalysis && risk ? risk.strokeColor : st.stroke)}; border-radius: 5px; padding: 2px 4px; color: #ffffff; text-align: center; max-width: 86px; box-sizing: border-box; overflow: hidden; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
               <div style="font-size: 9px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 78px;" title="${lote.nombre}">
                 ${safeLoteName}
               </div>
-              <div style="font-size: 9px; color: #38bdf8; font-weight: 700; white-space: nowrap;">
-                ${lote.hectareas} ha <span style="color: #94a3b8; font-size: 8px;">(${lote.percentOfFinca}%)</span>
+              <div style="font-size: 9px; color: ${showHeatAnalysis && risk ? risk.color : '#38bdf8'}; font-weight: 700; white-space: nowrap;">
+                ${showHeatAnalysis && risk ? `${risk.score}pts` : `${lote.hectareas} ha`} <span style="color: #94a3b8; font-size: 8px;">${showHeatAnalysis && risk ? riskLevelConfig[risk.level].label : `(${lote.percentOfFinca}%)`}</span>
               </div>
             </div>
           `,
@@ -515,13 +680,13 @@ export default function LeafletFincaParcelasMapInner({
 
       polygon.on('mouseover', () => {
         if (!isSelected) {
-          polygon.setStyle({ fillOpacity: 0.75, weight: 3 });
+          polygon.setStyle({ fillOpacity: showHeatAnalysis ? 0.75 : 0.75, weight: 3 });
         }
       });
 
       polygon.on('mouseout', () => {
         if (!isSelected) {
-          polygon.setStyle({ fillOpacity: 0.48, weight: 2 });
+          polygon.setStyle({ fillOpacity: showHeatAnalysis ? 0.55 : 0.48, weight: 2 });
         }
       });
 
@@ -535,7 +700,7 @@ export default function LeafletFincaParcelasMapInner({
       polygon.addTo(group);
       labelMarker.addTo(group);
     });
-  }, [parsedLotesWithCoords, selectedLoteId, onSelectLote]);
+  }, [parsedLotesWithCoords, selectedLoteId, onSelectLote, showHeatAnalysis, loteRiskMap]);
 
   // Encuadrar el mapa ÚNICAMENTE cuando cambia la finca o su perímetro
   useEffect(() => {
@@ -603,50 +768,218 @@ export default function LeafletFincaParcelasMapInner({
           top: 14,
           right: 14,
           zIndex: 1000,
-          background: 'rgba(15, 23, 42, 0.92)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 10,
-          padding: 4,
           display: 'flex',
-          gap: 4,
+          flexDirection: 'column',
+          gap: 6,
         }}
       >
-        <button
-          type="button"
-          onClick={() => setMapType('satellite')}
+        {/* Capa base (satélite / calles) */}
+        <div
           style={{
-            padding: '5px 10px',
-            fontSize: 12,
-            fontWeight: 600,
-            borderRadius: 6,
-            border: 'none',
-            cursor: 'pointer',
-            background: mapType === 'satellite' ? '#22c55e' : 'transparent',
-            color: mapType === 'satellite' ? '#000' : 'var(--color-text-muted)',
-            transition: 'all 0.2s',
+            background: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 10,
+            padding: 4,
+            display: 'flex',
+            gap: 4,
           }}
         >
-          Satelital
-        </button>
+          <button
+            type="button"
+            onClick={() => setMapType('satellite')}
+            style={{
+              padding: '5px 10px',
+              fontSize: 12,
+              fontWeight: 600,
+              borderRadius: 6,
+              border: 'none',
+              cursor: 'pointer',
+              background: mapType === 'satellite' ? '#22c55e' : 'transparent',
+              color: mapType === 'satellite' ? '#000' : 'var(--color-text-muted)',
+              transition: 'all 0.2s',
+            }}
+          >
+            Satelital
+          </button>
+          <button
+            type="button"
+            onClick={() => setMapType('streets')}
+            style={{
+              padding: '5px 10px',
+              fontSize: 12,
+              fontWeight: 600,
+              borderRadius: 6,
+              border: 'none',
+              cursor: 'pointer',
+              background: mapType === 'streets' ? '#22c55e' : 'transparent',
+              color: mapType === 'streets' ? '#000' : 'var(--color-text-muted)',
+              transition: 'all 0.2s',
+            }}
+          >
+            Topográfico
+          </button>
+        </div>
+
+        {/* Botón de análisis de zona de calor */}
         <button
           type="button"
-          onClick={() => setMapType('streets')}
-          style={{
-            padding: '5px 10px',
-            fontSize: 12,
-            fontWeight: 600,
-            borderRadius: 6,
-            border: 'none',
-            cursor: 'pointer',
-            background: mapType === 'streets' ? '#22c55e' : 'transparent',
-            color: mapType === 'streets' ? '#000' : 'var(--color-text-muted)',
-            transition: 'all 0.2s',
+          onClick={() => {
+            setShowHeatAnalysis(!showHeatAnalysis);
+            if (!showHeatAnalysis) setHeatAnalysisOpen(true);
           }}
+          style={{
+            background: showHeatAnalysis ? 'rgba(249, 115, 22, 0.9)' : 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(10px)',
+            border: showHeatAnalysis ? '1px solid #f97316' : '1px solid var(--color-border)',
+            borderRadius: 10,
+            padding: '5px 10px',
+            fontSize: 11,
+            fontWeight: 700,
+            cursor: 'pointer',
+            color: showHeatAnalysis ? '#fff' : 'var(--color-text-muted)',
+            transition: 'all 0.25s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            whiteSpace: 'nowrap',
+          }}
+          title="Activar análisis de riesgo agronómico por zona"
         >
-          Topográfico
+          <Activity size={13} />
+          {showHeatAnalysis ? 'Calor Activo' : 'Analisis de Zona'}
         </button>
       </div>
+
+      {/* Panel de Análisis de Riesgo por Zona (Heat Analysis) */}
+      {showHeatAnalysis && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 14,
+            right: 14,
+            zIndex: 1000,
+            width: 260,
+            maxHeight: heatAnalysisOpen ? 340 : 44,
+            overflow: 'hidden',
+            background: 'rgba(10, 14, 26, 0.96)',
+            backdropFilter: 'blur(14px)',
+            border: '1px solid rgba(249, 115, 22, 0.35)',
+            borderRadius: 12,
+            boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
+            transition: 'max-height 0.3s ease',
+          }}
+        >
+          {/* Header del panel */}
+          <div
+            onClick={() => setHeatAnalysisOpen(!heatAnalysisOpen)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 12px',
+              cursor: 'pointer',
+              borderBottom: heatAnalysisOpen ? '1px solid rgba(249,115,22,0.2)' : 'none',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Thermometer size={13} color="#f97316" />
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Analisis de Zona
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, color: '#64748b' }}>{lotes.length} lote{lotes.length !== 1 ? 's' : ''}</span>
+              {heatAnalysisOpen ? <ChevronUp size={12} color="#64748b" /> : <ChevronDown size={12} color="#64748b" />}
+            </div>
+          </div>
+
+          {/* Contenido del panel */}
+          {heatAnalysisOpen && (
+            <div style={{ padding: '8px 10px', overflowY: 'auto', maxHeight: 290 }}>
+              {/* Leyenda de colores */}
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
+                {(Object.entries(riskLevelConfig) as [RiskLevel, typeof riskLevelConfig[RiskLevel]][]).map(([key, cfg]) => (
+                  <span
+                    key={key}
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 700,
+                      padding: '2px 6px',
+                      borderRadius: 8,
+                      background: cfg.bg,
+                      color: cfg.text,
+                      border: `1px solid ${cfg.border}`,
+                    }}
+                  >
+                    {cfg.label}
+                  </span>
+                ))}
+              </div>
+
+              {/* Lista de lotes con su análisis */}
+              {Array.from(loteRiskMap.values()).map((risk) => {
+                const cfg = riskLevelConfig[risk.level];
+                return (
+                  <div
+                    key={risk.loteId}
+                    style={{
+                      marginBottom: 8,
+                      padding: '7px 9px',
+                      borderRadius: 8,
+                      background: cfg.bg,
+                      border: `1px solid ${cfg.border}`,
+                    }}
+                  >
+                    {/* Nombre y score */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#e2e8f0', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {risk.nombre}
+                      </span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: cfg.text, background: 'rgba(0,0,0,0.3)', padding: '1px 5px', borderRadius: 6 }}>
+                        {risk.score}/100
+                      </span>
+                    </div>
+
+                    {/* Barra de salud */}
+                    <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginBottom: 5, overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${risk.score}%`,
+                          background: risk.score >= 80 ? '#22c55e' : risk.score >= 60 ? '#eab308' : risk.score >= 40 ? '#f97316' : '#ef4444',
+                          borderRadius: 2,
+                          transition: 'width 0.5s ease',
+                        }}
+                      />
+                    </div>
+
+                    {/* Alerta principal */}
+                    <div style={{ fontSize: 10, color: cfg.text, fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 4 }}>
+                      <AlertTriangle size={9} style={{ flexShrink: 0, marginTop: 1 }} />
+                      <span style={{ lineHeight: 1.4 }}>{risk.alerts[0]}</span>
+                    </div>
+
+                    {/* Recomendación principal */}
+                    {risk.recommendations[0] && (
+                      <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 3, display: 'flex', alignItems: 'flex-start', gap: 4 }}>
+                        <Info size={8} style={{ flexShrink: 0, marginTop: 1 }} />
+                        <span style={{ lineHeight: 1.4 }}>{risk.recommendations[0]}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {lotes.length === 0 && (
+                <p style={{ fontSize: 11, color: '#64748b', textAlign: 'center', margin: '12px 0' }}>
+                  No hay lotes registrados en este predio.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Leyenda Agronómica Flotante */}
       <div

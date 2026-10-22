@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -23,6 +23,8 @@ import {
   FileBarChart,
   UserCircle,
   X,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 const baseNavItems = [
@@ -45,6 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hasHydrated, setHasHydrated] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
     setHasHydrated(true);
@@ -79,6 +82,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  
+  // Load and apply theme from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('agrodata_theme') as 'dark' | 'light' | null;
+    const initial = saved || 'dark';
+    setTheme(initial);
+    document.documentElement.setAttribute('data-theme', initial);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    localStorage.setItem('agrodata_theme', next);
+    document.documentElement.setAttribute('data-theme', next);
+  };
   const handleLogout = () => {
     logout();
   };
@@ -280,6 +298,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className="gradient-text">AgroData</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              style={{
+                background: 'none',
+                border: '1px solid var(--color-border)',
+                borderRadius: 8,
+                cursor: 'pointer',
+                color: 'var(--color-text-muted)',
+                padding: 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 34,
+                height: 34,
+                transition: 'all 0.2s',
+                flexShrink: 0,
+              }}
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }} className="desktop-header-org">
               {user.organizationName || 'AgroData'}
             </span>
@@ -326,3 +365,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
+
+

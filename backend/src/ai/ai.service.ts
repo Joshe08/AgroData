@@ -192,6 +192,9 @@ export class AiService {
 
     if (!apiKey) {
       this.logger.warn('GEMINI_API_KEY no configurada. Utilizando motor analítico local.');
+      if (imageBase64) {
+        return this.generateImageFallback(userMessage, snapshot);
+      }
       return this.generateSmartChatFallback(userMessage, snapshot);
     }
 
@@ -457,6 +460,86 @@ INSTRUCCIONES Y REGLAS OPERATIVAS:
     }
 
     return suggestions.slice(0, 3);
+  }
+
+  // ─── ANÁLISIS DE IMAGEN (FALLBACK SIN GEMINI) ────────────────────────────────
+
+  private generateImageFallback(query: string, snapshot: any) {
+    const { kpis, weather, fincas, produccionesActivas, inventarioBajoStock } = snapshot;
+    const q = (query || '').toLowerCase();
+
+    const cultivosActivos = produccionesActivas.map((p: any) => p.name).join(', ') || 'sin ciclos activos';
+    const insumos = inventarioBajoStock.map((i: any) => i.name).join(', ') || 'ninguno';
+
+    // Seleccionar el análisis según el tipo de consulta
+    let diagnosticoEspecifico = '';
+
+    if (q.includes('hoja') || q.includes('mancha') || q.includes('amarill') || q.includes('necrosis') || q.includes('clorosis')) {
+      diagnosticoEspecifico = `
+**Posibles causas de afecciones foliares (basado en contexto del Cesar):**
+
+- **Deficiencia de Nitrógeno:** Clorosis generalizada en hojas inferiores, color verde-amarillento uniforme. Tratamiento: Urea al 1-2% foliar o aplicación edáfica 80-120 kg N/ha.
+- **Cercospora / Alternaria:** Manchas circulares o angulares con halo clorótico. Tratamiento: Mancozeb 80 WP (2 kg/ha) o Azoxystrobin (0.5 L/ha).
+- **Deficiencia de Hierro (clorosis intervenal):** Hojas jóvenes amarillas con nervaduras verdes. Tratamiento: Quelato de hierro EDDHA foliar 0.3%.
+- **Quemadura solar:** Manchas blanquecinas irregulares en exposición directa. Manejo cultural: sombreado parcial o riego al amanecer.`;
+    } else if (q.includes('plaga') || q.includes('insecto') || q.includes('bicho') || q.includes('gusano') || q.includes('barren')) {
+      diagnosticoEspecifico = `
+**Plagas frecuentes en el Cesar y plan MIP:**
+
+- **Diatraea saccharalis (barrenador del tallo):** Perforaciones en el tallo con aserrín. Liberación de Cotesia flavipes (parasitoide) + Trichoderma spp. Umbral económico: >5% tallos afectados.
+- **Spodoptera frugiperda (cogollero del maíz):** Defoliación con excrementos en el cogollo. Spinosad 120 SC (0.3 L/ha) o Clorantraniliprole (150 mL/ha).
+- **Mosca blanca (Bemisia tabaci):** Fumagina + transmisión de geminivirus. Imidacloprid 350 SC (150 mL/ha) rotando con Spiromesifen.
+- **Trips:** Plateado en hojas. Abamectina 1.8 EC (500 mL/ha). Evitar aplicar en horas de calor.`;
+    } else if (q.includes('hongo') || q.includes('fungi') || q.includes('mildiu') || q.includes('roya') || q.includes('pudri')) {
+      diagnosticoEspecifico = `
+**Enfermedades fungosas comunes en el Cesar:**
+
+- **Phytophthora spp. (pudrición radicular):** Síntomas: marchitez súbita, raíces oscuras. Metalaxil-M + Mancozeb drench al suelo.
+- **Roya (Puccinia spp.):** Pústulas anaranjadas en el envés. Tebuconazol 25 EW (750 mL/ha) o Propiconazol 25 EC (500 mL/ha).
+- **Mildiu velloso:** Masa grisácea en el envés con clorosis superior. Fosetil-Al 80 WP (3 kg/ha) + manejo de humedad.
+- **Fusarium:** Marchitez vascular + coloración parda en el xilema. Rotación de cultivos y Trichoderma harzianum como biocontrolador preventivo.`;
+    } else {
+      diagnosticoEspecifico = `
+**Evaluacion fitosanitaria general (contexto Cesar, temperatura ${weather.temperature}°C, humedad ${weather.humidity}%):**
+
+- A **${weather.temperature}°C** y **${weather.humidity}%** de humedad, las condiciones favorecen el desarrollo de hongos foliares si la humedad relativa supera el 80% en horas nocturnas.
+- Probabilidad de lluvia del **${weather.rainProbability}%**: suspenda fumigaciones foliares si llueve dentro de las 2 horas siguientes a la aplicación.
+- Monitoree semanalmente los cultivos activos: **${cultivosActivos}**. Revise el envés de las hojas, los tallos y el cuello de la raíz.
+- En los lotes con sistemas de riego por aspersión, revise signos de Botrytis y Mildiu en períodos de alta humedad foliar.`;
+    }
+
+    const text = `### Analisis Fitosanitario — Diagnostico Local AgroData
+
+**Nota:** Para un diagnostico de imagen con inteligencia artificial avanzada, configure la clave GEMINI_API_KEY en el servidor. El siguiente analisis se basa en el contexto agronomico real de su organizacion en el Cesar.
+
+${diagnosticoEspecifico}
+
+---
+
+**Inventario disponible para tratamiento:**
+- Insumos con stock critico: **${insumos || 'Ninguno'}**
+- Verifique en bodega la disponibilidad de fungicidas, insecticidas y fertilizantes foliares antes de iniciar el plan de manejo.
+
+**Condiciones actuales del Cesar:**
+- Temperatura: **${weather.temperature}°C** | Humedad: **${weather.humidity}%** | Lluvia: **${weather.rainProbability}%**
+- Fincas monitoreadas: **${kpis.fincasCount}** (${kpis.totalHectareas.toFixed(1)} ha total)
+
+**Recomendacion de seguimiento:**
+Registre el diagnostico en el diario de campo del cultivo afectado para generar historico fitosanitario y optimizar el plan MIP a largo plazo.`;
+
+    return {
+      text,
+      fuente: 'Motor Analítico Local AgroData — Diagnostico Fitosanitario (Cesar)',
+      suggestions: [
+        '¿Qué insumos de bodega son compatibles con el plan MIP propuesto?',
+        '¿Cuál es el estado actual de los cultivos activos en mis lotes?',
+        '¿Hay riesgo fitosanitario por la humedad actual en el Cesar?',
+      ],
+      actionSuggestion: null,
+      sources: ['Base de Datos AgroData', 'Contexto Agronómico Cesar', 'Manual ICA Colombia'],
+      kpis,
+      isImageAnalysis: true,
+    };
   }
 
   // ─── MOTOR ANALÍTICO LOCAL INTELIGENTE (CUANDO GEMINI ESTÁ OFFLINE) ──────────

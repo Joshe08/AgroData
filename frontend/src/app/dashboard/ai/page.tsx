@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -18,6 +18,10 @@ import {
   Database,
   ArrowRight,
   ClipboardList,
+  Scan,
+  Zap,
+  TrendingUp,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface Finca {
@@ -117,6 +121,7 @@ function AIPageInner() {
   // Historial de mensajes con saludo dinámico según la hora y usuario
   const [messages, setMessages] = useState<Message[]>([]);
   const autoSentRef = useRef(false);
+  const [hasImagePending, setHasImagePending] = useState(false);
 
   useEffect(() => {
     setMessages((prev) => {
@@ -252,6 +257,7 @@ function AIPageInner() {
     const currentImage = selectedImage;
     setSelectedImage(null);
     setConsulta('');
+    setHasImagePending(!!currentImage);
 
     const userMsgId = 'user-' + Date.now();
     const newUserMessage: Message = {
@@ -305,6 +311,7 @@ function AIPageInner() {
       ]);
     } finally {
       setLoading(false);
+      setHasImagePending(false);
     }
   };
 
@@ -463,9 +470,34 @@ function AIPageInner() {
                 Analista Agronómico
               </span>
             </div>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: 11, margin: 0 }}>
-              Consulta sobre cultivos, finanzas, inventario y clima en el Cesar
-            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: 11, margin: 0 }}>
+                Consulta sobre cultivos, finanzas, inventario y clima en el Cesar
+              </p>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Finanzas' },
+                  { label: 'Plagas / Fotografias' },
+                  { label: 'Clima Cesar' },
+                  { label: 'Alertas de Inventario' },
+                ].map((cap) => (
+                  <span
+                    key={cap.label}
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 600,
+                      padding: '2px 6px',
+                      borderRadius: 8,
+                      background: 'rgba(99, 102, 241, 0.08)',
+                      color: '#818cf8',
+                      border: '1px solid rgba(99,102,241,0.2)',
+                    }}
+                  >
+                    {cap.label}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -676,15 +708,15 @@ function AIPageInner() {
                 width: 32,
                 height: 32,
                 borderRadius: 8,
-                background: 'rgba(16,185,129,0.15)',
-                border: '1px solid rgba(16,185,129,0.3)',
+                background: hasImagePending ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16,185,129,0.15)',
+                border: hasImagePending ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(16,185,129,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <Bot size={16} color="#10b981" />
+              {hasImagePending ? <Scan size={16} color="#f59e0b" /> : <Bot size={16} color="#10b981" />}
             </div>
             <div
               style={{
@@ -699,8 +731,8 @@ function AIPageInner() {
                 color: 'var(--color-text-muted)',
               }}
             >
-              <Loader2 size={14} style={{ animation: 'spin 1s linear infinite', color: '#10b981' }} />
-              <span>Consultando y procesando datos de la organización...</span>
+              <Loader2 size={14} style={{ animation: 'spin 1s linear infinite', color: hasImagePending ? '#f59e0b' : '#10b981' }} />
+              <span>{hasImagePending ? 'Analizando fotografía con motor fitosanitario...' : 'Consultando y procesando datos de la organización...'}</span>
             </div>
           </div>
         )}
@@ -759,21 +791,41 @@ function AIPageInner() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            background: 'var(--color-surface-2, #1e293b)',
-            padding: '5px 10px',
+            background: 'rgba(245, 158, 11, 0.08)',
+            padding: '6px 12px',
             borderRadius: 8,
-            border: '1px solid #10b981',
+            border: '1px solid rgba(245, 158, 11, 0.4)',
             maxWidth: 'fit-content',
           }}
         >
-          <img
-            src={selectedImage}
-            alt="Muestra adjunta"
-            style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover' }}
-          />
-          <span style={{ fontSize: 11, color: '#10b981', fontWeight: 600 }}>
-            Fotografía adjunta para análisis
-          </span>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <img
+              src={selectedImage}
+              alt="Muestra adjunta"
+              style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover' }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: 6,
+                background: 'rgba(245,158,11,0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Scan size={14} color="#f59e0b" />
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>
+              Fotografia para analisis fitosanitario
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>
+              Adjunte una consulta o envie directamente
+            </div>
+          </div>
           <button
             onClick={() => setSelectedImage(null)}
             style={{
@@ -781,6 +833,7 @@ function AIPageInner() {
               border: 'none',
               cursor: 'pointer',
               color: 'var(--color-text-muted)',
+              flexShrink: 0,
             }}
           >
             <X size={14} />
@@ -932,3 +985,4 @@ export default function AIPage() {
     </Suspense>
   );
 }
+
