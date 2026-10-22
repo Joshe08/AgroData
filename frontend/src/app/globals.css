@@ -212,25 +212,65 @@
 [data-theme="light"] .alert-banner-warning {
   background: #fffbeb !important;
   border-color: #fde68a !important;
+  color: #78350f !important;
 }
 [data-theme="light"] .alert-banner-warning .alert-title {
-  color: #b45309 !important;
+  color: #92400e !important;
+}
+[data-theme="light"] .alert-banner-warning * {
+  color: #78350f !important;
 }
 
 [data-theme="light"] .alert-banner-critical {
   background: #fef2f2 !important;
-  border-color: #fecaca !important;
+  border-color: #fca5a5 !important;
+  color: #7f1d1d !important;
 }
 [data-theme="light"] .alert-banner-critical .alert-title {
-  color: #b91c1c !important;
+  color: #991b1b !important;
+}
+[data-theme="light"] .alert-banner-critical * {
+  color: #7f1d1d !important;
 }
 
 [data-theme="light"] .alert-banner-info {
   background: #f0f9ff !important;
   border-color: #bae6fd !important;
+  color: #0c4a6e !important;
 }
 [data-theme="light"] .alert-banner-info .alert-title {
-  color: #0369a1 !important;
+  color: #075985 !important;
+}
+[data-theme="light"] .alert-banner-info * {
+  color: #0c4a6e !important;
+}
+
+/* Soporte dark mode para banners de alertas globales */
+.alert-banner-warning {
+  background: rgba(69, 39, 0, 0.65) !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  color: #fef3c7 !important;
+}
+.alert-banner-warning .alert-title {
+  color: #fcd34d !important;
+}
+
+.alert-banner-critical {
+  background: rgba(90, 10, 10, 0.65) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #fee2e2 !important;
+}
+.alert-banner-critical .alert-title {
+  color: #fca5a5 !important;
+}
+
+.alert-banner-info {
+  background: rgba(13, 18, 64, 0.70) !important;
+  border-color: rgba(99, 102, 241, 0.45) !important;
+  color: #e0e7ff !important;
+}
+.alert-banner-info .alert-title {
+  color: #a5b4fc !important;
 }
 
 [data-theme="light"] .leaflet-container {

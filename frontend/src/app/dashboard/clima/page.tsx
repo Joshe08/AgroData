@@ -362,40 +362,40 @@ export default function ClimaPage() {
 
       {weather && !loading && (
         <>
-          {/* Weather Alerts */}
+          {/* Weather Alerts con colores solidos */}
           {weather.alertas && weather.alertas.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
               {weather.alertas.map((alerta) => {
                 const isCritical = alerta.type === 'CRITICAL';
                 const isWarning = alerta.type === 'WARNING';
-                const bg = isCritical ? 'rgba(239,68,68,0.1)' : isWarning ? 'rgba(245,158,11,0.1)' : 'rgba(14,165,233,0.08)';
-                const border = isCritical ? 'rgba(239,68,68,0.3)' : isWarning ? 'rgba(245,158,11,0.3)' : 'rgba(14,165,233,0.25)';
-                const textColor = isCritical ? '#f87171' : isWarning ? '#fbbf24' : '#38bdf8';
+                const alertClass = isCritical ? 'alert-inline-danger' : isWarning ? 'alert-inline-warning' : 'alert-inline-info';
+                const iconColor = isCritical ? '#ef4444' : isWarning ? '#f59e0b' : '#0ea5e9';
                 return (
                   <div
                     key={alerta.id}
+                    className={`alert-inline ${alertClass}`}
                     style={{
                       padding: '14px 18px',
-                      background: bg,
-                      border: `1px solid ${border}`,
                       borderRadius: 12,
                       display: 'flex',
                       gap: 12,
                       alignItems: 'flex-start',
                     }}
                   >
-                    <ShieldAlert size={18} color={textColor} style={{ flexShrink: 0, marginTop: 1 }} />
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: textColor, marginBottom: 2 }}>
+                    <ShieldAlert size={20} color={iconColor} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>
                         {alerta.title}
                       </div>
-                      <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{alerta.message}</div>
+                      <div style={{ fontSize: 13, lineHeight: 1.45, opacity: 0.95, fontWeight: 500 }}>{alerta.message}</div>
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
+
+
 
           {/* Main Weather Card */}
           <div

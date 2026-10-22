@@ -465,13 +465,13 @@ export default function InventarioPage() {
 
       {/* Alerta crítica */}
       {alertas.length > 0 && (
-        <div style={{ padding: '13px 18px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 12, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <ShieldAlert size={20} color="#f87171" style={{ flexShrink: 0 }} />
+        <div className="alert-inline alert-inline-danger" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <ShieldAlert size={20} style={{ flexShrink: 0 }} />
           <div>
-            <div style={{ fontWeight: 600, color: '#f87171', fontSize: 13 }}>
+            <div style={{ fontWeight: 700, fontSize: 13 }}>
               {alertas.length} insumo(s) con existencia crítica por debajo del stock mínimo
             </div>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: 12, marginTop: 2 }}>
+            <div style={{ fontSize: 12, marginTop: 2, opacity: 0.9 }}>
               {(alertas as Item[]).map(a => a.nombre).slice(0, 5).join(', ')}
             </div>
           </div>

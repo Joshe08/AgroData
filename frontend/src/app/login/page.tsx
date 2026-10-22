@@ -19,7 +19,6 @@ import {
   Moon,
   ArrowRight,
   Layers,
-  Sparkles,
   X,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -127,22 +126,21 @@ export default function LoginPage() {
         overflowX: 'hidden',
       }}
     >
-      {/* Overlay: sutil en dark mode para preservar legibilidad; transparente en light mode para máxima fidelidad fotográfica */}
+      {/* Overlay sutil: En modo oscuro solo un velo tenue (35%) para que la foto NUNCA se pierda */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           background: isDark
-            ? 'linear-gradient(135deg, rgba(10, 15, 29, 0.88) 0%, rgba(15, 23, 42, 0.82) 100%)'
-            : 'radial-gradient(ellipse at 80% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)',
-          backdropFilter: isDark ? 'blur(2px)' : 'none',
+            ? 'linear-gradient(180deg, rgba(15, 23, 42, 0.35) 0%, rgba(10, 15, 29, 0.45) 100%)'
+            : 'radial-gradient(ellipse at 85% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 70%)',
           pointerEvents: 'none',
           zIndex: 1,
         }}
       />
 
       {/* ========================================================= */}
-      {/* TOP HEADER: BRAND + THEME TOGGLE                          */}
+      {/* TOP HEADER: BRAND + THEME TOGGLE (ÚNICO BOTÓN DE TEMA)    */}
       {/* ========================================================= */}
       <header
         style={{
@@ -151,9 +149,9 @@ export default function LoginPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '24px 36px',
+          padding: '20px 48px',
           width: '100%',
-          maxWidth: 1440,
+          maxWidth: 1680,
           margin: '0 auto',
         }}
       >
@@ -168,7 +166,7 @@ export default function LoginPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 8px 20px -4px rgba(13, 148, 136, 0.4)',
+              boxShadow: '0 6px 18px -3px rgba(13, 148, 136, 0.45)',
               flexShrink: 0,
             }}
           >
@@ -183,6 +181,7 @@ export default function LoginPage() {
                 letterSpacing: '-0.02em',
                 lineHeight: 1.15,
                 color: isDark ? '#ffffff' : '#0f172a',
+                textShadow: isDark ? '0 2px 4px rgba(0,0,0,0.5)' : '0 1px 2px rgba(255,255,255,0.8)',
               }}
             >
               AgroData <span style={{ color: '#059669' }}>Cesar</span>
@@ -190,9 +189,10 @@ export default function LoginPage() {
             <div
               style={{
                 fontSize: 11.5,
-                fontWeight: 500,
-                color: isDark ? '#94a3b8' : '#475569',
+                fontWeight: 600,
+                color: isDark ? '#cbd5e1' : '#334155',
                 letterSpacing: '-0.01em',
+                textShadow: isDark ? '0 1px 2px rgba(0,0,0,0.4)' : '0 1px 2px rgba(255,255,255,0.7)',
               }}
             >
               Inteligencia y Gestión Agropecuaria
@@ -200,7 +200,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Top-Right Theme Toggle Pill */}
+        {/* Único botón de cambio de tema: Header superior derecho */}
         <button
           type="button"
           onClick={toggleTheme}
@@ -210,10 +210,10 @@ export default function LoginPage() {
             gap: 6,
             padding: '4px 6px',
             borderRadius: 9999,
-            background: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-            border: isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.12)',
+            background: isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.95)',
+            border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.15)',
             backdropFilter: 'blur(10px)',
-            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
           }}
@@ -229,8 +229,8 @@ export default function LoginPage() {
               alignItems: 'center',
               justifyContent: 'center',
               background: !isDark ? '#ffffff' : 'transparent',
-              color: !isDark ? '#f59e0b' : '#94a3b8',
-              boxShadow: !isDark ? '0 2px 6px rgba(0,0,0,0.12)' : 'none',
+              color: !isDark ? '#d97706' : '#94a3b8',
+              boxShadow: !isDark ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
               transition: 'all 0.2s ease',
             }}
           >
@@ -244,9 +244,9 @@ export default function LoginPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: isDark ? '#0f172a' : 'transparent',
+              background: isDark ? '#1e293b' : 'transparent',
               color: isDark ? '#38bdf8' : '#94a3b8',
-              boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.3)' : 'none',
+              boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : 'none',
               transition: 'all 0.2s ease',
             }}
           >
@@ -256,7 +256,7 @@ export default function LoginPage() {
       </header>
 
       {/* ========================================================= */}
-      {/* MAIN CONTENT BODY: LEFT HERO + RIGHT LOGIN CARD           */}
+      {/* MAIN CONTENT BODY: MÁS AMPLIO HACIA LOS LADOS             */}
       {/* ========================================================= */}
       <div
         className="login-main-body"
@@ -267,21 +267,21 @@ export default function LoginPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '20px 48px 40px',
-          maxWidth: 1440,
+          padding: '16px 56px 36px',
+          maxWidth: 1680,
           width: '100%',
           margin: '0 auto',
-          gap: 40,
+          gap: 60,
         }}
       >
         {/* ===================================================== */}
-        {/* LEFT COLUMN: HERO VALUE PROPOSITION                   */}
+        {/* LEFT COLUMN: HERO CON MÁXIMA NITIDEZ Y LEGIBILIDAD     */}
         {/* ===================================================== */}
         <section
           className="login-hero-column"
           style={{
-            flex: 1,
-            maxWidth: 640,
+            flex: '1 1 580px',
+            maxWidth: 620,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -290,12 +290,14 @@ export default function LoginPage() {
           {/* Eyebrow / Overline Tag */}
           <div
             style={{
+              display: 'inline-block',
               fontSize: 12,
-              fontWeight: 700,
+              fontWeight: 800,
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               color: '#0d9488',
-              marginBottom: 14,
+              marginBottom: 12,
+              textShadow: isDark ? '0 1px 3px rgba(0,0,0,0.6)' : '0 1px 2px rgba(255,255,255,0.8)',
             }}
           >
             EL CAMPO EN TUS DATOS
@@ -305,12 +307,15 @@ export default function LoginPage() {
           <h1
             className="font-display"
             style={{
-              fontSize: 'clamp(32px, 4.2vw, 50px)',
+              fontSize: 'clamp(32px, 3.8vw, 48px)',
               fontWeight: 800,
-              lineHeight: 1.12,
-              letterSpacing: '-0.03em',
-              color: isDark ? '#f8fafc' : '#0f172a',
-              marginBottom: 18,
+              lineHeight: 1.14,
+              letterSpacing: '-0.025em',
+              color: isDark ? '#ffffff' : '#0f172a',
+              marginBottom: 16,
+              textShadow: isDark
+                ? '0 2px 10px rgba(0,0,0,0.7)'
+                : '0 2px 4px rgba(255,255,255,0.9)',
             }}
           >
             Toma de decisiones <br />
@@ -318,7 +323,8 @@ export default function LoginPage() {
             <span
               style={{
                 color: '#00897b',
-                fontWeight: 800,
+                fontWeight: 850,
+                textShadow: isDark ? '0 2px 8px rgba(0,0,0,0.5)' : 'none',
               }}
             >
               datos reales
@@ -332,181 +338,252 @@ export default function LoginPage() {
             style={{
               fontSize: 15,
               lineHeight: 1.65,
-              color: isDark ? '#cbd5e1' : '#334155',
-              maxWidth: 540,
-              marginBottom: 36,
-              fontWeight: 450,
+              color: isDark ? '#f1f5f9' : '#1e293b',
+              maxWidth: 520,
+              marginBottom: 30,
+              fontWeight: 500,
+              textShadow: isDark
+                ? '0 1px 4px rgba(0,0,0,0.6)'
+                : '0 1px 3px rgba(255,255,255,0.85)',
             }}
           >
             Monitorea predios, controla ciclos de cultivo y ganadería, administra inventarios en bodega, analiza finanzas y recibe alertas agronómicas en tiempo real.
           </p>
 
-          {/* 4 Feature Badges (Horizontal Flow) */}
+          {/* 4 Feature Cards con fondo sólido legible (no transparente) */}
           <div
             className="login-feature-pills-row"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-              gap: 16,
-              maxWidth: 600,
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              gap: 12,
+              maxWidth: 520,
             }}
           >
             {/* Feature 1: Mapeo Satelital */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+                padding: '12px 14px',
+                borderRadius: 14,
+                background: isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.92)',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(203, 213, 225, 0.8)',
+                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.06)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
               <div
                 style={{
                   width: 32,
                   height: 32,
                   borderRadius: '50%',
-                  background: 'rgba(20, 184, 166, 0.20)',
-                  border: '1px solid rgba(13, 148, 136, 0.35)',
+                  background: 'rgba(13, 148, 136, 0.15)',
+                  border: '1px solid rgba(13, 148, 136, 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#0d9488',
+                  flexShrink: 0,
+                  marginTop: 2,
                 }}
               >
                 <MapPin size={16} />
               </div>
-              <div
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  color: isDark ? '#f1f5f9' : '#0f172a',
-                  lineHeight: 1.25,
-                }}
-              >
-                Mapeo Satelital
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: isDark ? '#94a3b8' : '#64748b',
-                  lineHeight: 1.35,
-                }}
-              >
-                Predios georreferenciados y parcelas
+              <div>
+                <div
+                  style={{
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: isDark ? '#ffffff' : '#0f172a',
+                    lineHeight: 1.25,
+                    marginBottom: 2,
+                  }}
+                >
+                  Mapeo Satelital
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: isDark ? '#94a3b8' : '#475569',
+                    lineHeight: 1.35,
+                  }}
+                >
+                  Predios georreferenciados y parcelas
+                </div>
               </div>
             </div>
 
             {/* Feature 2: Clima Agrícola Real */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+                padding: '12px 14px',
+                borderRadius: 14,
+                background: isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.92)',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(203, 213, 225, 0.8)',
+                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.06)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
               <div
                 style={{
                   width: 32,
                   height: 32,
                   borderRadius: '50%',
-                  background: 'rgba(20, 184, 166, 0.20)',
-                  border: '1px solid rgba(13, 148, 136, 0.35)',
+                  background: 'rgba(13, 148, 136, 0.15)',
+                  border: '1px solid rgba(13, 148, 136, 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#0d9488',
+                  flexShrink: 0,
+                  marginTop: 2,
                 }}
               >
                 <CloudSun size={16} />
               </div>
-              <div
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  color: isDark ? '#f1f5f9' : '#0f172a',
-                  lineHeight: 1.25,
-                }}
-              >
-                Clima Agrícola Real
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: isDark ? '#94a3b8' : '#64748b',
-                  lineHeight: 1.35,
-                }}
-              >
-                Alertas de lluvia, radiación UV y viento
+              <div>
+                <div
+                  style={{
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: isDark ? '#ffffff' : '#0f172a',
+                    lineHeight: 1.25,
+                    marginBottom: 2,
+                  }}
+                >
+                  Clima Agrícola Real
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: isDark ? '#94a3b8' : '#475569',
+                    lineHeight: 1.35,
+                  }}
+                >
+                  Alertas de lluvia, UV y viento
+                </div>
               </div>
             </div>
 
             {/* Feature 3: Gestión Ganadera */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+                padding: '12px 14px',
+                borderRadius: 14,
+                background: isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.92)',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(203, 213, 225, 0.8)',
+                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.06)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
               <div
                 style={{
                   width: 32,
                   height: 32,
                   borderRadius: '50%',
-                  background: 'rgba(20, 184, 166, 0.20)',
-                  border: '1px solid rgba(13, 148, 136, 0.35)',
+                  background: 'rgba(13, 148, 136, 0.15)',
+                  border: '1px solid rgba(13, 148, 136, 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#0d9488',
+                  flexShrink: 0,
+                  marginTop: 2,
                 }}
               >
                 <Layers size={16} />
               </div>
-              <div
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  color: isDark ? '#f1f5f9' : '#0f172a',
-                  lineHeight: 1.25,
-                }}
-              >
-                Gestión Ganadera
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: isDark ? '#94a3b8' : '#64748b',
-                  lineHeight: 1.35,
-                }}
-              >
-                Inventario, ciclos de cultivo y ganadería
+              <div>
+                <div
+                  style={{
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: isDark ? '#ffffff' : '#0f172a',
+                    lineHeight: 1.25,
+                    marginBottom: 2,
+                  }}
+                >
+                  Gestión Ganadera
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: isDark ? '#94a3b8' : '#475569',
+                    lineHeight: 1.35,
+                  }}
+                >
+                  Inventarios y ciclos de cultivo
+                </div>
               </div>
             </div>
 
             {/* Feature 4: Informes y Analítica */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+                padding: '12px 14px',
+                borderRadius: 14,
+                background: isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.92)',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(203, 213, 225, 0.8)',
+                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.06)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
               <div
                 style={{
                   width: 32,
                   height: 32,
                   borderRadius: '50%',
-                  background: 'rgba(20, 184, 166, 0.20)',
-                  border: '1px solid rgba(13, 148, 136, 0.35)',
+                  background: 'rgba(13, 148, 136, 0.15)',
+                  border: '1px solid rgba(13, 148, 136, 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#0d9488',
+                  flexShrink: 0,
+                  marginTop: 2,
                 }}
               >
                 <TrendingUp size={16} />
               </div>
-              <div
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  color: isDark ? '#f1f5f9' : '#0f172a',
-                  lineHeight: 1.25,
-                }}
-              >
-                Informes y Analítica
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: isDark ? '#94a3b8' : '#64748b',
-                  lineHeight: 1.35,
-                }}
-              >
-                Toma de decisiones inteligentes
+              <div>
+                <div
+                  style={{
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: isDark ? '#ffffff' : '#0f172a',
+                    lineHeight: 1.25,
+                    marginBottom: 2,
+                  }}
+                >
+                  Informes y Analítica
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: isDark ? '#94a3b8' : '#475569',
+                    lineHeight: 1.35,
+                  }}
+                >
+                  Toma de decisiones inteligentes
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* ===================================================== */}
-        {/* RIGHT COLUMN: FLOATING CLEAN LOGIN CARD               */}
+        {/* RIGHT COLUMN: CARD DE LOGIN (SÓLIDA, SIN TRANSPARENCIA) */}
         {/* ===================================================== */}
         <section
           className="login-card-column"
@@ -515,20 +592,19 @@ export default function LoginPage() {
             width: '100%',
             maxWidth: 420,
             display: 'flex',
-            justifyContent: 'center',
+            justifyContent: 'flex-end',
           }}
         >
           <div
             style={{
               width: '100%',
-              background: isDark ? 'rgba(15, 23, 42, 0.94)' : '#ffffff',
-              borderRadius: 28,
-              padding: '36px 34px 24px 34px',
+              background: isDark ? '#0f172a' : '#ffffff',
+              borderRadius: 26,
+              padding: '36px 34px 26px 34px',
               boxShadow: isDark
-                ? '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-                : '0 25px 50px -12px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(20px)',
-              transition: 'background 0.3s ease, box-shadow 0.3s ease',
+                ? '0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.1)'
+                : '0 25px 60px -15px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(226, 232, 240, 0.9)',
+              transition: 'background 0.25s ease, box-shadow 0.25s ease',
             }}
           >
             {/* Top Card Icon: 2 Leaves (Green + Blue) */}
@@ -570,9 +646,10 @@ export default function LoginPage() {
             <p
               style={{
                 fontSize: 12.5,
-                color: isDark ? '#94a3b8' : '#64748b',
+                color: isDark ? '#94a3b8' : '#475569',
                 marginBottom: 24,
                 lineHeight: 1.45,
+                fontWeight: 500,
               }}
             >
               Ingresa tus credenciales para acceder a tu plataforma
@@ -586,17 +663,18 @@ export default function LoginPage() {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: 10,
-                  padding: '11px 14px',
-                  background: isDark ? 'rgba(239, 68, 68, 0.16)' : '#fef2f2',
-                  border: isDark ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid #fecaca',
+                  padding: '12px 14px',
+                  background: isDark ? 'rgba(239, 68, 68, 0.2)' : '#fef2f2',
+                  border: isDark ? '1px solid rgba(239, 68, 68, 0.45)' : '1px solid #fca5a5',
                   borderRadius: 12,
                   marginBottom: 18,
-                  color: isDark ? '#fca5a5' : '#b91c1c',
+                  color: isDark ? '#fca5a5' : '#991b1b',
                   fontSize: 12.5,
                   lineHeight: 1.4,
+                  fontWeight: 500,
                 }}
               >
-                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2, color: '#ef4444' }} />
                 <span>{error}</span>
               </div>
             )}
@@ -609,16 +687,17 @@ export default function LoginPage() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  padding: '11px 14px',
-                  background: isDark ? 'rgba(34, 197, 94, 0.16)' : '#ecfdf5',
-                  border: isDark ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid #a7f3d0',
+                  padding: '12px 14px',
+                  background: isDark ? 'rgba(34, 197, 94, 0.2)' : '#ecfdf5',
+                  border: isDark ? '1px solid rgba(34, 197, 94, 0.45)' : '1px solid #6ee7b7',
                   borderRadius: 12,
                   marginBottom: 18,
-                  color: isDark ? '#86efac' : '#047857',
+                  color: isDark ? '#86efac' : '#065f46',
                   fontSize: 12.5,
+                  fontWeight: 600,
                 }}
               >
-                <CheckCircle size={16} style={{ flexShrink: 0 }} />
+                <CheckCircle size={16} style={{ flexShrink: 0, color: '#10b981' }} />
                 <span>Credenciales válidas. Ingresando...</span>
               </div>
             )}
@@ -632,7 +711,7 @@ export default function LoginPage() {
                   style={{
                     display: 'block',
                     fontSize: 12.5,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     color: isDark ? '#e2e8f0' : '#1e293b',
                     marginBottom: 7,
                   }}
@@ -647,7 +726,7 @@ export default function LoginPage() {
                       left: 14,
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      color: isDark ? '#64748b' : '#94a3b8',
+                      color: isDark ? '#94a3b8' : '#64748b',
                       pointerEvents: 'none',
                     }}
                   />
@@ -664,19 +743,20 @@ export default function LoginPage() {
                       width: '100%',
                       padding: '11px 14px 11px 40px',
                       background: isDark ? '#1e293b' : '#ffffff',
-                      border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
+                      border: isDark ? '1px solid #334155' : '1px solid #cbd5e1',
                       borderRadius: 12,
                       color: isDark ? '#ffffff' : '#0f172a',
                       fontSize: 13.5,
+                      fontWeight: 500,
                       outline: 'none',
                       transition: 'border-color 0.2s, box-shadow 0.2s',
                     }}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = '#0d9488';
-                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.15)';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.2)';
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = isDark ? '#334155' : '#e2e8f0';
+                      e.currentTarget.style.borderColor = isDark ? '#334155' : '#cbd5e1';
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                   />
@@ -690,7 +770,7 @@ export default function LoginPage() {
                   style={{
                     display: 'block',
                     fontSize: 12.5,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     color: isDark ? '#e2e8f0' : '#1e293b',
                     marginBottom: 7,
                   }}
@@ -705,7 +785,7 @@ export default function LoginPage() {
                       left: 14,
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      color: isDark ? '#64748b' : '#94a3b8',
+                      color: isDark ? '#94a3b8' : '#64748b',
                       pointerEvents: 'none',
                     }}
                   />
@@ -722,19 +802,20 @@ export default function LoginPage() {
                       width: '100%',
                       padding: '11px 42px 11px 40px',
                       background: isDark ? '#1e293b' : '#ffffff',
-                      border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
+                      border: isDark ? '1px solid #334155' : '1px solid #cbd5e1',
                       borderRadius: 12,
                       color: isDark ? '#ffffff' : '#0f172a',
                       fontSize: 13.5,
+                      fontWeight: 500,
                       outline: 'none',
                       transition: 'border-color 0.2s, box-shadow 0.2s',
                     }}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = '#0d9488';
-                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.15)';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.2)';
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = isDark ? '#334155' : '#e2e8f0';
+                      e.currentTarget.style.borderColor = isDark ? '#334155' : '#cbd5e1';
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                   />
@@ -750,7 +831,7 @@ export default function LoginPage() {
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      color: isDark ? '#64748b' : '#94a3b8',
+                      color: isDark ? '#94a3b8' : '#64748b',
                       padding: 4,
                       display: 'flex',
                       alignItems: 'center',
@@ -777,13 +858,13 @@ export default function LoginPage() {
                     : 'linear-gradient(90deg, #0d9488 0%, #059669 35%, #2563eb 100%)',
                   color: '#ffffff',
                   fontSize: 14,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: busy ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
-                  boxShadow: busy ? 'none' : '0 8px 22px -4px rgba(37, 99, 235, 0.4)',
+                  boxShadow: busy ? 'none' : '0 8px 22px -4px rgba(37, 99, 235, 0.45)',
                   transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                 }}
                 onMouseEnter={(e) => {
@@ -816,7 +897,7 @@ export default function LoginPage() {
                     border: 'none',
                     padding: 0,
                     fontSize: 12,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     color: '#0d9488',
                     cursor: 'pointer',
                     transition: 'color 0.15s',
@@ -832,91 +913,31 @@ export default function LoginPage() {
               <div
                 style={{
                   height: 1,
-                  background: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9',
+                  background: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
                   margin: '12px 0 4px',
                 }}
               />
 
-              {/* Card Bottom Footer: Security Badge + Dark Mode Switch */}
+              {/* Card Bottom Footer: Único Distintivo de Seguridad Limpio (Sin duplicar modo oscuro) */}
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingTop: 2,
+                  justifyContent: 'center',
+                  gap: 7,
+                  paddingTop: 4,
                 }}
               >
-                {/* Left: Security Badge */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <ShieldCheck size={16} color="#059669" />
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: isDark ? '#94a3b8' : '#64748b',
-                      fontWeight: 500,
-                    }}
-                  >
-                    Tu información está segura
-                  </span>
-                </div>
-
-                {/* Vertical Divider */}
-                <div
+                <ShieldCheck size={16} color="#059669" />
+                <span
                   style={{
-                    width: 1,
-                    height: 16,
-                    background: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0',
+                    fontSize: 11.5,
+                    color: isDark ? '#94a3b8' : '#64748b',
+                    fontWeight: 600,
                   }}
-                />
-
-                {/* Right: Dark Mode Toggle */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Moon size={13} color={isDark ? '#38bdf8' : '#64748b'} />
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: isDark ? '#94a3b8' : '#64748b',
-                      fontWeight: 500,
-                    }}
-                  >
-                    Modo oscuro
-                  </span>
-                  {/* Slider Toggle */}
-                  <div
-                    onClick={toggleTheme}
-                    role="switch"
-                    aria-checked={isDark}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        toggleTheme();
-                      }
-                    }}
-                    style={{
-                      width: 38,
-                      height: 20,
-                      borderRadius: 10,
-                      background: isDark ? '#059669' : '#cbd5e1',
-                      padding: 2,
-                      cursor: 'pointer',
-                      transition: 'background 0.2s ease',
-                      position: 'relative',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: '50%',
-                        background: '#ffffff',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                        transform: isDark ? 'translateX(18px)' : 'translateX(0)',
-                        transition: 'transform 0.2s ease',
-                      }}
-                    />
-                  </div>
-                </div>
+                >
+                  Tu información está segura y protegida
+                </span>
               </div>
             </form>
           </div>
@@ -930,26 +951,27 @@ export default function LoginPage() {
         style={{
           position: 'relative',
           zIndex: 10,
-          padding: '16px 36px',
+          padding: '16px 48px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           fontSize: 11.5,
-          color: isDark ? '#94a3b8' : '#475569',
-          maxWidth: 1440,
+          color: isDark ? '#cbd5e1' : '#334155',
+          maxWidth: 1680,
           width: '100%',
           margin: '0 auto',
           flexWrap: 'wrap',
           gap: 12,
+          textShadow: isDark ? '0 1px 3px rgba(0,0,0,0.5)' : '0 1px 2px rgba(255,255,255,0.7)',
         }}
       >
-        <div>© {new Date().getFullYear()} AgroData Cesar. Plataforma Integral Agropecuaria.</div>
-        <div style={{ display: 'flex', gap: 16 }}>
+        <div style={{ fontWeight: 600 }}>© {new Date().getFullYear()} AgroData Cesar. Plataforma Integral Agropecuaria.</div>
+        <div style={{ display: 'flex', gap: 16, fontWeight: 500 }}>
           <span>Seguridad SSL</span>
           <span>•</span>
           <span>Analítica Predictiva</span>
           <span>•</span>
-          <span>Soporte Cesar</span>
+          <span>Departamento del Cesar</span>
         </div>
       </footer>
 
@@ -980,7 +1002,7 @@ export default function LoginPage() {
             onClick={(e) => e.stopPropagation()}
             style={{
               background: isDark ? '#0f172a' : '#ffffff',
-              border: isDark ? '1px solid #1e293b' : '1px solid #e2e8f0',
+              border: isDark ? '1px solid #1e293b' : '1px solid #cbd5e1',
               borderRadius: 20,
               padding: 28,
               maxWidth: 420,
@@ -1018,7 +1040,7 @@ export default function LoginPage() {
             >
               Recuperar contraseña
             </h3>
-            <p style={{ fontSize: 13, color: isDark ? '#94a3b8' : '#64748b', marginBottom: 20, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 13, color: isDark ? '#94a3b8' : '#475569', marginBottom: 20, lineHeight: 1.5 }}>
               Ingresa el correo electrónico asociado a tu cuenta para enviarte instrucciones de restablecimiento.
             </p>
 
@@ -1026,13 +1048,14 @@ export default function LoginPage() {
               <div
                 style={{
                   padding: '14px 16px',
-                  background: isDark ? 'rgba(34, 197, 94, 0.15)' : '#ecfdf5',
-                  border: isDark ? '1px solid rgba(34, 197, 94, 0.35)' : '1px solid #a7f3d0',
+                  background: isDark ? 'rgba(34, 197, 94, 0.2)' : '#ecfdf5',
+                  border: isDark ? '1px solid rgba(34, 197, 94, 0.45)' : '1px solid #a7f3d0',
                   borderRadius: 12,
                   color: isDark ? '#86efac' : '#047857',
                   fontSize: 13,
                   lineHeight: 1.5,
                   marginBottom: 16,
+                  fontWeight: 500,
                 }}
               >
                 ✓ Si el correo coincide con una cuenta activa, te hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada o spam.
@@ -1040,7 +1063,7 @@ export default function LoginPage() {
             ) : (
               <form onSubmit={handleForgotSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <label style={{ fontSize: 12.5, fontWeight: 600, color: isDark ? '#e2e8f0' : '#1e293b', display: 'block', marginBottom: 6 }}>
+                  <label style={{ fontSize: 12.5, fontWeight: 700, color: isDark ? '#e2e8f0' : '#1e293b', display: 'block', marginBottom: 6 }}>
                     Correo electrónico
                   </label>
                   <input
@@ -1053,10 +1076,11 @@ export default function LoginPage() {
                       width: '100%',
                       padding: '10px 14px',
                       borderRadius: 10,
-                      background: isDark ? '#1e293b' : '#f8fafc',
+                      background: isDark ? '#1e293b' : '#ffffff',
                       border: isDark ? '1px solid #334155' : '1px solid #cbd5e1',
                       color: isDark ? '#ffffff' : '#0f172a',
                       fontSize: 13.5,
+                      fontWeight: 500,
                       outline: 'none',
                     }}
                   />
@@ -1067,7 +1091,7 @@ export default function LoginPage() {
                   style={{
                     padding: '11px',
                     borderRadius: 10,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     fontSize: 13.5,
                     marginTop: 6,
                   }}
@@ -1103,9 +1127,11 @@ export default function LoginPage() {
           .login-feature-pills-row {
             justify-content: center !important;
             text-align: center !important;
+            grid-template-columns: 1fr !important;
           }
-          .login-feature-pills-row > div {
-            align-items: center !important;
+          .login-card-column {
+            justify-content: center !important;
+            max-width: 440px !important;
           }
         }
 

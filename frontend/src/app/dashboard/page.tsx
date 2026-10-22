@@ -775,26 +775,46 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Alertas globales (richAlerts) */}
+      {/* Alertas globales (richAlerts) con contraste y fondos sólidos */}
       {data.richAlerts && data.richAlerts.length > 0 && (
         <div style={{ marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {data.richAlerts.map((alerta) => {
             const isCritical = alerta.type === 'CRITICAL';
             const isWarning = alerta.type === 'WARNING';
-            const alertClass = isCritical ? 'alert-banner-critical' : isWarning ? 'alert-banner-warning' : 'alert-banner-info';
-            const bg = isCritical ? 'rgba(239,68,68,0.12)' : isWarning ? 'rgba(245,158,11,0.12)' : 'rgba(14,165,233,0.10)';
-            const border = isCritical ? 'rgba(239,68,68,0.35)' : isWarning ? 'rgba(245,158,11,0.35)' : 'rgba(14,165,233,0.30)';
+            const alertClass = isCritical ? 'alert-inline-danger' : isWarning ? 'alert-inline-warning' : 'alert-inline-info';
             const iconColor = isCritical ? '#ef4444' : isWarning ? '#f59e0b' : '#0ea5e9';
-            const titleColor = isCritical ? '#f87171' : isWarning ? '#fbbf24' : '#38bdf8';
             return (
-              <div key={alerta.id} className={alertClass} style={{ padding: '16px 20px', background: bg, border: `1px solid ${border}`, borderRadius: 14, display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <AlertTriangle size={20} color={iconColor} style={{ flexShrink: 0, marginTop: 2 }} />
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                    <div className="alert-title" style={{ fontSize: 14, fontWeight: 700, color: titleColor }}>{alerta.title}</div>
-                    <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(0,0,0,0.15)', borderRadius: 6, color: 'var(--color-text)', fontWeight: 600 }}>{alerta.source}</span>
+              <div
+                key={alerta.id}
+                className={`alert-inline ${alertClass}`}
+                style={{
+                  padding: '16px 20px',
+                  borderRadius: 14,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 14,
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
+                }}
+              >
+                <AlertTriangle size={22} color={iconColor} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>{alerta.title}</div>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        padding: '2px 8px',
+                        background: 'rgba(0,0,0,0.12)',
+                        borderRadius: 6,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {alerta.source}
+                    </span>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>{alerta.message}</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.5, opacity: 0.95, fontWeight: 500 }}>
+                    {alerta.message}
+                  </div>
                 </div>
               </div>
             );
