@@ -49,6 +49,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [hasHydrated, setHasHydrated] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
+  // Load and apply theme from localStorage
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? (localStorage.getItem('agrodata_theme') as 'dark' | 'light' | null) : null;
+    const initial = saved || 'dark';
+    setTheme(initial);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', initial);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('agrodata_theme', next);
+    }
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', next);
+    }
+  };
+
   useEffect(() => {
     setHasHydrated(true);
   }, []);
@@ -81,22 +102,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
     );
   }
-
-  
-  // Load and apply theme from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('agrodata_theme') as 'dark' | 'light' | null;
-    const initial = saved || 'dark';
-    setTheme(initial);
-    document.documentElement.setAttribute('data-theme', initial);
-  }, []);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    localStorage.setItem('agrodata_theme', next);
-    document.documentElement.setAttribute('data-theme', next);
-  };
   const handleLogout = () => {
     logout();
   };
