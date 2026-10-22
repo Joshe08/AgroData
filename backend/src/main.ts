@@ -7,9 +7,14 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Aumentar límite de carga útil para soportar imágenes base64 en análisis fitosanitario de AgroIA
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ limit: '50mb', extended: true }));
 
   // Asegurar carpeta uploads para fotografías de maquinaria y otros archivos
   const uploadsDir = join(process.cwd(), 'uploads');

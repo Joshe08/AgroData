@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -123,19 +123,7 @@ function AIPageInner() {
   const autoSentRef = useRef(false);
   const [hasImagePending, setHasImagePending] = useState(false);
 
-  useEffect(() => {
-    setMessages((prev) => {
-      if (prev.length > 0) return prev;
-      return [
-        {
-          id: 'welcome-msg',
-          role: 'assistant',
-          content: buildWelcomeMessage(userName),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ];
-    });
-  }, [userName]);
+  // messages inicia limpio sin burbuja estática previa
 
   // Si llega ?q= desde el dashboard, pre-rellenar y enviar automáticamente
   useEffect(() => {
@@ -227,21 +215,52 @@ function AIPageInner() {
     }
   };
 
-  // Manejo de imagen para análisis fitosanitario
+  // Manejo de imagen para análisis fitosanitario con compresión ligera
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        useToastStore.getState().warning('La imagen debe pesar menos de 5MB.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
-        useToastStore.getState().info('Fotografía adjunta para análisis fitosanitario.');
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      useToastStore.getState().warning('Por favor selecciona un archivo de imagen válido.');
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1200;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+          setSelectedImage(compressed);
+          useToastStore.getState().info('Fotografía adjunta para análisis fitosanitario.');
+        } else {
+          setSelectedImage(event.target?.result as string);
+        }
+      };
+      img.onerror = () => {
+        setSelectedImage(event.target?.result as string);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   // Enviar mensaje a AgroIA
@@ -345,14 +364,7 @@ function AIPageInner() {
   // Limpiar chat
   const handleClearChat = () => {
     autoSentRef.current = false;
-    setMessages([
-      {
-        id: 'welcome-msg-' + Date.now(),
-        role: 'assistant',
-        content: buildWelcomeMessage(userName),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ]);
+    setMessages([]);
   };
 
   // Renderizado limpio de Markdown
@@ -413,11 +425,11 @@ function AIPageInner() {
   return (
     <div
       style={{
-        maxWidth: 860,
+        maxWidth: 760,
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 100px)',
+        height: 'calc(100vh - 110px)',
         minHeight: 0,
       }}
     >
@@ -551,7 +563,61 @@ function AIPageInner() {
           minHeight: 0,
         }}
       >
-        {messages.map((msg) => {
+        {messages.length === 0 ? (
+          <div style={{ margin: 'auto 0', textAlign: 'center', padding: '24px 16px' }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: 'rgba(16,185,129,0.12)',
+                border: '1px solid rgba(16,185,129,0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px',
+                boxShadow: '0 0 20px rgba(16, 185, 129, 0.15)',
+              }}
+            >
+              <Bot size={22} color="#10b981" />
+            </div>
+
+            <h2 className="font-display" style={{ fontSize: 18, fontWeight: 700, margin: '0 0 6px', color: 'var(--color-text)' }}>
+              {buildWelcomeMessage(userName)}
+            </h2>
+            <p style={{ fontSize: 12, color: 'var(--color-text-muted)', maxWidth: 440, margin: '0 auto 20px', lineHeight: 1.5 }}>
+              Copiloto agronómico con acceso vivo a tus predios, finanzas, bodega y clima del Cesar.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, textAlign: 'left', maxWidth: 620, margin: '0 auto' }}>
+              {PROMPT_SUGERIDOS.slice(0, 4).map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSendMessage(p.prompt)}
+                  className="glass-hover"
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    background: 'var(--color-surface-2)',
+                    border: '1px solid var(--color-border)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)' }}>{p.label}</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-muted)', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    {p.prompt}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          messages.map((msg) => {
           const isUser = msg.role === 'user';
           return (
             <div
@@ -699,9 +765,10 @@ function AIPageInner() {
               </div>
             </div>
           );
-        })}
+        })
+      )}
 
-        {loading && (
+      {loading && (
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <div
               style={{

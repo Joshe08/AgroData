@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ClimaWidget from '@/components/dashboard/ClimaWidget';
 import AgroIAWidget from '@/components/dashboard/AgroIAWidget';
+import MapaCalorZonasWidget from '@/components/dashboard/MapaCalorZonasWidget';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ interface FincaData {
 interface DashboardData {
   fincas: number;
   fincasData?: FincaData[];
+  rawFincas?: any[];
   producciones: number;
   ingresos: number;
   gastos: number;
@@ -271,7 +273,11 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
           {/* Accesos rápidos */}
           <div className="card" style={{ padding: '18px 20px' }}>
             <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--color-text-muted)' }}>Módulos de Campo</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+            <div style={{ marginBottom: 20 }}>
+            <MapaCalorZonasWidget fincas={data.rawFincas || []} loading={loading} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
               {[
                 { label: 'Ver Fincas y Parcelas', href: '/dashboard/fincas', icon: <MapPin size={14} /> },
                 { label: 'Gestionar Producciones', href: '/dashboard/producciones', icon: <Sprout size={14} /> },
@@ -525,6 +531,11 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
         </div>
       </div>
 
+      {/* ── 3.5 FILA: ANÁLISIS DE ZONAS DE CALOR Y ESTRÉS HÍDRICO ──────── */}
+      <div style={{ marginBottom: 24 }}>
+        <MapaCalorZonasWidget fincas={data.rawFincas || []} loading={loading} />
+      </div>
+
       {/* ── 4. FILA: DISTRIBUCIÓN PRODUCTIVA + ACTIVIDAD RECIENTE ──────────
               Dos tarjetas iguales lado a lado, responsivas en móvil.        */}
       <div className="dashboard-two-col-grid">
@@ -706,6 +717,7 @@ export default function DashboardPage() {
 
       setData({
         fincas: fincas.length,
+        rawFincas: fincas,
         fincasData: fincas.map((f: any) => ({ id: f.id, nombre: f.nombre, lat: f.lat ?? f.latitude, lon: f.lon ?? f.longitude })),
         producciones: prods.length,
         ingresos: totalIngresos,
@@ -769,18 +781,20 @@ export default function DashboardPage() {
           {data.richAlerts.map((alerta) => {
             const isCritical = alerta.type === 'CRITICAL';
             const isWarning = alerta.type === 'WARNING';
-            const bg = isCritical ? 'rgba(239,68,68,0.1)' : isWarning ? 'rgba(245,158,11,0.1)' : 'rgba(14,165,233,0.08)';
-            const border = isCritical ? 'rgba(239,68,68,0.3)' : isWarning ? 'rgba(245,158,11,0.3)' : 'rgba(14,165,233,0.25)';
-            const textColor = isCritical ? '#f87171' : isWarning ? '#fbbf24' : '#38bdf8';
+            const alertClass = isCritical ? 'alert-banner-critical' : isWarning ? 'alert-banner-warning' : 'alert-banner-info';
+            const bg = isCritical ? 'rgba(239,68,68,0.12)' : isWarning ? 'rgba(245,158,11,0.12)' : 'rgba(14,165,233,0.10)';
+            const border = isCritical ? 'rgba(239,68,68,0.35)' : isWarning ? 'rgba(245,158,11,0.35)' : 'rgba(14,165,233,0.30)';
+            const iconColor = isCritical ? '#ef4444' : isWarning ? '#f59e0b' : '#0ea5e9';
+            const titleColor = isCritical ? '#f87171' : isWarning ? '#fbbf24' : '#38bdf8';
             return (
-              <div key={alerta.id} style={{ padding: '16px 20px', background: bg, border: `1px solid ${border}`, borderRadius: 14, display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <AlertTriangle size={20} color={textColor} style={{ flexShrink: 0, marginTop: 2 }} />
+              <div key={alerta.id} className={alertClass} style={{ padding: '16px 20px', background: bg, border: `1px solid ${border}`, borderRadius: 14, display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                <AlertTriangle size={20} color={iconColor} style={{ flexShrink: 0, marginTop: 2 }} />
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: textColor }}>{alerta.title}</div>
-                    <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, color: textColor }}>{alerta.source}</span>
+                    <div className="alert-title" style={{ fontSize: 14, fontWeight: 700, color: titleColor }}>{alerta.title}</div>
+                    <span style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(0,0,0,0.15)', borderRadius: 6, color: 'var(--color-text)', fontWeight: 600 }}>{alerta.source}</span>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{alerta.message}</div>
+                  <div style={{ fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>{alerta.message}</div>
                 </div>
               </div>
             );

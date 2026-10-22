@@ -377,6 +377,9 @@ INSTRUCCIONES Y REGLAS OPERATIVAS:
       };
     } catch (error) {
       this.logger.warn(`Gemini API unavailable: ${(error as any)?.message}. Usando motor analítico local.`);
+      if (imageBase64) {
+        return this.generateImageFallback(userMessage, snapshot);
+      }
       return this.generateSmartChatFallback(userMessage, snapshot);
     }
   }

@@ -1348,22 +1348,48 @@ function FincaDetailModal({
               <Layers size={16} color="#22c55e" />
               <span>Zona Perimetral de la Finca y Parcelas</span>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 onClick={() => onOpenPerimeterModal(finca)}
                 className="btn-secondary"
-                style={{ fontSize: 11, padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 4, color: '#10b981', borderColor: 'rgba(16,185,129,0.4)' }}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: '6px 14px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  color: '#10b981',
+                  borderColor: 'rgba(16, 185, 129, 0.4)',
+                  borderRadius: 10,
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
               >
-                <Compass size={12} /> Delimitar Zona Finca
+                <Compass size={14} color="#10b981" />
+                <span>Delimitar Zona Finca</span>
               </button>
               <button
                 type="button"
                 onClick={() => onOpenLoteModal(finca.id)}
-                className="btn-secondary"
-                style={{ fontSize: 11, padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 4, color: '#22c55e' }}
+                className="btn-primary"
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: '6px 16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  borderRadius: 10,
+                  boxShadow: '0 3px 12px rgba(16, 185, 129, 0.25)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
               >
-                <Plus size={12} /> Nueva Parcela
+                <Plus size={14} />
+                <span>Nueva Parcela</span>
               </button>
             </div>
           </div>
@@ -1732,24 +1758,49 @@ export default function FincasPage() {
                   </div>
                 </div>
 
-                <div className="fincas-toolbar-actions">
+                <div className="fincas-toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     onClick={() => setPerimeterModalFinca(currentMapFinca)}
                     className="btn-secondary"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '7px 12px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      padding: '8px 16px',
+                      color: '#10b981',
+                      borderColor: 'rgba(16, 185, 129, 0.4)',
+                      borderRadius: 10,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
                     title="Delimitar zona geográfica del predio mediante puntos manuales"
                   >
-                    <Compass size={14} />
+                    <Compass size={15} color="#10b981" />
                     <span>Delimitar Finca</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setLoteModalData({ isOpen: true, fincaId: currentMapFinca.id })}
                     className="btn-primary"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '7px 12px', background: '#22c55e' }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      padding: '8px 18px',
+                      borderRadius: 10,
+                      boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
                   >
-                    <Plus size={14} /> <span>Nueva Parcela</span>
+                    <Plus size={15} />
+                    <span>Nueva Parcela</span>
                   </button>
                 </div>
               </div>

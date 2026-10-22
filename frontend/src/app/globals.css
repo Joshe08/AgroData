@@ -151,6 +151,88 @@
   border-top-color: rgba(200, 230, 213, 0.5);
 }
 
+
+[data-theme="light"] .input-field {
+  background: #ffffff !important;
+  border-color: #c8e6d5 !important;
+  color: #0f1f0f !important;
+}
+
+[data-theme="light"] .input-field::placeholder {
+  color: #6b9e83 !important;
+}
+
+[data-theme="light"] .input-field:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+[data-theme="light"] .btn-secondary {
+  background: #ffffff !important;
+  border-color: #c8e6d5 !important;
+  color: #0f1f0f !important;
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background: #f0f7f4 !important;
+  border-color: #059669 !important;
+  color: #059669 !important;
+}
+
+[data-theme="light"] .fincas-toolbar-card {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%) !important;
+  border-color: #c8e6d5 !important;
+}
+
+[data-theme="light"] select.input-field option {
+  background: #ffffff;
+  color: #0f1f0f;
+}
+
+/* Alertas legibles en modo claro (nunca texto claro sobre fondo blanco) */
+[data-theme="light"] .alert-warning-box {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+[data-theme="light"] .alert-critical-box {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #991b1b !important;
+}
+
+[data-theme="light"] .alert-info-box {
+  background: #f0f9ff !important;
+  border-color: #bae6fd !important;
+  color: #075985 !important;
+}
+
+
+[data-theme="light"] .alert-banner-warning {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+[data-theme="light"] .alert-banner-warning .alert-title {
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .alert-banner-critical {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+}
+[data-theme="light"] .alert-banner-critical .alert-title {
+  color: #b91c1c !important;
+}
+
+[data-theme="light"] .alert-banner-info {
+  background: #f0f9ff !important;
+  border-color: #bae6fd !important;
+}
+[data-theme="light"] .alert-banner-info .alert-title {
+  color: #0369a1 !important;
+}
+
 [data-theme="light"] .leaflet-container {
   background-color: #e8f5ee !important;
 }
@@ -789,6 +871,14 @@ body {
   gap: 16px;
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
   border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+
+.fincas-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .fincas-kpi-strip {

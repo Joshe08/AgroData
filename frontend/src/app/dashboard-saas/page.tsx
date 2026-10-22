@@ -34,6 +34,8 @@ import {
   ShieldCheck,
   Mail,
   MessageSquare,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 
@@ -115,6 +117,27 @@ export default function SaasAdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? (localStorage.getItem('agrodata_theme') as 'dark' | 'light' | null) : null;
+    const initial = saved || 'dark';
+    setTheme(initial);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', initial);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('agrodata_theme', next);
+    }
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', next);
+    }
+  };
 
   // Modals state
   const [showOrgModal, setShowOrgModal] = useState(false);
@@ -640,7 +663,25 @@ export default function SaasAdminPage() {
             </div>
 
             {/* Header Actions */}
-            <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <button
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                className="btn-secondary"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '9px 14px',
+                  borderRadius: 12,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 13,
+                }}
+              >
+                {theme === 'dark' ? <Sun size={15} color="#fbbf24" /> : <Moon size={15} color="#6366f1" />}
+                <span>{theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}</span>
+              </button>
               {activeTab === 'empresas' && (
                 <button
                   onClick={() => setShowOrgModal(true)}
