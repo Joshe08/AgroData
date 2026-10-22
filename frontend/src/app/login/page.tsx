@@ -118,23 +118,23 @@ export default function LoginPage() {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        backgroundImage: `url('/images/login-hero-bg.jpg'), url('/images/login-bg.png')`,
+        backgroundImage: `url('/images/login-bg-hq.jpg')`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center center',
+        backgroundPosition: 'center 35%',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
         color: isDark ? '#f1f5f9' : '#0f172a',
         overflowX: 'hidden',
       }}
     >
-      {/* Overlay sutil para garantizar legibilidad perfecta del texto y armonía en dark mode */}
+      {/* Overlay: sutil en dark mode para preservar legibilidad; transparente en light mode para máxima fidelidad fotográfica */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           background: isDark
             ? 'linear-gradient(135deg, rgba(10, 15, 29, 0.88) 0%, rgba(15, 23, 42, 0.82) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(240, 249, 245, 0.25) 100%)',
+            : 'radial-gradient(ellipse at 80% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)',
           backdropFilter: isDark ? 'blur(2px)' : 'none',
           pointerEvents: 'none',
           zIndex: 1,
