@@ -1059,3 +1059,100 @@ body {
 [data-theme="light"] {
   --color-border-subtle: rgba(0, 0, 0, 0.07);
 }
+
+/* ================================================
+   SISTEMA GLOBAL DE ALERTAS / MENSAJES INLINE
+   Legibles en MODO OSCURO y MODO CLARO
+   ================================================ */
+
+/* --- Dark mode base (default) --- */
+.alert-inline {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.alert-inline-success {
+  background: rgba(6, 78, 59, 0.55);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #6ee7b7;
+}
+
+.alert-inline-warning {
+  background: rgba(69, 39, 0, 0.60);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fcd34d;
+}
+
+.alert-inline-danger {
+  background: rgba(90, 10, 10, 0.60);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+
+.alert-inline-info {
+  background: rgba(13, 18, 64, 0.65);
+  border: 1px solid rgba(99, 102, 241, 0.40);
+  color: #a5b4fc;
+}
+
+/* --- Light mode overrides --- */
+[data-theme="light"] .alert-inline-success {
+  background: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+  color: #064e3b !important;
+}
+
+[data-theme="light"] .alert-inline-warning {
+  background: #fffbeb !important;
+  border-color: #fcd34d !important;
+  color: #78350f !important;
+}
+
+[data-theme="light"] .alert-inline-danger {
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+  color: #7f1d1d !important;
+}
+
+[data-theme="light"] .alert-inline-info {
+  background: #eef2ff !important;
+  border-color: #a5b4fc !important;
+  color: #1e1b4b !important;
+}
+
+/* --- Badges en dark mode: más legibles con fondo sólido --- */
+.badge-success {
+  background: rgba(6, 78, 59, 0.50) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.40) !important;
+}
+
+.badge-warning {
+  background: rgba(69, 39, 0, 0.55) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.40) !important;
+}
+
+.badge-danger {
+  background: rgba(90, 10, 10, 0.55) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.40) !important;
+}
+
+.badge-info {
+  background: rgba(13, 18, 64, 0.55) !important;
+  color: #a5b4fc !important;
+  border-color: rgba(99, 102, 241, 0.35) !important;
+}
+
+/* Badges en light: ya estaban definidos arriba, se mantienen */
+
+/* Toast container - fondo más sólido en dark */
+.toast-container > div {
+  backdrop-filter: blur(12px);
+}

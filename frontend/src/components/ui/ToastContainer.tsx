@@ -4,44 +4,83 @@ import { useEffect, useRef } from 'react';
 import { useToastStore, Toast, ToastType } from '@/store/toastStore';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
-const ICONS: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle size={18} />,
-  error: <XCircle size={18} />,
-  warning: <AlertTriangle size={18} />,
-  info: <Info size={18} />,
-};
-
-const COLORS: Record<ToastType, { bg: string; border: string; color: string; icon: string }> = {
+// Colores sólidos y legibles tanto en modo oscuro como claro
+const COLORS: Record<ToastType, { bg: string; border: string; color: string; icon: string; darkBg: string }> = {
   success: {
-    bg: 'rgba(16, 185, 129, 0.08)',
-    border: 'rgba(16, 185, 129, 0.3)',
-    color: '#f1f5f9',
+    bg: '#052e16',         // fondo oscuro sólido verde muy oscuro
+    darkBg: '#052e16',
+    border: 'rgba(16, 185, 129, 0.5)',
+    color: '#6ee7b7',      // texto verde claro legible en oscuro
     icon: '#34d399',
   },
   error: {
-    bg: 'rgba(239, 68, 68, 0.08)',
-    border: 'rgba(239, 68, 68, 0.3)',
-    color: '#f1f5f9',
+    bg: '#2d0a0a',
+    darkBg: '#2d0a0a',
+    border: 'rgba(239, 68, 68, 0.5)',
+    color: '#fca5a5',
     icon: '#f87171',
   },
   warning: {
-    bg: 'rgba(245, 158, 11, 0.08)',
-    border: 'rgba(245, 158, 11, 0.3)',
-    color: '#f1f5f9',
+    bg: '#2d1a00',
+    darkBg: '#2d1a00',
+    border: 'rgba(245, 158, 11, 0.5)',
+    color: '#fcd34d',
     icon: '#fbbf24',
   },
   info: {
-    bg: 'rgba(99, 102, 241, 0.08)',
-    border: 'rgba(99, 102, 241, 0.3)',
-    color: '#f1f5f9',
+    bg: '#0d0f2a',
+    darkBg: '#0d0f2a',
+    border: 'rgba(99, 102, 241, 0.5)',
+    color: '#a5b4fc',
     icon: '#818cf8',
+  },
+};
+
+// Colores para modo claro
+const COLORS_LIGHT: Record<ToastType, { bg: string; border: string; color: string; icon: string }> = {
+  success: {
+    bg: '#ecfdf5',
+    border: '#6ee7b7',
+    color: '#064e3b',
+    icon: '#059669',
+  },
+  error: {
+    bg: '#fef2f2',
+    border: '#fca5a5',
+    color: '#7f1d1d',
+    icon: '#dc2626',
+  },
+  warning: {
+    bg: '#fffbeb',
+    border: '#fcd34d',
+    color: '#78350f',
+    icon: '#d97706',
+  },
+  info: {
+    bg: '#eef2ff',
+    border: '#a5b4fc',
+    color: '#1e1b4b',
+    icon: '#4f46e5',
   },
 };
 
 function ToastItem({ toast }: { toast: Toast }) {
   const { removeToast } = useToastStore();
-  const c = COLORS[toast.type];
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Detectar tema actual
+  const isLight =
+    typeof document !== 'undefined' &&
+    document.documentElement.getAttribute('data-theme') === 'light';
+
+  const c = isLight ? COLORS_LIGHT[toast.type] : COLORS[toast.type];
+
+  const ICONS: Record<ToastType, React.ReactNode> = {
+    success: <CheckCircle size={18} />,
+    error: <XCircle size={18} />,
+    warning: <AlertTriangle size={18} />,
+    info: <Info size={18} />,
+  };
 
   useEffect(() => {
     return () => {
@@ -61,8 +100,10 @@ function ToastItem({ toast }: { toast: Toast }) {
         background: c.bg,
         border: `1px solid ${c.border}`,
         borderRadius: 12,
-        backdropFilter: 'blur(12px)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(8px)',
+        boxShadow: isLight
+          ? '0 4px 20px rgba(0,0,0,0.12)'
+          : '0 8px 32px rgba(0,0,0,0.6)',
         maxWidth: 380,
         width: '100%',
         animation: 'toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -72,7 +113,16 @@ function ToastItem({ toast }: { toast: Toast }) {
       <span style={{ color: c.icon, flexShrink: 0, marginTop: 1 }}>
         {ICONS[toast.type]}
       </span>
-      <span style={{ flex: 1, fontSize: 14, color: c.color, lineHeight: 1.5, wordBreak: 'break-word' }}>
+      <span
+        style={{
+          flex: 1,
+          fontSize: 14,
+          color: c.color,
+          lineHeight: 1.5,
+          wordBreak: 'break-word',
+          fontWeight: 500,
+        }}
+      >
         {toast.message}
       </span>
       <button
@@ -82,7 +132,8 @@ function ToastItem({ toast }: { toast: Toast }) {
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          color: 'var(--color-text-subtle)',
+          color: c.color,
+          opacity: 0.6,
           padding: 0,
           flexShrink: 0,
           display: 'flex',
