@@ -803,6 +803,7 @@ export default function FinanzasPage() {
       </div>
 
       {/* Table */}
+      <div style={{ marginTop: 32 }} />
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[...Array(5)].map((_, i) => <div key={i} className="skeleton" style={{ height: 60, borderRadius: 12 }} />)}

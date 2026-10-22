@@ -19,7 +19,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Obtener el perfil del usuario actual' })
   async getMe(@Request() req: any) {
     const user = await this.prisma.user.findUnique({
-      where: { id: req.user.sub },
+      where: { id: req.user.sub || req.user.userId || req.user.id },
       select: {
         id: true,
         email: true,
@@ -53,7 +53,7 @@ export class UsersController {
       data.passwordHash = await bcrypt.hash(body.password, 10);
     }
     const updated = await this.prisma.user.update({
-      where: { id: req.user.sub },
+      where: { id: req.user.sub || req.user.userId || req.user.id },
       data,
       select: {
         id: true,

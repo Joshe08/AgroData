@@ -998,3 +998,64 @@ body {
     grid-template-columns: 1fr 1fr !important;
   }
 }
+
+/* ===============================================
+   AgroIA Chat Bubble Styles (light/dark aware)
+   =============================================== */
+
+/* Dark mode defaults */
+.ai-bubble-user {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--color-text);
+}
+
+.ai-bubble-assistant {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.ai-chip-btn {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* Light mode overrides */
+[data-theme="light"] .ai-bubble-user {
+  background: rgba(79, 70, 229, 0.08) !important;
+  border-color: rgba(79, 70, 229, 0.22) !important;
+  color: var(--color-text);
+}
+
+[data-theme="light"] .ai-bubble-assistant {
+  background: #f3faf6 !important;
+  border-color: #c8e6d5 !important;
+  color: var(--color-text);
+}
+
+[data-theme="light"] .ai-chip-btn {
+  background: #f3faf6 !important;
+  border-color: #c8e6d5 !important;
+  color: var(--color-text-muted);
+}
+
+[data-theme="light"] .ai-chat-container {
+  background: #f8fbf9 !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Input box light mode */
+[data-theme="light"] .ai-chat-container .card {
+  background: #ffffff !important;
+  border-color: var(--color-border) !important;
+}
+
+/* color-border-subtle variable for footer divider */
+:root {
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+}
+[data-theme="light"] {
+  --color-border-subtle: rgba(0, 0, 0, 0.07);
+}

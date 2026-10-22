@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { aiApi, fincasApi } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useToastStore } from '@/store/toastStore';
+import { useAiChatStore, AiMessage } from '@/store/aiChatStore';
 import {
   Bot,
   Send,
@@ -29,21 +30,6 @@ interface Finca {
   nombre: string;
   ubicacion: string;
   hectareas: number;
-}
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-  sources?: string[];
-  actionSuggestion?: {
-    type: string;
-    data: any;
-  } | null;
-  actionExecuted?: boolean;
-  imageUrl?: string;
-  kpis?: any;
 }
 
 const PROMPT_SUGERIDOS = [
@@ -104,8 +90,16 @@ function AIPageInner() {
   const userName = user?.nombre || (user as any)?.name;
   const searchParams = useSearchParams();
 
+  // Persistencia de mensajes y finca seleccionada via Zustand store
+  const messages = useAiChatStore((s) => s.messages);
+  const selectedFinca = useAiChatStore((s) => s.selectedFinca);
+  const storeAddMessage = useAiChatStore((s) => s.addMessage);
+  const storeSetMessages = useAiChatStore((s) => s.setMessages);
+  const storeUpdateMessage = useAiChatStore((s) => s.updateMessage);
+  const storeSetFinca = useAiChatStore((s) => s.setSelectedFinca);
+  const storeClearChat = useAiChatStore((s) => s.clearChat);
+
   const [fincas, setFincas] = useState<Finca[]>([]);
-  const [selectedFinca, setSelectedFinca] = useState<string>('');
   const [consulta, setConsulta] = useState('');
   const [loading, setLoading] = useState(false);
   const [executingActionId, setExecutingActionId] = useState<string | null>(null);
@@ -118,12 +112,8 @@ function AIPageInner() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Historial de mensajes con saludo dinámico según la hora y usuario
-  const [messages, setMessages] = useState<Message[]>([]);
   const autoSentRef = useRef(false);
   const [hasImagePending, setHasImagePending] = useState(false);
-
-  // messages inicia limpio sin burbuja estática previa
 
   // Si llega ?q= desde el dashboard, pre-rellenar y enviar automáticamente
   useEffect(() => {
@@ -131,7 +121,6 @@ function AIPageInner() {
     if (q && !autoSentRef.current) {
       autoSentRef.current = true;
       setConsulta(q);
-      // Pequeño delay para que el estado del saludo inicial esté listo
       setTimeout(() => handleSendMessage(q), 300);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -279,7 +268,7 @@ function AIPageInner() {
     setHasImagePending(!!currentImage);
 
     const userMsgId = 'user-' + Date.now();
-    const newUserMessage: Message = {
+    const newUserMessage: AiMessage = {
       id: userMsgId,
       role: 'user',
       content: promptToSend,
@@ -287,12 +276,12 @@ function AIPageInner() {
       imageUrl: currentImage || undefined,
     };
 
-    const newHistory = [...messages, newUserMessage];
-    setMessages(newHistory);
+    storeAddMessage(newUserMessage);
     setLoading(true);
 
     try {
-      const historyPayload = newHistory
+      const currentMessages = useAiChatStore.getState().messages;
+      const historyPayload = currentMessages
         .filter((m) => m.id !== 'welcome-msg')
         .map((m) => ({
           role: m.role,
@@ -305,7 +294,7 @@ function AIPageInner() {
         imageBase64: currentImage || undefined,
       });
 
-      const assistantMsg: Message = {
+      const assistantMsg: AiMessage = {
         id: 'assistant-' + Date.now(),
         role: 'assistant',
         content: res.data.text || 'Consulta procesada con éxito.',
@@ -315,19 +304,16 @@ function AIPageInner() {
         kpis: res.data.kpis,
       };
 
-      setMessages((prev) => [...prev, assistantMsg]);
+      storeAddMessage(assistantMsg);
     } catch {
       useToastStore.getState().error('Error al comunicarse con AgroIA. Intenta nuevamente.');
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: 'error-' + Date.now(),
-          role: 'assistant',
-          content:
-            'Hubo un inconveniente al procesar la solicitud con el servidor. Por favor verifica la conexión o intenta reformular la pregunta.',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+      storeAddMessage({
+        id: 'error-' + Date.now(),
+        role: 'assistant',
+        content:
+          'Hubo un inconveniente al procesar la solicitud con el servidor. Por favor verifica la conexión o intenta reformular la pregunta.',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      });
     } finally {
       setLoading(false);
       setHasImagePending(false);
@@ -341,19 +327,14 @@ function AIPageInner() {
       const res = await aiApi.executeAction(action);
       useToastStore.getState().success(res.data.message || 'Acción ejecutada en la base de datos.');
 
-      setMessages((prev) =>
-        prev.map((m) => (m.id === msgId ? { ...m, actionExecuted: true } : m))
-      );
+      storeUpdateMessage(msgId, { actionExecuted: true });
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: 'action-confirm-' + Date.now(),
-          role: 'assistant',
-          content: `Confirmación de registro: ${res.data.message || 'El registro ha sido asentado exitosamente en la base de datos.'}`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+      storeAddMessage({
+        id: 'action-confirm-' + Date.now(),
+        role: 'assistant',
+        content: `Confirmación de registro: ${res.data.message || 'El registro ha sido asentado exitosamente en la base de datos.'}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      });
     } catch (e: any) {
       useToastStore.getState().error(e.response?.data?.message || 'Error al ejecutar la acción.');
     } finally {
@@ -361,10 +342,10 @@ function AIPageInner() {
     }
   };
 
-  // Limpiar chat
+  // Limpiar chat — borra el store también
   const handleClearChat = () => {
     autoSentRef.current = false;
-    setMessages([]);
+    storeClearChat();
   };
 
   // Renderizado limpio de Markdown
@@ -519,7 +500,7 @@ function AIPageInner() {
             className="input-field"
             style={{ width: 'auto', minWidth: 140, maxWidth: 200, padding: '5px 10px', fontSize: 12 }}
             value={selectedFinca}
-            onChange={(e) => setSelectedFinca(e.target.value)}
+            onChange={(e) => storeSetFinca(e.target.value)}
           >
             <option value="">Todas las fincas</option>
             {fincas.map((f) => (
@@ -549,7 +530,7 @@ function AIPageInner() {
 
       {/* Chat Messages Container */}
       <div
-        className="card"
+        className="card ai-chat-container"
         style={{
           flex: 1,
           overflowY: 'auto',
@@ -559,7 +540,6 @@ function AIPageInner() {
           gap: 12,
           marginBottom: 8,
           borderRadius: 12,
-          background: 'var(--color-surface, #0f172a)',
           minHeight: 0,
         }}
       >
@@ -651,14 +631,9 @@ function AIPageInner() {
 
               {/* Message Bubble */}
               <div
+                className={isUser ? 'ai-bubble-user' : 'ai-bubble-assistant'}
                 style={{
                   maxWidth: '78%',
-                  background: isUser
-                    ? 'rgba(59, 130, 246, 0.12)'
-                    : 'var(--color-surface-2, #1e293b)',
-                  border: isUser
-                    ? '1px solid rgba(59, 130, 246, 0.3)'
-                    : '1px solid var(--color-border, #334155)',
                   borderRadius: 10,
                   padding: '10px 14px',
                 }}
@@ -747,7 +722,7 @@ function AIPageInner() {
                     justifyContent: 'space-between',
                     marginTop: 6,
                     paddingTop: 4,
-                    borderTop: '1px solid rgba(255,255,255,0.05)',
+                    borderTop: '1px solid var(--color-border-subtle)',
                     fontSize: 10,
                     color: 'var(--color-text-subtle)',
                     flexWrap: 'wrap',
@@ -785,19 +760,7 @@ function AIPageInner() {
             >
               {hasImagePending ? <Scan size={16} color="#f59e0b" /> : <Bot size={16} color="#10b981" />}
             </div>
-            <div
-              style={{
-                background: 'var(--color-surface-2, #1e293b)',
-                border: '1px solid var(--color-border, #334155)',
-                borderRadius: 12,
-                padding: '10px 14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontSize: 12,
-                color: 'var(--color-text-muted)',
-              }}
-            >
+            <div className="ai-bubble-assistant" style={{ borderRadius: 12, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-muted)' }}>
               <Loader2 size={14} style={{ animation: 'spin 1s linear infinite', color: hasImagePending ? '#f59e0b' : '#10b981' }} />
               <span>{hasImagePending ? 'Analizando fotografía con motor fitosanitario...' : 'Consultando y procesando datos de la organización...'}</span>
             </div>
@@ -807,7 +770,7 @@ function AIPageInner() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Sugerencias en la parte inferior (sin emojis) */}
+      {/* Sugerencias en la parte inferior */}
       <div
         style={{
           display: 'flex',
@@ -823,13 +786,11 @@ function AIPageInner() {
             key={i}
             onClick={() => handleSendMessage(p.prompt)}
             disabled={loading}
+            className="ai-chip-btn"
             style={{
               padding: '5px 11px',
-              background: 'var(--color-surface-2, #1e293b)',
-              border: '1px solid var(--color-border, #334155)',
               borderRadius: 16,
               fontSize: 11,
-              color: 'var(--color-text-muted)',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
               transition: 'all 0.15s',
@@ -841,8 +802,8 @@ function AIPageInner() {
               e.currentTarget.style.color = 'var(--color-text)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-border, #334155)';
-              e.currentTarget.style.color = 'var(--color-text-muted)';
+              e.currentTarget.style.borderColor = '';
+              e.currentTarget.style.color = '';
             }}
           >
             {p.label}
@@ -914,8 +875,7 @@ function AIPageInner() {
         style={{
           padding: '10px 14px',
           borderRadius: 12,
-          background: 'var(--color-surface, #1e293b)',
-          border: '1px solid var(--color-border, #334155)',
+          border: '1px solid var(--color-border)',
           display: 'flex',
           gap: 8,
           alignItems: 'center',
@@ -1052,4 +1012,3 @@ export default function AIPage() {
     </Suspense>
   );
 }
-
