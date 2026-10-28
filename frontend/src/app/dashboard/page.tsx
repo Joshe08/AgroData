@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { fincasApi, finanzasApi, produccionesApi, inventarioApi, maquinariaApi } from '@/lib/api';
 import {
@@ -255,6 +256,203 @@ function ActividadProductivaWidget({
   );
 }
 
+// ─── Widget de Próximos Mantenimientos y Estado de Flota ──────────────────────
+
+function ProximoMantenimientoWidget({
+  maquinarias,
+  loading,
+}: {
+  maquinarias: MaquinaDashboardItem[];
+  loading?: boolean;
+}) {
+  return (
+    <div
+      className="card"
+      style={{
+        padding: '20px 22px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#f59e0b',
+              flexShrink: 0,
+            }}
+          >
+            <Clock size={16} />
+          </div>
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>
+              Próximos Mantenimientos de Maquinaria
+            </h3>
+            <p style={{ fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 }}>
+              Cronograma de servicio preventivo y estado de equipos
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/dashboard/maquinaria"
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: 'var(--color-primary)',
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+          }}
+        >
+          Gestionar flota <ChevronRight size={13} />
+        </Link>
+      </div>
+
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="skeleton" style={{ height: 48, borderRadius: 8 }} />
+          ))}
+        </div>
+      ) : !maquinarias || maquinarias.length === 0 ? (
+        <div
+          style={{
+            padding: '14px 16px',
+            background: 'rgba(16, 185, 129, 0.05)',
+            border: '1px solid rgba(16, 185, 129, 0.15)',
+            borderRadius: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: 'rgba(16, 185, 129, 0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#10b981',
+              flexShrink: 0,
+            }}
+          >
+            <CheckCircle2 size={16} />
+          </div>
+          <div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>
+              Flota operativa al día
+            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>
+              Todos los tractores y equipos cuentan con sus revisiones vigentes.
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
+          {maquinarias.slice(0, 4).map((m) => {
+            const isDanado = m.estado === 'DAÑADO' || m.estado === 'DANADO';
+            const isMant = m.estado === 'MANTENIMIENTO';
+            const badgeBg = isDanado
+              ? 'rgba(239, 68, 68, 0.12)'
+              : isMant
+              ? 'rgba(245, 158, 11, 0.12)'
+              : 'rgba(14, 165, 233, 0.12)';
+            const badgeColor = isDanado ? '#f87171' : isMant ? '#fbbf24' : '#38bdf8';
+            const badgeLabel = isDanado
+              ? 'Fuera de Servicio'
+              : isMant
+              ? 'En Taller'
+              : m.proximoMantenimiento
+              ? `Prog: ${m.proximoMantenimiento.split('T')[0]}`
+              : 'Operativo';
+
+            return (
+              <div
+                key={m.id}
+                style={{
+                  padding: '9px 12px',
+                  borderRadius: 10,
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 6,
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid var(--color-border)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--color-text-muted)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Tractor size={15} />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        color: 'var(--color-text)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {m.nombre}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {m.tipo} · {m.finca?.nombre || 'Predio General'}
+                    </div>
+                  </div>
+                </div>
+
+                <span
+                  style={{
+                    fontSize: 10.5,
+                    fontWeight: 600,
+                    padding: '2px 7px',
+                    borderRadius: 6,
+                    background: badgeBg,
+                    color: badgeColor,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  {badgeLabel}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Dashboard AGRONOMO ───────────────────────────────────────────────────────
 
 function AgronomoDashboard({ data }: { data: DashboardData }) {
@@ -266,13 +464,12 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
     <>
       {loading ? (
         <div className="dashboard-kpi-grid">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 140, borderRadius: 16 }} />)}
+          {[...Array(3)].map((_, i) => <div key={i} className="skeleton" style={{ height: 140, borderRadius: 16 }} />)}
         </div>
       ) : (
         <div className="dashboard-kpi-grid">
           <StatCard label="Fincas a cargo" value={fincas} icon={<MapPin size={20} />} color="green" onClick={() => router.push('/dashboard/fincas')} />
           <StatCard label="Cultivos activos" value={producciones} icon={<Sprout size={20} />} color="blue" onClick={() => router.push('/dashboard/producciones')} />
-          <StatCard label="Maquinaria y Equipos" value={data.maquinariaTotal || 0} subtitle={data.maquinariaMantenimiento > 0 ? `${data.maquinariaMantenimiento} en mantenimiento` : 'Operativa'} icon={<Wrench size={20} />} color={data.maquinariaMantenimiento > 0 ? 'amber' : 'green'} onClick={() => router.push('/dashboard/maquinaria')} />
           <StatCard label="Alertas de insumos" value={alertasInventario} subtitle={alertasInventario > 0 ? 'Requieren atención' : 'Stock en orden'} icon={<Package size={20} />} color={alertasInventario > 0 ? 'red' : 'green'} onClick={() => router.push('/dashboard/inventario')} />
         </div>
       )}
@@ -438,109 +635,46 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
       {/* ── 1. KPI CARDS ──────────────────────────────────────────────────── */}
       {loading ? (
         <div className="dashboard-kpi-grid">
-          {[...Array(5)].map((_, i) => <div key={i} className="skeleton" style={{ height: 130, borderRadius: 16 }} />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 130, borderRadius: 16 }} />)}
         </div>
       ) : (
         <div className="dashboard-kpi-grid">
           <StatCard label="Fincas Registradas" value={fincas} icon={<MapPin size={20} />} color="green" onClick={() => router.push('/dashboard/fincas')} />
           <StatCard label="Producciones Activas" value={producciones} icon={<Sprout size={20} />} color="blue" onClick={() => router.push('/dashboard/producciones')} />
-          <StatCard
-            label="Maquinaria y Equipos"
-            value={data.maquinariaTotal || 0}
-            subtitle={
-              (data.maquinariaMantenimiento || 0) + (data.maquinariaAveriada || 0) > 0
-                ? `${(data.maquinariaMantenimiento || 0) + (data.maquinariaAveriada || 0)} requieren atención`
-                : 'Todos operativos'
-            }
-            icon={<Wrench size={20} />}
-            color={
-              (data.maquinariaAveriada || 0) > 0
-                ? 'red'
-                : (data.maquinariaMantenimiento || 0) > 0
-                ? 'amber'
-                : 'green'
-            }
-            onClick={() => router.push('/dashboard/maquinaria')}
-          />
           <StatCard label="Ingresos Totales" value={formatCOP(ingresos)} icon={<TrendingUp size={20} />} color="green" onClick={() => router.push('/dashboard/finanzas')} />
           <StatCard label="Gastos Totales" value={formatCOP(gastos)} icon={<TrendingDown size={20} />} color="red" onClick={() => router.push('/dashboard/finanzas')} />
         </div>
       )}
 
-      {/* ── 2. ALERTAS DE OPERACIÓN CONSOLIDADAS ──────────────────────────── */}
-      {(alertasInventario > 0 || (data.maquinariaMantenimiento || 0) > 0 || (data.maquinariaAveriada || 0) > 0) ? (
-        <div style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {/* Alerta de Maquinaria (única, concisa y directa) */}
-          {((data.maquinariaMantenimiento || 0) > 0 || (data.maquinariaAveriada || 0) > 0) && (
-            <div
-              style={{
-                padding: '12px 16px',
-                background: (data.maquinariaAveriada || 0) > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
-                border: `1px solid ${(data.maquinariaAveriada || 0) > 0 ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)'}`,
-                borderRadius: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: 10,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Wrench size={17} color={(data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24'} />
-                <span style={{ fontSize: 13, color: 'var(--color-text)' }}>
-                  <strong style={{ color: (data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24' }}>
-                    Mantenimiento de Maquinaria:
-                  </strong>{' '}
-                  {(data.maquinariaMantenimiento || 0) + (data.maquinariaAveriada || 0)} equipo(s) requieren atención (
-                  {(data.maquinariaMantenimiento || 0) > 0 && `${data.maquinariaMantenimiento} en servicio`}
-                  {(data.maquinariaMantenimiento || 0) > 0 && (data.maquinariaAveriada || 0) > 0 && ', '}
-                  {(data.maquinariaAveriada || 0) > 0 && `${data.maquinariaAveriada} fuera de servicio`}
-                  ).
-                </span>
-              </div>
-              <a
-                href="/dashboard/maquinaria"
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: (data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24',
-                  textDecoration: 'none',
-                }}
-              >
-                Revisar maquinaria &rarr;
-              </a>
+      {/* ── 2. ALERTAS DE OPERACIÓN ───────────────────────────────────────── */}
+      {alertasInventario > 0 ? (
+        <div style={{ marginBottom: 20 }}>
+          <div
+            style={{
+              padding: '12px 16px',
+              background: 'rgba(245,158,11,0.08)',
+              border: '1px solid rgba(245,158,11,0.25)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 10,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <AlertTriangle size={17} color="#fbbf24" />
+              <span style={{ fontSize: 13, color: 'var(--color-text)' }}>
+                <strong style={{ color: '#fbbf24' }}>Stock Crítico:</strong> {alertasInventario} insumo(s) alcanzaron el nivel mínimo de bodega.
+              </span>
             </div>
-          )}
-
-          {/* Alerta de Stock de Insumos */}
-          {alertasInventario > 0 && (
-            <div
-              style={{
-                padding: '12px 16px',
-                background: 'rgba(245,158,11,0.08)',
-                border: '1px solid rgba(245,158,11,0.25)',
-                borderRadius: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: 10,
-              }}
+            <a
+              href="/dashboard/inventario"
+              style={{ fontSize: 12, fontWeight: 600, color: '#fbbf24', textDecoration: 'none' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <AlertTriangle size={17} color="#fbbf24" />
-                <span style={{ fontSize: 13, color: 'var(--color-text)' }}>
-                  <strong style={{ color: '#fbbf24' }}>Stock Crítico:</strong> {alertasInventario} insumo(s) alcanzaron el nivel mínimo de bodega.
-                </span>
-              </div>
-              <a
-                href="/dashboard/inventario"
-                style={{ fontSize: 12, fontWeight: 600, color: '#fbbf24', textDecoration: 'none' }}
-              >
-                Ver inventario &rarr;
-              </a>
-            </div>
-          )}
+              Ver inventario &rarr;
+            </a>
+          </div>
         </div>
       ) : (
         <div style={{ marginBottom: 20, padding: '10px 16px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -549,77 +683,84 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
         </div>
       )}
 
-      {/* ── 3. FILA PRINCIPAL: GRÁFICA FINANCIERA + CLIMA & AGROIA ─────────
-              La gráfica ocupa el espacio principal; clima y AgroIA van en
-              una columna derecha apilada, con colapso responsivo en móvil.    */}
+      {/* ── 3. FILA PRINCIPAL: FINANZAS + PRÓXIMOS MANTENIMIENTOS / CLIMA & AGROIA ── */}
       <div className="dashboard-charts-grid">
 
-        {/* Gráfica ingresos vs gastos */}
-        <div className="card" style={{ padding: '22px 24px', minWidth: 0, overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>Ingresos vs Gastos</h3>
-              <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Histórico financiero — últimos 6 meses</p>
+        {/* Columna izquierda: Gráfica Ingresos vs Gastos + Próximos Mantenimientos */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+          {/* Gráfica ingresos vs gastos */}
+          <div className="card" style={{ padding: '22px 24px', minWidth: 0, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+              <div>
+                <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>Ingresos vs Gastos</h3>
+                <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Histórico financiero — últimos 6 meses</p>
+              </div>
+              <div style={{ display: 'flex', gap: 12, fontSize: 11 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-text-muted)' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} /> Ingresos
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-text-muted)' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} /> Gastos
+                </span>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 12, fontSize: 11 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-text-muted)' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} /> Ingresos
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-text-muted)' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} /> Gastos
-              </span>
+
+            {loading ? (
+              <div className="skeleton" style={{ height: 210, borderRadius: 10 }} />
+            ) : !resumenFinanciero || (resumenFinanciero as any[]).length === 0 || (resumenFinanciero as any[]).every((m: any) => (m.ingresos || 0) === 0 && (m.gastos || 0) === 0) ? (
+              <div style={{ height: 210, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
+                <div><BarChart3 size={32} style={{ margin: '0 auto 8px', opacity: 0.25 }} /><p>Sin datos financieros registrados</p></div>
+              </div>
+            ) : (
+              <div style={{ width: '100%', height: 210, minWidth: 0 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={resumenFinanciero as Array<{ mes: string; ingresos: number; gastos: number }>} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="gi2" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                      </linearGradient>
+                      <linearGradient id="gg2" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                    <XAxis dataKey="mes" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} />
+                    <Tooltip
+                      contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8, color: '#f8fafc', fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
+                      formatter={(v: any) => [formatCOP(Number(v || 0))]}
+                    />
+                    <Area type="monotone" dataKey="ingresos" name="Ingresos" stroke="#10b981" strokeWidth={2.5} fill="url(#gi2)" dot={{ r: 3, fill: '#10b981' }} activeDot={{ r: 5 }} />
+                    <Area type="monotone" dataKey="gastos" name="Gastos" stroke="#ef4444" strokeWidth={2.5} fill="url(#gg2)" dot={{ r: 3, fill: '#ef4444' }} activeDot={{ r: 5 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Resumen de balance debajo de la gráfica */}
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--color-border)', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 2 }}>Balance neto</div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: balance >= 0 ? '#4ade80' : '#f87171' }}>{formatCOP(balance)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 2 }}>Total ingresos</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#4ade80' }}>{formatCOP(ingresos)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 2 }}>Total gastos</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#f87171' }}>{formatCOP(gastos)}</div>
+              </div>
             </div>
           </div>
 
-          {loading ? (
-            <div className="skeleton" style={{ height: 210, borderRadius: 10 }} />
-          ) : !resumenFinanciero || (resumenFinanciero as any[]).length === 0 || (resumenFinanciero as any[]).every((m: any) => (m.ingresos || 0) === 0 && (m.gastos || 0) === 0) ? (
-            <div style={{ height: 210, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: 13, textAlign: 'center' }}>
-              <div><BarChart3 size={32} style={{ margin: '0 auto 8px', opacity: 0.25 }} /><p>Sin datos financieros registrados</p></div>
-            </div>
-          ) : (
-            <div style={{ width: '100%', height: 210, minWidth: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={resumenFinanciero as Array<{ mes: string; ingresos: number; gastos: number }>} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="gi2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id="gg2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="mes" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} />
-                  <Tooltip
-                    contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8, color: '#f8fafc', fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
-                    formatter={(v: any) => [formatCOP(Number(v || 0))]}
-                  />
-                  <Area type="monotone" dataKey="ingresos" name="Ingresos" stroke="#10b981" strokeWidth={2.5} fill="url(#gi2)" dot={{ r: 3, fill: '#10b981' }} activeDot={{ r: 5 }} />
-                  <Area type="monotone" dataKey="gastos" name="Gastos" stroke="#ef4444" strokeWidth={2.5} fill="url(#gg2)" dot={{ r: 3, fill: '#ef4444' }} activeDot={{ r: 5 }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Resumen de balance debajo de la gráfica */}
-          <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--color-border)', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 2 }}>Balance neto</div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: balance >= 0 ? '#4ade80' : '#f87171' }}>{formatCOP(balance)}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 2 }}>Total ingresos</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#4ade80' }}>{formatCOP(ingresos)}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--color-text-subtle)', marginBottom: 2 }}>Total gastos</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#f87171' }}>{formatCOP(gastos)}</div>
-            </div>
-          </div>
+          {/* Widget de Próximos Mantenimientos y Estado de Maquinaria */}
+          <ProximoMantenimientoWidget
+            maquinarias={data.maquinariasEnAtencion}
+            loading={loading}
+          />
         </div>
 
         {/* Columna derecha: Clima rotativo + AgroIA apilados */}
@@ -767,17 +908,24 @@ export default function DashboardPage() {
         return est === 'DAÑADO' || est === 'DANADO' || est === 'BROKEN' || est === 'AVERIADO';
       });
 
-      const now = new Date();
-      const limiteMantenimiento = new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000);
-      const porVencer = maquinas.filter((m: any) => {
-        const est = String(m.estado || m.status || '').toUpperCase();
-        if (est === 'MANTENIMIENTO' || est === 'DAÑADO' || est === 'DANADO') return false;
-        if (!m.proximoMantenimiento) return false;
-        const f = new Date(m.proximoMantenimiento);
-        return !isNaN(f.getTime()) && f <= limiteMantenimiento;
-      });
+      // Equipos con próximo mantenimiento programado (ordenados por fecha ascendente)
+      const conProximo = maquinas
+        .filter((m: any) => {
+          const est = String(m.estado || m.status || '').toUpperCase();
+          if (est === 'MANTENIMIENTO' || est === 'DAÑADO' || est === 'DANADO') return false;
+          return !!m.proximoMantenimiento;
+        })
+        .sort((a: any, b: any) => {
+          const fa = new Date(a.proximoMantenimiento).getTime();
+          const fb = new Date(b.proximoMantenimiento).getTime();
+          return fa - fb;
+        });
 
-      const maquinariasAtencion: MaquinaDashboardItem[] = [...enMantenimiento, ...averiadas, ...porVencer].map((m: any) => ({
+      // Lista priorizada para el widget: Averiada -> En Mantenimiento -> Próximos Servicios
+      const priorizadas = [...averiadas, ...enMantenimiento, ...conProximo];
+      const seleccionadas = priorizadas.length > 0 ? priorizadas : maquinas;
+
+      const maquinariasAtencion: MaquinaDashboardItem[] = seleccionadas.slice(0, 4).map((m: any) => ({
         id: m.id,
         nombre: m.nombre || m.name || 'Equipo',
         tipo: m.tipo || m.type || 'MAQUINARIA',
