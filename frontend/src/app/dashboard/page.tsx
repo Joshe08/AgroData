@@ -3,11 +3,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { fincasApi, finanzasApi, produccionesApi, inventarioApi } from '@/lib/api';
+import { fincasApi, finanzasApi, produccionesApi, inventarioApi, maquinariaApi } from '@/lib/api';
 import {
   MapPin, Sprout, DollarSign, Package, TrendingUp, TrendingDown,
   AlertTriangle, RefreshCw, Tractor, Users, CloudSun, Wrench,
   BarChart3, Coins, ArrowUpCircle, ArrowDownCircle, Scale, CalendarDays,
+  CheckCircle2, Clock, ChevronRight,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -45,6 +46,17 @@ interface FincaData {
   nombre: string;
   lat?: number;
   lon?: number;
+  ubicacion?: string;
+}
+
+export interface MaquinaDashboardItem {
+  id: string | number;
+  nombre: string;
+  tipo: string;
+  estado: string;
+  finca?: { nombre: string } | null;
+  proximoMantenimiento?: string;
+  horasUso?: number;
 }
 
 interface DashboardData {
@@ -55,6 +67,10 @@ interface DashboardData {
   ingresos: number;
   gastos: number;
   alertasInventario: number;
+  maquinariaTotal: number;
+  maquinariaMantenimiento: number;
+  maquinariaAveriada: number;
+  maquinariasEnAtencion: MaquinaDashboardItem[];
   richAlerts?: any[];
   empleados: number;
   resumenFinanciero: unknown[];
@@ -250,12 +266,13 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
     <>
       {loading ? (
         <div className="dashboard-kpi-grid">
-          {[...Array(3)].map((_, i) => <div key={i} className="skeleton" style={{ height: 140, borderRadius: 16 }} />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 140, borderRadius: 16 }} />)}
         </div>
       ) : (
         <div className="dashboard-kpi-grid">
           <StatCard label="Fincas a cargo" value={fincas} icon={<MapPin size={20} />} color="green" onClick={() => router.push('/dashboard/fincas')} />
           <StatCard label="Cultivos activos" value={producciones} icon={<Sprout size={20} />} color="blue" onClick={() => router.push('/dashboard/producciones')} />
+          <StatCard label="Maquinaria y Equipos" value={data.maquinariaTotal || 0} subtitle={data.maquinariaMantenimiento > 0 ? `${data.maquinariaMantenimiento} en mantenimiento` : 'Operativa'} icon={<Wrench size={20} />} color={data.maquinariaMantenimiento > 0 ? 'amber' : 'green'} onClick={() => router.push('/dashboard/maquinaria')} />
           <StatCard label="Alertas de insumos" value={alertasInventario} subtitle={alertasInventario > 0 ? 'Requieren atención' : 'Stock en orden'} icon={<Package size={20} />} color={alertasInventario > 0 ? 'red' : 'green'} onClick={() => router.push('/dashboard/inventario')} />
         </div>
       )}
@@ -282,6 +299,7 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
                 { label: 'Ver Fincas y Parcelas', href: '/dashboard/fincas', icon: <MapPin size={14} /> },
                 { label: 'Gestionar Producciones', href: '/dashboard/producciones', icon: <Sprout size={14} /> },
                 { label: 'Revisar Inventario', href: '/dashboard/inventario', icon: <Package size={14} /> },
+                { label: 'Maquinaria y Equipos', href: '/dashboard/maquinaria', icon: <Wrench size={14} /> },
               ].map((item) => (
                 <a key={item.href} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 8, color: 'var(--color-text)', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>
                   <span style={{ color: 'var(--color-primary)' }}>{item.icon}</span>{item.label}
@@ -292,7 +310,7 @@ function AgronomoDashboard({ data }: { data: DashboardData }) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <ClimaWidget fincaNombre={primeraFinca?.nombre} lat={primeraFinca?.lat} lon={primeraFinca?.lon} />
+          <ClimaWidget fincas={data.fincasData} fincaNombre={primeraFinca?.nombre} lat={primeraFinca?.lat} lon={primeraFinca?.lon} />
           <AgroIAWidget alertasInventario={alertasInventario} producciones={producciones} fincas={fincas} balance={0} />
         </div>
       </div>
@@ -420,19 +438,80 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
       {/* ── 1. KPI CARDS ──────────────────────────────────────────────────── */}
       {loading ? (
         <div className="dashboard-kpi-grid">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 130, borderRadius: 16 }} />)}
+          {[...Array(5)].map((_, i) => <div key={i} className="skeleton" style={{ height: 130, borderRadius: 16 }} />)}
         </div>
       ) : (
         <div className="dashboard-kpi-grid">
           <StatCard label="Fincas Registradas" value={fincas} icon={<MapPin size={20} />} color="green" onClick={() => router.push('/dashboard/fincas')} />
           <StatCard label="Producciones Activas" value={producciones} icon={<Sprout size={20} />} color="blue" onClick={() => router.push('/dashboard/producciones')} />
+          <StatCard
+            label="Maquinaria y Equipos"
+            value={data.maquinariaTotal || 0}
+            subtitle={
+              (data.maquinariaMantenimiento || 0) + (data.maquinariaAveriada || 0) > 0
+                ? `${(data.maquinariaMantenimiento || 0) + (data.maquinariaAveriada || 0)} requieren atención`
+                : 'Todos operativos'
+            }
+            icon={<Wrench size={20} />}
+            color={
+              (data.maquinariaAveriada || 0) > 0
+                ? 'red'
+                : (data.maquinariaMantenimiento || 0) > 0
+                ? 'amber'
+                : 'green'
+            }
+            onClick={() => router.push('/dashboard/maquinaria')}
+          />
           <StatCard label="Ingresos Totales" value={formatCOP(ingresos)} icon={<TrendingUp size={20} />} color="green" onClick={() => router.push('/dashboard/finanzas')} />
           <StatCard label="Gastos Totales" value={formatCOP(gastos)} icon={<TrendingDown size={20} />} color="red" onClick={() => router.push('/dashboard/finanzas')} />
         </div>
       )}
 
-      {/* ── 2. ALERTA DE STOCK ────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 24 }}>
+      {/* ── 2. ALERTAS DE OPERACIÓN (STOCK Y MAQUINARIA) ───────────────────── */}
+      <div style={{ marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* Alerta de Maquinaria */}
+        {((data.maquinariaMantenimiento || 0) > 0 || (data.maquinariaAveriada || 0) > 0) && (
+          <div
+            style={{
+              padding: '13px 18px',
+              background: (data.maquinariaAveriada || 0) > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
+              border: `1px solid ${(data.maquinariaAveriada || 0) > 0 ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)'}`,
+              borderRadius: 12,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Wrench size={18} color={(data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24'} />
+              <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+                <strong style={{ color: (data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24' }}>
+                  Atención en Maquinaria:
+                </strong>{' '}
+                {(data.maquinariaMantenimiento || 0) + (data.maquinariaAveriada || 0)} equipo(s) requieren atención (
+                {(data.maquinariaMantenimiento || 0) > 0 && `${data.maquinariaMantenimiento} en mantenimiento`}
+                {(data.maquinariaMantenimiento || 0) > 0 && (data.maquinariaAveriada || 0) > 0 && ', '}
+                {(data.maquinariaAveriada || 0) > 0 && `${data.maquinariaAveriada} averiado(s)`}
+                ).
+              </span>
+            </div>
+            <a
+              href="/dashboard/maquinaria"
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: (data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24',
+                textDecoration: 'underline',
+              }}
+            >
+              Gestionar maquinaria &rarr;
+            </a>
+          </div>
+        )}
+
+        {/* Alerta de Stock de Insumos */}
         {alertasInventario > 0 ? (
           <div style={{ padding: '13px 18px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -443,12 +522,12 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
             </div>
             <a href="/dashboard/inventario" style={{ fontSize: 12, fontWeight: 600, color: '#fbbf24', textDecoration: 'underline' }}>Ver insumos →</a>
           </div>
-        ) : (
+        ) : (!data.maquinariaMantenimiento && !data.maquinariaAveriada) ? (
           <div style={{ padding: '12px 18px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Operaciones al día · Insumos y predios en condiciones normales.</span>
+            <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Operaciones al día · Insumos, maquinaria y predios en condiciones normales.</span>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* ── 3. FILA PRINCIPAL: GRÁFICA FINANCIERA + CLIMA & AGROIA ─────────
@@ -524,9 +603,9 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
           </div>
         </div>
 
-        {/* Columna derecha: Clima + AgroIA apilados, sin huecos */}
+        {/* Columna derecha: Clima rotativo + AgroIA apilados */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <ClimaWidget fincaNombre={primeraFinca?.nombre} lat={primeraFinca?.lat} lon={primeraFinca?.lon} />
+          <ClimaWidget fincas={data.fincasData} fincaNombre={primeraFinca?.nombre} lat={primeraFinca?.lat} lon={primeraFinca?.lon} />
           <AgroIAWidget alertasInventario={alertasInventario} producciones={producciones} fincas={fincas} balance={balance} />
         </div>
       </div>
@@ -536,8 +615,7 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
         <MapaCalorZonasWidget fincas={data.rawFincas || []} loading={loading} />
       </div>
 
-      {/* ── 4. FILA: DISTRIBUCIÓN PRODUCTIVA + ACTIVIDAD RECIENTE ──────────
-              Dos tarjetas iguales lado a lado, responsivas en móvil.        */}
+      {/* ── 4. FILA: DISTRIBUCIÓN PRODUCTIVA + ACTIVIDAD RECIENTE ────────── */}
       <div className="dashboard-two-col-grid">
 
         {/* Distribución de producciones modernizada */}
@@ -586,6 +664,82 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
         </div>
       </div>
 
+      {/* ── 4.5 SECCIÓN: MAQUINARIA QUE REQUIERE ATENCIÓN ────────────────── */}
+      {data.maquinariasEnAtencion && data.maquinariasEnAtencion.length > 0 && (
+        <div className="card" style={{ padding: '20px 24px', marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Wrench size={18} color="#fbbf24" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>
+                  Maquinaria en Mantenimiento y Revisión
+                </h3>
+                <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                  Equipos en taller, fuera de servicio o con mantenimiento preventivo programado
+                </p>
+              </div>
+            </div>
+            <a
+              href="/dashboard/maquinaria"
+              style={{ fontSize: 12, color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              Gestionar maquinaria &rarr;
+            </a>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+            {data.maquinariasEnAtencion.map((m) => {
+              const isDanado = m.estado === 'DAÑADO' || m.estado === 'DANADO';
+              const isMant = m.estado === 'MANTENIMIENTO';
+              const badgeColor = isDanado ? '#f87171' : isMant ? '#fbbf24' : '#60a5fa';
+              const badgeBg = isDanado ? 'rgba(239,68,68,0.12)' : isMant ? 'rgba(245,158,11,0.12)' : 'rgba(59,130,246,0.12)';
+              const label = isDanado ? 'Fuera de Servicio' : isMant ? 'En Mantenimiento' : 'Próximo a Servicio';
+
+              return (
+                <div
+                  key={m.id}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>
+                      {m.nombre}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: '2px 8px',
+                        borderRadius: 6,
+                        background: badgeBg,
+                        color: badgeColor,
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-text-muted)' }}>
+                    <span>{m.tipo} · {m.finca?.nombre || 'Predio General'}</span>
+                    {m.proximoMantenimiento && (
+                      <span>Vence: {m.proximoMantenimiento.split('T')[0]}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── 5. ACCESOS RÁPIDOS ────────────────────────────────────────────── */}
       <div className="card" style={{ padding: '20px 24px' }}>
         <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Accesos rápidos</h3>
@@ -624,10 +778,16 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData>({
     fincas: 0,
     fincasData: [],
+    rawFincas: [],
     producciones: 0,
     ingresos: 0,
     gastos: 0,
     alertasInventario: 0,
+    maquinariaTotal: 0,
+    maquinariaMantenimiento: 0,
+    maquinariaAveriada: 0,
+    maquinariasEnAtencion: [],
+    richAlerts: [],
     empleados: 0,
     resumenFinanciero: [],
     distribProds: [],
@@ -638,12 +798,13 @@ export default function DashboardPage() {
   const loadData = useCallback(async () => {
     setData((prev) => ({ ...prev, loading: true }));
     try {
-      const [fincasRes, prodsRes, alertasRes, finanzasRes, resumenRes] = await Promise.allSettled([
+      const [fincasRes, prodsRes, alertasRes, finanzasRes, resumenRes, maquinariaRes] = await Promise.allSettled([
         fincasApi.getAll(),
         produccionesApi.getAll(),
         inventarioApi.alertas(),
         finanzasApi.getAll(),
         finanzasApi.resumen(),
+        maquinariaApi.getAll(),
       ]);
 
       const fincas = fincasRes.status === 'fulfilled' ? fincasRes.value.data : [];
@@ -651,6 +812,58 @@ export default function DashboardPage() {
       const alertas = alertasRes.status === 'fulfilled' ? alertasRes.value.data : [];
       const transacciones = finanzasRes.status === 'fulfilled' ? (finanzasRes.value.data || []) : [];
       const resumen = resumenRes.status === 'fulfilled' ? resumenRes.value.data : null;
+      const maquinas: any[] = maquinariaRes.status === 'fulfilled' ? (maquinariaRes.value.data || []) : [];
+
+      const enMantenimiento = maquinas.filter((m: any) => {
+        const est = String(m.estado || m.status || '').toUpperCase();
+        return est === 'MANTENIMIENTO' || est === 'EN MANTENIMIENTO';
+      });
+
+      const averiadas = maquinas.filter((m: any) => {
+        const est = String(m.estado || m.status || '').toUpperCase();
+        return est === 'DAÑADO' || est === 'DANADO' || est === 'BROKEN' || est === 'AVERIADO';
+      });
+
+      const now = new Date();
+      const limiteMantenimiento = new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000);
+      const porVencer = maquinas.filter((m: any) => {
+        const est = String(m.estado || m.status || '').toUpperCase();
+        if (est === 'MANTENIMIENTO' || est === 'DAÑADO' || est === 'DANADO') return false;
+        if (!m.proximoMantenimiento) return false;
+        const f = new Date(m.proximoMantenimiento);
+        return !isNaN(f.getTime()) && f <= limiteMantenimiento;
+      });
+
+      const maquinariasAtencion: MaquinaDashboardItem[] = [...enMantenimiento, ...averiadas, ...porVencer].map((m: any) => ({
+        id: m.id,
+        nombre: m.nombre || m.name || 'Equipo',
+        tipo: m.tipo || m.type || 'MAQUINARIA',
+        estado: m.estado || m.status || 'OPERATIVO',
+        finca: m.finca,
+        proximoMantenimiento: m.proximoMantenimiento,
+        horasUso: m.horasUso,
+      }));
+
+      // Alertas globales enriquecidas para el dashboard
+      const richAlertsList: any[] = [];
+      if (averiadas.length > 0) {
+        richAlertsList.push({
+          id: 'alerta-maquinaria-danada',
+          type: 'CRITICAL',
+          source: 'Maquinaria y Equipos',
+          title: `${averiadas.length} equipo(s) fuera de servicio o averiados`,
+          message: `Equipos: ${averiadas.map((m: any) => m.nombre).slice(0, 3).join(', ')}${averiadas.length > 3 ? '...' : ''}. Requieren atención técnica inmediata para no demorar las labores de campo.`,
+        });
+      }
+      if (enMantenimiento.length > 0) {
+        richAlertsList.push({
+          id: 'alerta-maquinaria-mantenimiento',
+          type: 'WARNING',
+          source: 'Taller y Mantenimiento',
+          title: `${enMantenimiento.length} equipo(s) en mantenimiento preventivo o correctivo`,
+          message: `Maquinaria en taller: ${enMantenimiento.map((m: any) => m.nombre).slice(0, 3).join(', ')}${enMantenimiento.length > 3 ? '...' : ''}. Consultar la hoja de vida de cada equipo para su fecha de entrega.`,
+        });
+      }
 
       let totalIngresos = Number(resumen?.totalIngresos ?? resumen?.totalIncome ?? 0);
       let totalGastos = Number(resumen?.totalGastos ?? resumen?.totalExpenses ?? 0);
@@ -718,11 +931,22 @@ export default function DashboardPage() {
       setData({
         fincas: fincas.length,
         rawFincas: fincas,
-        fincasData: fincas.map((f: any) => ({ id: f.id, nombre: f.nombre, lat: f.lat ?? f.latitude, lon: f.lon ?? f.longitude })),
+        fincasData: fincas.map((f: any) => ({
+          id: f.id,
+          nombre: f.nombre || f.name,
+          lat: f.lat ?? f.latitude,
+          lon: f.lon ?? f.longitude,
+          ubicacion: f.ubicacion || f.municipio || f.departamento,
+        })),
         producciones: prods.length,
         ingresos: totalIngresos,
         gastos: totalGastos,
         alertasInventario: (alertas as unknown[]).length,
+        maquinariaTotal: maquinas.length,
+        maquinariaMantenimiento: enMantenimiento.length,
+        maquinariaAveriada: averiadas.length,
+        maquinariasEnAtencion: maquinariasAtencion,
+        richAlerts: richAlertsList,
         empleados: 0,
         resumenFinanciero: meses,
         distribProds: Object.entries(tiposMap).map(([name, value]) => ({ name, value })),

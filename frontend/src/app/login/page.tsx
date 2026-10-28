@@ -1058,7 +1058,7 @@ export default function LoginPage() {
                   fontWeight: 500,
                 }}
               >
-                ✓ Si el correo coincide con una cuenta activa, te hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada o spam.
+                Si el correo coincide con una cuenta activa, te hemos enviado un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada o spam.
               </div>
             ) : (
               <form onSubmit={handleForgotSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

@@ -1919,7 +1919,7 @@ export default function SaasAdminPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const text = `🌾 AgroData Cesar - Notificación de Acceso\n\n¡Hola ${createdAccountModal.userName}!\nSe ha habilitado tu acceso a la plataforma AgroData para la organización *${createdAccountModal.orgName}*.\n\n🌐 Enlace de Acceso: ${window.location.origin}/login\n📧 Correo: ${createdAccountModal.userEmail}\n🔑 Contraseña temporal: ${createdAccountModal.temporaryPassword}\n📋 Estado de cuenta: ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo y Verificado'}\n\nPor tu seguridad, te recomendamos cambiar la contraseña en tu primer inicio de sesión.`;
+                    const text = `AgroData Cesar - Notificación de Acceso\n\nEstimado(a) ${createdAccountModal.userName}:\nSe ha habilitado tu acceso a la plataforma AgroData para la organización *${createdAccountModal.orgName}*.\n\nEnlace de Acceso: ${window.location.origin}/login\nCorreo: ${createdAccountModal.userEmail}\nContraseña temporal: ${createdAccountModal.temporaryPassword}\nEstado de cuenta: ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo y Verificado'}\n\nPor tu seguridad, te recomendamos cambiar la contraseña en tu primer inicio de sesión.`;
                     navigator.clipboard.writeText(text);
                     useToastStore.getState().success('Mensaje completo copiado al portapapeles.');
                   }}
@@ -1944,7 +1944,7 @@ export default function SaasAdminPage() {
                   whiteSpace: 'pre-wrap',
                 }}
               >
-                {`🌾 AgroData Cesar - Notificación de Acceso\n¡Hola ${createdAccountModal.userName}!\nSe ha habilitado tu cuenta para "${createdAccountModal.orgName}".\n🌐 Acceso: ${typeof window !== 'undefined' ? window.location.origin : ''}/login\n📧 Correo: ${createdAccountModal.userEmail || '—'}\n🔑 Contraseña: ${createdAccountModal.temporaryPassword || '—'}\n📋 Estado: ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo'}`}
+                {`AgroData Cesar - Notificación de Acceso\nEstimado(a) ${createdAccountModal.userName}:\nSe ha habilitado tu cuenta para "${createdAccountModal.orgName}".\nAcceso: ${typeof window !== 'undefined' ? window.location.origin : ''}/login\nCorreo: ${createdAccountModal.userEmail || '—'}\nContraseña: ${createdAccountModal.temporaryPassword || '—'}\nEstado: ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo'}`}
               </div>
             </div>
 
@@ -1957,7 +1957,7 @@ export default function SaasAdminPage() {
                     onClick={() => {
                       const cleanPhone = createdAccountModal.phone?.replace(/[^0-9]/g, '') || '';
                       const fullPhone = cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`;
-                      const text = `🌾 *AgroData Cesar - Notificación de Acceso*\n\n¡Hola ${createdAccountModal.userName}!\nSe ha habilitado tu acceso a la plataforma AgroData para la organización *${createdAccountModal.orgName}*.\n\n🌐 *Enlace:* ${window.location.origin}/login\n📧 *Correo:* ${createdAccountModal.userEmail}\n🔑 *Contraseña:* ${createdAccountModal.temporaryPassword}\n📋 *Estado:* ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo y Verificado'}`;
+                      const text = `*AgroData Cesar - Notificación de Acceso*\n\nEstimado(a) ${createdAccountModal.userName}:\nSe ha habilitado tu acceso a la plataforma AgroData para la organización *${createdAccountModal.orgName}*.\n\n*Enlace:* ${window.location.origin}/login\n*Correo:* ${createdAccountModal.userEmail}\n*Contraseña:* ${createdAccountModal.temporaryPassword}\n*Estado:* ${createdAccountModal.status === 'PENDING' ? 'Pendiente de Validación' : 'Activo y Verificado'}`;
                       window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(text)}`, '_blank');
                     }}
                     className="btn-secondary"

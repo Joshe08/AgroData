@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { produccionesApi, fincasApi } from '@/lib/api';
 import { useToastStore } from '@/store/toastStore';
 import {
@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   Clock,
   BarChart2,
+  ListFilter,
+  PenTool,
 } from 'lucide-react';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { format } from 'date-fns';
@@ -60,6 +62,219 @@ const ESTADO_BADGES: Record<string, { bg: string; text: string; label: string }>
   ACTIVE: { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', label: 'Activo' },
 };
 
+// ─── Catálogos Agronómicos y Pecuarios del Cesar y Colombia ─────────────────
+
+interface CropPreset {
+  nombre: string;
+  variedades: string[];
+  unidadSugerida: string;
+  unidadesDisponibles: string[];
+  sistemaRiegoDefault: string;
+  duracionEstimadaMeses: number;
+}
+
+const CATALOGO_CULTIVOS: Record<string, CropPreset> = {
+  'Palma de Aceite': {
+    nombre: 'Palma de Aceite',
+    variedades: ['Híbrido OxG (Coari x Olifera)', 'Tenera (Deli x Nigeria)', 'Deli x Ghana', 'Deli x La Mé', 'Compacta'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Toneladas (RFF)', 'Kilos', 'Palmas sembradas'],
+    sistemaRiegoDefault: 'Secano',
+    duracionEstimadaMeses: 36,
+  },
+  'Arroz': {
+    nombre: 'Arroz',
+    variedades: ['Fedearroz 68', 'Fedearroz 400', 'Fedearroz 67', 'Fedearroz 2000', 'Llanero 1', 'Iniap 12'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Bultos (50 kg)', 'Toneladas', 'Kilos'],
+    sistemaRiegoDefault: 'Riego por gravedad / inundación',
+    duracionEstimadaMeses: 4,
+  },
+  'Maíz Tecnificado': {
+    nombre: 'Maíz Tecnificado',
+    variedades: ['Pioneer 30F35', 'Dekalb DK-7088', 'Advanta 9313', 'ICA V-109', 'Pioneer P3862', 'Semilla Certificada Local'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Toneladas', 'Bultos (50 kg)', 'Kilos'],
+    sistemaRiegoDefault: 'Secano',
+    duracionEstimadaMeses: 4,
+  },
+  'Café Especial': {
+    nombre: 'Café Especial',
+    variedades: ['Castillo (Resistente a Roya)', 'Cenicafé 1', 'Caturra', 'Variedad Colombia', 'Borbón Rosado', 'Tabi', 'Geisha'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Cargas (125 kg)', 'Arrobas (12.5 kg)', 'Kilos de Pergamino', 'Árboles'],
+    sistemaRiegoDefault: 'Secano',
+    duracionEstimadaMeses: 24,
+  },
+  'Yuca Industrial / Dulce': {
+    nombre: 'Yuca Industrial / Dulce',
+    variedades: ['ICA Costeña', 'M-Tai 8', 'Venezolana', 'Chirosa', 'Brava (Almidón)', 'Corpoica Tai'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Toneladas', 'Bultos (60 kg)', 'Kilos'],
+    sistemaRiegoDefault: 'Secano',
+    duracionEstimadaMeses: 10,
+  },
+  'Algodón': {
+    nombre: 'Algodón',
+    variedades: ['DeltaPine 1553', 'FiberMax 9180', 'Stoneville 4554', 'NuOPAL (Bollgard II)'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Toneladas de fibra', 'Kilos'],
+    sistemaRiegoDefault: 'Secano',
+    duracionEstimadaMeses: 6,
+  },
+  'Cacao': {
+    nombre: 'Cacao',
+    variedades: ['CCN-51', 'Fedecacao 2 (FSA 12)', 'ICS-95', 'TSH-565', 'Clon Criollo Fino de Aroma'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Kilos de grano seco', 'Toneladas', 'Árboles'],
+    sistemaRiegoDefault: 'Riego por goteo',
+    duracionEstimadaMeses: 30,
+  },
+  'Plátano / Banano': {
+    nombre: 'Plátano / Banano',
+    variedades: ['Hartón Común', 'Dominico Hartón', 'Guineo / Cuatrofilos', 'Cavitán', 'Banano Criollo'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Racimos', 'Kilos', 'Toneladas'],
+    sistemaRiegoDefault: 'Riego por goteo',
+    duracionEstimadaMeses: 11,
+  },
+  'Sorgo': {
+    nombre: 'Sorgo',
+    variedades: ['Sorgo Blanco JJ-T', 'Pioneer 85G46', 'ICA Niquía', 'Sorgo Forrajero'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Toneladas', 'Bultos (50 kg)'],
+    sistemaRiegoDefault: 'Secano',
+    duracionEstimadaMeses: 4,
+  },
+  'Mango / Frutales': {
+    nombre: 'Mango / Frutales',
+    variedades: ['Tommy Atkins', 'Keitt', 'Kent', 'Mango de Azúcar', 'Hilacha (Criollo)', 'Yulima'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Cajas (20 kg)', 'Toneladas', 'Árboles'],
+    sistemaRiegoDefault: 'Riego por goteo',
+    duracionEstimadaMeses: 36,
+  },
+  'Cítricos (Limón / Naranja)': {
+    nombre: 'Cítricos (Limón / Naranja)',
+    variedades: ['Limón Tahití', 'Naranja Valencia', 'Mandarina Oneco', 'Limón Mandarino Criollo'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Canastillas (25 kg)', 'Toneladas', 'Árboles'],
+    sistemaRiegoDefault: 'Riego por goteo',
+    duracionEstimadaMeses: 36,
+  },
+  'Hortalizas / Tomate / Ají': {
+    nombre: 'Hortalizas / Tomate / Ají',
+    variedades: ['Tomate Chonto', 'Tomate Milano', 'Pimentón Nathalie', 'Ají Topito dulce', 'Cebolla de Rama'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Canastillas', 'Kilos', 'Metros cuadrados'],
+    sistemaRiegoDefault: 'Riego por goteo',
+    duracionEstimadaMeses: 3,
+  },
+  'Pastos y Forrajes Tecnificados': {
+    nombre: 'Pastos y Forrajes Tecnificados',
+    variedades: ['Mombasa (Megathyrsus)', 'Tanzania', 'Brachiaria Decumbens', 'Brachiaria Brizantha (Marandú)', 'Pasto Cuba 22', 'Maralfalfa', 'Estrella Africana'],
+    unidadSugerida: 'Hectáreas',
+    unidadesDisponibles: ['Hectáreas', 'Toneladas de materia verde', 'Kilos'],
+    sistemaRiegoDefault: 'Secano',
+    duracionEstimadaMeses: 3,
+  },
+};
+
+const CATALOGO_GANADERIA = {
+  especies: [
+    { value: 'Bovino', label: 'Bovino (Ganado Vacuno)' },
+    { value: 'Bufalino', label: 'Bufalino (Búfalos de agua)' },
+    { value: 'Ovino', label: 'Ovino (Ovejas / Carneros de lana o pelo)' },
+    { value: 'Caprino', label: 'Caprino (Cabras)' },
+    { value: 'Equino', label: 'Equino / Mular (Caballos, Mulas)' },
+  ],
+  orientaciones: [
+    'Ceba / Engorde intensivo',
+    'Doble Propósito (Carne y Leche)',
+    'Lechería Especializada',
+    'Cría y Levante',
+    'Pie de Cría / Genética pura',
+  ],
+  razasPorEspecie: {
+    Bovino: [
+      'Brahman Blanco',
+      'Brahman Rojo',
+      'Gyr Lechero',
+      'Guzerá',
+      'Girolando (F1 Gyr x Holstein)',
+      'Costeño con Cuernos (Criollo Cesar)',
+      'Simmental / Simbrah',
+      'Angus / Brangus',
+      'Blanco Orejinegro (BON)',
+      'Cruce Comercial / 7 Colores',
+    ],
+    Bufalino: ['Murrah', 'Mediterráneo', 'Jafarabadi', 'Cruce comercial bufalino'],
+    Ovino: ['Pelibuey / Camuro Criollo', 'Katahdin', 'Dorper', 'Santa Inês'],
+    Caprino: ['Alpina', 'Saanen', 'Boer', 'Criolla Costeña / Santandereana'],
+    Equino: ['Criollo Colombiano', 'Cuarto de Milla', 'Mular de trabajo', 'Paso Fino'],
+  } as Record<string, string[]>,
+  sistemasPastoreo: [
+    'Pastoreo Rotacional con cerca eléctrica',
+    'Sistema Silvopastoril con árboles nativos',
+    'Pastoreo Continuo tradicional',
+    'Semi-estabulado (Pastoreo + Suplemento)',
+    'Estabulado completo (Confinamiento)',
+  ],
+  unidades: ['Cabezas / Animales', 'Lotes de animales', 'Litros de leche / día', 'Kilos en pie'],
+};
+
+const CATALOGO_PISCICULTURA = {
+  especies: [
+    'Tilapia Roja (Oreochromis)',
+    'Tilapia Negra / Nilótica',
+    'Cachama Blanca (Piaractus brachypomus)',
+    'Bocachico (Prochilodus magdalenae)',
+    'Trucha Arcoíris',
+    'Bagre Rayado / Yaque',
+    'Pirarucú',
+  ],
+  unidades: ['Alevinos / Peces', 'Kilos de pescado', 'Toneladas', 'Estanques'],
+};
+
+const CATALOGO_AVICULTURA = {
+  tipos: [
+    'Pollo de engorde',
+    'Gallina ponedora (Huevo comercial)',
+    'Pollo criollo / campesino',
+    'Codorniz',
+    'Pavo / Gallipavo',
+  ],
+  lineas: ['Ross 308', 'Cobb 500', 'Isa Brown', 'Hy-Line Brown', 'Lohmann Brown', 'Hubbard'],
+  unidades: ['Aves / Animales', 'Kilos de carne', 'Canastillas de huevo (30 docenas)'],
+};
+
+const CATALOGO_PORCICULTURA = {
+  explotaciones: [
+    'Ceba / Engorde intensivo',
+    'Cría y Venta de Lechones',
+    'Ciclo Completo (Cría, Levante y Ceba)',
+  ],
+  razas: ['Pietrain x Duroc', 'Landrace x Large White', 'PIC Comercial', 'F1 Landrace x Pietrain', 'Criollo Zungo'],
+  unidades: ['Cerdos / Animales', 'Kilos en pie', 'Canales'],
+};
+
+const CATALOGO_APICULTURA = {
+  especies: [
+    'Apis mellifera (Africanizada)',
+    'Apis mellifera (Europea / Italiana)',
+    'Meliponas (Abejas nativas sin aguijón)',
+  ],
+  propositos: [
+    'Miel de abejas',
+    'Polen',
+    'Propóleo',
+    'Cera pura',
+    'Polinización de cultivos',
+    'Venta de núcleos y reinas',
+  ],
+  unidades: ['Colmenas activas', 'Kilos de miel', 'Litros de miel'],
+};
+
 function ProduccionModal({
   prod,
   fincas,
@@ -82,12 +297,20 @@ function ProduccionModal({
   const [loadingLotes, setLoadingLotes] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Modo de ingreso: 'CATALOGO' (lista de selección) vs 'MANUAL' (entrada escrita libre)
+  const [modoIngreso, setModoIngreso] = useState<'CATALOGO' | 'MANUAL'>('CATALOGO');
+
   // Dynamic parameters by domain
   const [agri, setAgri] = useState({
-    cultivo: prod?.metadata?.cultivo || prod?.variedad || '',
-    variedad: prod?.metadata?.variedad || '',
+    cultivoPreset: prod?.metadata?.cultivo && CATALOGO_CULTIVOS[prod.metadata.cultivo] ? prod.metadata.cultivo : 'Palma de Aceite',
+    cultivoManual: prod?.metadata?.cultivo || prod?.variedad || '',
+    variedad: prod?.metadata?.variedad || (CATALOGO_CULTIVOS['Palma de Aceite']?.variedades[0] || ''),
+    variedadManual: '',
+    usarVariedadManual: false,
     areaSembrada: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
     unidad: prod?.unidadMedida || 'Hectáreas',
+    usarUnidadManual: false,
+    unidadManual: '',
     fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
     fechaCosecha: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
     sistemaCultivo: prod?.metadata?.sistemaCultivo || 'Secano',
@@ -95,8 +318,11 @@ function ProduccionModal({
   });
 
   const [cafe, setCafe] = useState({
-    variedad: prod?.metadata?.variedadCafe || 'Castillo',
+    variedad: prod?.metadata?.variedadCafe || 'Castillo (Resistente a Roya)',
+    variedadManual: '',
+    usarVariedadManual: false,
     area: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
+    unidad: prod?.unidadMedida || 'Hectáreas',
     numArboles: prod?.metadata?.numArboles || '',
     densidad: prod?.metadata?.densidad || '5000 árboles/ha',
     fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -106,17 +332,27 @@ function ProduccionModal({
 
   const [ganado, setGanado] = useState({
     especie: prod?.metadata?.especie || 'Bovino',
-    proposito: prod?.metadata?.proposito || 'Doble Propósito',
-    raza: prod?.metadata?.raza || 'Brahman / Gyr',
+    especieManual: '',
+    usarEspecieManual: false,
+    proposito: prod?.metadata?.proposito || 'Doble Propósito (Carne y Leche)',
+    propositoManual: '',
+    usarPropositoManual: false,
+    raza: prod?.metadata?.raza || 'Brahman Blanco',
+    razaManual: '',
+    usarRazaManual: false,
     cantidadCabezas: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
+    unidad: prod?.unidadMedida || 'Cabezas / Animales',
     pesoPromedioInicial: prod?.metadata?.pesoPromedioInicial || '',
     sistemaPastoreo: prod?.metadata?.sistemaPastoreo || 'Pastoreo Rotacional con cerca eléctrica',
     fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
   });
 
   const [pesca, setPesca] = useState({
-    especie: prod?.metadata?.especiePez || 'Tilapia roja',
+    especie: prod?.metadata?.especiePez || 'Tilapia Roja (Oreochromis)',
+    especieManual: '',
+    usarEspecieManual: false,
     cantidadAlevinos: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
+    unidad: prod?.unidadMedida || 'Alevinos / Peces',
     pesoInicialGramos: prod?.metadata?.pesoInicialGramos || '',
     pesoObjetivoGramos: prod?.metadata?.pesoObjetivoGramos || '500',
     densidadPecesM2: prod?.metadata?.densidadPecesM2 || '',
@@ -128,8 +364,13 @@ function ProduccionModal({
   const [aves, setAves] = useState({
     galpon: prod?.metadata?.galpon || '',
     tipoAve: prod?.metadata?.tipoAve || 'Pollo de engorde',
+    tipoAveManual: '',
+    usarTipoAveManual: false,
     lineaRaza: prod?.metadata?.lineaRaza || 'Ross 308',
+    lineaRazaManual: '',
+    usarLineaManual: false,
     cantidad: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
+    unidad: prod?.unidadMedida || 'Aves / Animales',
     fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
     fechaSalida: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
     produccionEsperada: prod?.metadata?.produccionEsperada || '',
@@ -138,13 +379,31 @@ function ProduccionModal({
 
   const [porcinos, setPorcinos] = useState({
     corral: prod?.metadata?.corral || '',
-    tipoExplotacion: prod?.metadata?.tipoExplotacion || 'Ceba / Engorde',
-    lineaRaza: prod?.metadata?.lineaRaza || 'Pietrain / Landrace',
+    tipoExplotacion: prod?.metadata?.tipoExplotacion || 'Ceba / Engorde intensivo',
+    tipoExplotacionManual: '',
+    usarExplotacionManual: false,
+    lineaRaza: prod?.metadata?.lineaRaza || 'Pietrain x Duroc',
+    lineaRazaManual: '',
+    usarRazaManual: false,
     cantidad: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
+    unidad: prod?.unidadMedida || 'Cerdos / Animales',
     pesoInicialKg: prod?.metadata?.pesoInicialKg || '25',
     pesoObjetivoKg: prod?.metadata?.pesoObjetivoKg || '105',
     fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
     fechaSalida: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
+  });
+
+  const [apic, setApic] = useState({
+    tipoAbeja: prod?.metadata?.tipoAbeja || 'Apis mellifera (Africanizada)',
+    tipoAbejaManual: '',
+    usarTipoAbejaManual: false,
+    numColmenas: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
+    unidad: prod?.unidadMedida || 'Colmenas activas',
+    proposito: prod?.metadata?.proposito || 'Miel de abejas',
+    floraPredominante: prod?.metadata?.floraPredominante || '',
+    fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
+    fechaCosecha: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
+    kilosEstimados: prod?.metadata?.kilosEstimados || '',
   });
 
   const [otra, setOtra] = useState({
@@ -156,15 +415,29 @@ function ProduccionModal({
     descripcion: prod?.metadata?.descripcion || '',
   });
 
-  const [apic, setApic] = useState({
-    tipoAbeja: prod?.metadata?.tipoAbeja || 'Apis mellifera (Africanizada)',
-    numColmenas: prod?.cantidadSembrada ? String(prod.cantidadSembrada) : '',
-    proposito: prod?.metadata?.proposito || 'Miel',
-    floraPredominante: prod?.metadata?.floraPredominante || '',
-    fechaInicio: prod?.fechaInicio?.split('T')[0] || new Date().toISOString().split('T')[0],
-    fechaCosecha: prod?.fechaEstimadaCosecha?.split('T')[0] || '',
-    kilosEstimados: prod?.metadata?.kilosEstimados || '',
-  });
+  // Actualizar datos del cultivo cuando cambia el preset
+  const handleCultivoPresetChange = (presetName: string) => {
+    const selected = CATALOGO_CULTIVOS[presetName];
+    if (selected) {
+      setAgri((prev) => {
+        // Calcular fecha estimada de cosecha si no está fijada
+        let nuevaCosecha = prev.fechaCosecha;
+        if (!nuevaCosecha && prev.fechaInicio && selected.duracionEstimadaMeses) {
+          const d = new Date(prev.fechaInicio);
+          d.setMonth(d.getMonth() + selected.duracionEstimadaMeses);
+          nuevaCosecha = d.toISOString().split('T')[0];
+        }
+        return {
+          ...prev,
+          cultivoPreset: presetName,
+          variedad: selected.variedades[0] || '',
+          unidad: selected.unidadSugerida,
+          sistemaCultivo: selected.sistemaRiegoDefault,
+          fechaCosecha: nuevaCosecha,
+        };
+      });
+    }
+  };
 
   // Load lotes when fincaId changes
   const fetchLotes = useCallback(async (fId: string | number) => {
@@ -221,55 +494,109 @@ function ProduccionModal({
       let metadata: Record<string, any> = {};
 
       if (tipo === 'AGRICULTURA') {
-        name = `${agri.cultivo || 'Cultivo'} - ${agri.variedad || 'Lote'}`;
+        const cultivoFinal = modoIngreso === 'CATALOGO' ? agri.cultivoPreset : (agri.cultivoManual.trim() || 'Cultivo');
+        const variedadFinal = agri.usarVariedadManual || modoIngreso === 'MANUAL'
+          ? (agri.variedadManual.trim() || agri.variedad)
+          : agri.variedad;
+        const unidadFinal = agri.usarUnidadManual ? agri.unidadManual : agri.unidad;
+
+        name = `${cultivoFinal} - ${variedadFinal || 'Lote'}`;
         startDate = agri.fechaInicio;
         endDate = agri.fechaCosecha || undefined;
         expectedYield = agri.areaSembrada ? parseFloat(agri.areaSembrada) : undefined;
-        unit = agri.unidad;
-        metadata = { ...agri, tipoProduccion: 'AGRICULTURA' };
+        unit = unidadFinal;
+        metadata = {
+          ...agri,
+          cultivo: cultivoFinal,
+          variedad: variedadFinal,
+          unidad: unidadFinal,
+          tipoProduccion: 'AGRICULTURA',
+        };
       } else if (tipo === 'CAFICULTURA') {
-        name = `Café ${cafe.variedad}`;
+        const variedadFinal = cafe.usarVariedadManual || modoIngreso === 'MANUAL'
+          ? (cafe.variedadManual.trim() || cafe.variedad)
+          : cafe.variedad;
+
+        name = `Café ${variedadFinal}`;
         startDate = cafe.fechaInicio;
         endDate = cafe.fechaCosecha || undefined;
         expectedYield = cafe.area ? parseFloat(cafe.area) : undefined;
-        unit = 'Hectáreas';
-        metadata = { ...cafe, tipoProduccion: 'CAFICULTURA' };
+        unit = cafe.unidad || 'Hectáreas';
+        metadata = { ...cafe, variedad: variedadFinal, tipoProduccion: 'CAFICULTURA' };
       } else if (tipo === 'GANADERIA') {
-        name = `${ganado.especie} - ${ganado.proposito}`;
+        const especieFinal = ganado.usarEspecieManual || modoIngreso === 'MANUAL'
+          ? (ganado.especieManual.trim() || ganado.especie)
+          : ganado.especie;
+        const propositoFinal = ganado.usarPropositoManual || modoIngreso === 'MANUAL'
+          ? (ganado.propositoManual.trim() || ganado.proposito)
+          : ganado.proposito;
+        const razaFinal = ganado.usarRazaManual || modoIngreso === 'MANUAL'
+          ? (ganado.razaManual.trim() || ganado.raza)
+          : ganado.raza;
+
+        name = `${especieFinal} - ${propositoFinal}`;
         startDate = ganado.fechaInicio;
         expectedYield = ganado.cantidadCabezas ? parseFloat(ganado.cantidadCabezas) : undefined;
-        unit = 'Cabezas';
-        metadata = { ...ganado, tipoProduccion: 'GANADERIA' };
+        unit = ganado.unidad;
+        metadata = {
+          ...ganado,
+          especie: especieFinal,
+          proposito: propositoFinal,
+          raza: razaFinal,
+          tipoProduccion: 'GANADERIA',
+        };
       } else if (tipo === 'PISCICULTURA') {
-        name = `Piscicultura ${pesca.especie}`;
+        const especieFinal = pesca.usarEspecieManual || modoIngreso === 'MANUAL'
+          ? (pesca.especieManual.trim() || pesca.especie)
+          : pesca.especie;
+
+        name = `Piscicultura ${especieFinal}`;
         startDate = pesca.fechaSiembra;
         endDate = pesca.fechaCosecha || undefined;
         expectedYield = pesca.cantidadAlevinos ? parseFloat(pesca.cantidadAlevinos) : undefined;
-        unit = 'Alevinos / Peces';
-        metadata = { ...pesca, tipoProduccion: 'PISCICULTURA' };
+        unit = pesca.unidad;
+        metadata = { ...pesca, especie: especieFinal, tipoProduccion: 'PISCICULTURA' };
+      } else if (tipo === 'AVICULTURA') {
+        const tipoAveFinal = aves.usarTipoAveManual || modoIngreso === 'MANUAL'
+          ? (aves.tipoAveManual.trim() || aves.tipoAve)
+          : aves.tipoAve;
+        const lineaFinal = aves.usarLineaManual || modoIngreso === 'MANUAL'
+          ? (aves.lineaRazaManual.trim() || aves.lineaRaza)
+          : aves.lineaRaza;
+
+        name = `Avicultura - ${tipoAveFinal} (${lineaFinal || 'Lote'})`;
+        startDate = aves.fechaInicio;
+        endDate = aves.fechaSalida || undefined;
+        expectedYield = aves.cantidad ? parseFloat(aves.cantidad) : undefined;
+        unit = aves.unidad;
+        metadata = { ...aves, tipoAve: tipoAveFinal, lineaRaza: lineaFinal, tipoProduccion: 'AVICULTURA' };
+      } else if (tipo === 'PORCICULTURA') {
+        const tipoFinal = porcinos.usarExplotacionManual || modoIngreso === 'MANUAL'
+          ? (porcinos.tipoExplotacionManual.trim() || porcinos.tipoExplotacion)
+          : porcinos.tipoExplotacion;
+        const razaFinal = porcinos.usarRazaManual || modoIngreso === 'MANUAL'
+          ? (porcinos.lineaRazaManual.trim() || porcinos.lineaRaza)
+          : porcinos.lineaRaza;
+
+        name = `Porcicultura - ${tipoFinal} (${razaFinal || 'Cerdos'})`;
+        startDate = porcinos.fechaInicio;
+        endDate = porcinos.fechaSalida || undefined;
+        expectedYield = porcinos.cantidad ? parseFloat(porcinos.cantidad) : undefined;
+        unit = porcinos.unidad;
+        metadata = { ...porcinos, tipoExplotacion: tipoFinal, lineaRaza: razaFinal, tipoProduccion: 'PORCICULTURA' };
       } else if (tipo === 'APICULTURA') {
+        const abejaFinal = apic.usarTipoAbejaManual || modoIngreso === 'MANUAL'
+          ? (apic.tipoAbejaManual.trim() || apic.tipoAbeja)
+          : apic.tipoAbeja;
+
         name = `Apiario - ${apic.numColmenas || '0'} Colmenas (${apic.proposito})`;
         startDate = apic.fechaInicio;
         endDate = apic.fechaCosecha || undefined;
         expectedYield = apic.numColmenas ? parseFloat(apic.numColmenas) : undefined;
-        unit = 'Colmenas';
-        metadata = { ...apic, tipoProduccion: 'APICULTURA' };
-      } else if (tipo === 'AVICULTURA') {
-        name = `Avicultura - ${aves.tipoAve} (${aves.lineaRaza || 'Lote'})`;
-        startDate = aves.fechaInicio;
-        endDate = aves.fechaSalida || undefined;
-        expectedYield = aves.cantidad ? parseFloat(aves.cantidad) : undefined;
-        unit = 'Aves';
-        metadata = { ...aves, tipoProduccion: 'AVICULTURA' };
-      } else if (tipo === 'PORCICULTURA') {
-        name = `Porcicultura - ${porcinos.tipoExplotacion} (${porcinos.lineaRaza || 'Cerdos'})`;
-        startDate = porcinos.fechaInicio;
-        endDate = porcinos.fechaSalida || undefined;
-        expectedYield = porcinos.cantidad ? parseFloat(porcinos.cantidad) : undefined;
-        unit = 'Cerdos';
-        metadata = { ...porcinos, tipoProduccion: 'PORCICULTURA' };
+        unit = apic.unidad;
+        metadata = { ...apic, tipoAbeja: abejaFinal, tipoProduccion: 'APICULTURA' };
       } else {
-        name = otra.nombreActividad || 'Actividad Agropecuaria';
+        name = otra.nombreActividad.trim() || 'Actividad Agropecuaria';
         startDate = otra.fechaInicio;
         endDate = otra.fechaFin || undefined;
         expectedYield = otra.cantidad ? parseFloat(otra.cantidad) : undefined;
@@ -308,20 +635,22 @@ function ProduccionModal({
     }
   };
 
+  const presetActual = CATALOGO_CULTIVOS[agri.cultivoPreset] || CATALOGO_CULTIVOS['Palma de Aceite'];
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-content"
-        style={{ maxWidth: 680, width: '92vw', maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ maxWidth: 700, width: '92vw', maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
           <div>
             <h2 className="font-display" style={{ fontSize: 20, fontWeight: 700 }}>
               {prod ? 'Editar Ciclo Productivo' : 'Iniciar Nueva Producción'}
             </h2>
             <p style={{ color: 'var(--color-text-muted)', fontSize: 13, marginTop: 2 }}>
-              Planificación técnica de cultivos, ganado o especies menores
+              Planificación técnica adaptativa para cultivos, ganadería o especies menores
             </p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4 }}>
@@ -330,7 +659,7 @@ function ProduccionModal({
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Base: Finca and Sector */}
+          {/* Base: Finca y Sector */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
@@ -350,7 +679,7 @@ function ProduccionModal({
 
             <div>
               <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                Tipo de Producción *
+                Sector de Producción *
               </label>
               <select
                 className="input-field"
@@ -377,7 +706,7 @@ function ProduccionModal({
                 Parcela, Lote o Potrero en {fincas.find(f => String(f.id) === String(fincaId))?.nombre || 'la finca'} *
               </label>
               <span style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>
-                {loadingLotes ? 'Cargando parcelas...' : `${lotes.length} parcelas encontradas`}
+                {loadingLotes ? 'Consultando parcelas...' : `${lotes.length} parcelas registradas`}
               </span>
             </div>
 
@@ -408,39 +737,140 @@ function ProduccionModal({
             </div>
           </div>
 
-          {/* DYNAMIC FORM 1: AGRICULTURA */}
+          {/* Selector de Modo: Catálogo (Lista) vs Entrada Manual */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '8px 12px',
+              borderRadius: 10,
+              background: 'rgba(16,185,129,0.06)',
+              border: '1px solid rgba(16,185,129,0.2)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {modoIngreso === 'CATALOGO' ? (
+                <ListFilter size={15} color="var(--color-primary)" />
+              ) : (
+                <PenTool size={15} color="var(--color-primary)" />
+              )}
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text)' }}>
+                Modo de Formulario: {modoIngreso === 'CATALOGO' ? 'Catálogo Preestablecido' : 'Ingreso Manual Libre'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button
+                type="button"
+                onClick={() => setModoIngreso('CATALOGO')}
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: modoIngreso === 'CATALOGO' ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
+                  color: modoIngreso === 'CATALOGO' ? '#ffffff' : 'var(--color-text-muted)',
+                }}
+              >
+                Catálogo (Lista)
+              </button>
+              <button
+                type="button"
+                onClick={() => setModoIngreso('MANUAL')}
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: modoIngreso === 'MANUAL' ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
+                  color: modoIngreso === 'MANUAL' ? '#ffffff' : 'var(--color-text-muted)',
+                }}
+              >
+                Manual (Texto Libre)
+              </button>
+            </div>
+          </div>
+
+          {/* ── 1. AGRICULTURA ────────────────────────────────────────────── */}
           {tipo === 'AGRICULTURA' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {modoIngreso === 'CATALOGO' ? (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                      Cultivo principal (Lista recomendada) *
+                    </label>
+                    <select
+                      className="input-field"
+                      value={agri.cultivoPreset}
+                      onChange={(e) => handleCultivoPresetChange(e.target.value)}
+                      required
+                    >
+                      {Object.keys(CATALOGO_CULTIVOS).map((cName) => (
+                        <option key={cName} value={cName}>{cName}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                      Cultivo principal (Manual) *
+                    </label>
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Ajonjolí, Malanga, Frijol caupí..."
+                      value={agri.cultivoManual}
+                      onChange={(e) => setAgri((a) => ({ ...a, cultivoManual: e.target.value }))}
+                      required
+                    />
+                  </div>
+                )}
+
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Cultivo principal *
-                  </label>
-                  <input
-                    className="input-field"
-                    placeholder="Ej: Arroz, Maíz tecnificado, Palma, Yuca"
-                    value={agri.cultivo}
-                    onChange={(e) => setAgri((a) => ({ ...a, cultivo: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Variedad / Híbrido
-                  </label>
-                  <input
-                    className="input-field"
-                    placeholder="Ej: Fedearroz 68, Pioneer 30F35"
-                    value={agri.variedad}
-                    onChange={(e) => setAgri((a) => ({ ...a, variedad: e.target.value }))}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Variedad / Híbrido
+                    </label>
+                    {modoIngreso === 'CATALOGO' && (
+                      <button
+                        type="button"
+                        onClick={() => setAgri((a) => ({ ...a, usarVariedadManual: !a.usarVariedadManual }))}
+                        style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        {agri.usarVariedadManual ? 'Elegir de lista' : '+ Escribir manual'}
+                      </button>
+                    )}
+                  </div>
+
+                  {modoIngreso === 'CATALOGO' && !agri.usarVariedadManual ? (
+                    <select
+                      className="input-field"
+                      value={agri.variedad}
+                      onChange={(e) => setAgri((a) => ({ ...a, variedad: e.target.value }))}
+                    >
+                      {presetActual.variedades.map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Variedad local, Semilla criolla..."
+                      value={agri.variedadManual}
+                      onChange={(e) => setAgri((a) => ({ ...a, variedadManual: e.target.value }))}
+                    />
+                  )}
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Área sembrada (Hectáreas) *
+                    Cantidad sembrada o programada *
                   </label>
                   <input
                     className="input-field"
@@ -453,9 +883,46 @@ function ProduccionModal({
                     required
                   />
                 </div>
+
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Unidad de medida *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setAgri((a) => ({ ...a, usarUnidadManual: !a.usarUnidadManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {agri.usarUnidadManual ? 'Ver opciones' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {agri.usarUnidadManual ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Bultos, Kilos, Hectáreas, Matas..."
+                      value={agri.unidadManual}
+                      onChange={(e) => setAgri((a) => ({ ...a, unidadManual: e.target.value }))}
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={agri.unidad}
+                      onChange={(e) => setAgri((a) => ({ ...a, unidad: e.target.value }))}
+                    >
+                      {(presetActual?.unidadesDisponibles || ['Hectáreas', 'Toneladas', 'Kilos', 'Bultos']).map((u) => (
+                        <option key={u} value={u}>{u}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Sistema de cultivo
+                    Sistema de cultivo / riego
                   </label>
                   <select
                     className="input-field"
@@ -465,8 +932,20 @@ function ProduccionModal({
                     <option value="Secano">Secano (temporal de lluvias)</option>
                     <option value="Riego por goteo">Riego por goteo</option>
                     <option value="Riego por gravedad / inundación">Riego por gravedad / inundación</option>
-                    <option value="Aspersión">Aspersión</option>
+                    <option value="Aspersión">Aspersión / Microaspersión</option>
                   </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
+                    Rendimiento estimado a cosecha
+                  </label>
+                  <input
+                    className="input-field"
+                    placeholder="Ej: 5.5 ton/ha, 80 bultos/ha..."
+                    value={agri.rendimientoEstimado}
+                    onChange={(e) => setAgri((a) => ({ ...a, rendimientoEstimado: e.target.value }))}
+                  />
                 </div>
               </div>
 
@@ -498,28 +977,45 @@ function ProduccionModal({
             </div>
           )}
 
-          {/* DYNAMIC FORM 2: CAFICULTURA */}
+          {/* ── 2. CAFICULTURA ────────────────────────────────────────────── */}
           {tipo === 'CAFICULTURA' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Variedad de Café *
-                  </label>
-                  <select
-                    className="input-field"
-                    value={cafe.variedad}
-                    onChange={(e) => setCafe((c) => ({ ...c, variedad: e.target.value }))}
-                  >
-                    <option value="Castillo">Castillo (resistente a roya)</option>
-                    <option value="Cenicafé 1">Cenicafé 1</option>
-                    <option value="Caturra">Caturra</option>
-                    <option value="Colombia">Variedad Colombia</option>
-                    <option value="Borbón">Borbón / Borbón Rosado</option>
-                    <option value="Tabi">Tabi</option>
-                    <option value="Geisha">Geisha (Café especial)</option>
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Variedad de Café *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setCafe((c) => ({ ...c, usarVariedadManual: !c.usarVariedadManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {cafe.usarVariedadManual ? 'Elegir de lista' : '+ Escribir manual'}
+                    </button>
+                  </div>
+
+                  {cafe.usarVariedadManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Borbón Chiroso, Papayo, Maragogipe..."
+                      value={cafe.variedadManual}
+                      onChange={(e) => setCafe((c) => ({ ...c, variedadManual: e.target.value }))}
+                      required
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={cafe.variedad}
+                      onChange={(e) => setCafe((c) => ({ ...c, variedad: e.target.value }))}
+                    >
+                      {CATALOGO_CULTIVOS['Café Especial'].variedades.map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
+
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
                     Área de lote (Hectáreas) *
@@ -591,43 +1087,124 @@ function ProduccionModal({
             </div>
           )}
 
-          {/* DYNAMIC FORM 3: GANADERIA */}
+          {/* ── 3. GANADERIA ────────────────────────────────────────────── */}
           {tipo === 'GANADERIA' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Especie *
-                  </label>
-                  <select
-                    className="input-field"
-                    value={ganado.especie}
-                    onChange={(e) => setGanado((g) => ({ ...g, especie: e.target.value }))}
-                  >
-                    <option value="Bovino">Bovino (Ganado vacuno)</option>
-                    <option value="Bufalino">Bufalino (Búfalos)</option>
-                    <option value="Ovino">Ovino (Ovejas / Carneros)</option>
-                    <option value="Caprino">Caprino (Cabras)</option>
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Especie animal *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setGanado((g) => ({ ...g, usarEspecieManual: !g.usarEspecieManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {ganado.usarEspecieManual ? 'Elegir de lista' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {ganado.usarEspecieManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Búfalos, Asnales, Camélidos..."
+                      value={ganado.especieManual}
+                      onChange={(e) => setGanado((g) => ({ ...g, especieManual: e.target.value }))}
+                      required
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={ganado.especie}
+                      onChange={(e) => {
+                        const esp = e.target.value;
+                        const razasDisponibles = CATALOGO_GANADERIA.razasPorEspecie[esp] || [];
+                        setGanado((g) => ({
+                          ...g,
+                          especie: esp,
+                          raza: razasDisponibles[0] || 'Cruce comercial',
+                        }));
+                      }}
+                    >
+                      {CATALOGO_GANADERIA.especies.map((item) => (
+                        <option key={item.value} value={item.value}>{item.label}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
+
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Orientación productiva *
-                  </label>
-                  <select
-                    className="input-field"
-                    value={ganado.proposito}
-                    onChange={(e) => setGanado((g) => ({ ...g, proposito: e.target.value }))}
-                  >
-                    <option value="Ceba / Carne">Ceba / Engorde (Carne)</option>
-                    <option value="Lechería">Lechería especializada</option>
-                    <option value="Doble Propósito">Doble Propósito (Carne y Leche)</option>
-                    <option value="Cría y Levante">Cría y Levante</option>
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Orientación productiva *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setGanado((g) => ({ ...g, usarPropositoManual: !g.usarPropositoManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {ganado.usarPropositoManual ? 'Elegir de lista' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {ganado.usarPropositoManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Recría de novillas, Producción de queso..."
+                      value={ganado.propositoManual}
+                      onChange={(e) => setGanado((g) => ({ ...g, propositoManual: e.target.value }))}
+                      required
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={ganado.proposito}
+                      onChange={(e) => setGanado((g) => ({ ...g, proposito: e.target.value }))}
+                    >
+                      {CATALOGO_GANADERIA.orientaciones.map((o) => (
+                        <option key={o} value={o}>{o}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Raza / Biotipo
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setGanado((g) => ({ ...g, usarRazaManual: !g.usarRazaManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {ganado.usarRazaManual ? 'Elegir de lista' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {ganado.usarRazaManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: F1 Senepol x Brahman, Criollo..."
+                      value={ganado.razaManual}
+                      onChange={(e) => setGanado((g) => ({ ...g, razaManual: e.target.value }))}
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={ganado.raza}
+                      onChange={(e) => setGanado((g) => ({ ...g, raza: e.target.value }))}
+                    >
+                      {(CATALOGO_GANADERIA.razasPorEspecie[ganado.especie] || ['Cruce Comercial']).map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
                     Cantidad de animales (cabezas) *
@@ -639,17 +1216,6 @@ function ProduccionModal({
                     value={ganado.cantidadCabezas}
                     onChange={(e) => setGanado((g) => ({ ...g, cantidadCabezas: e.target.value }))}
                     required
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Raza / Biotipo
-                  </label>
-                  <input
-                    className="input-field"
-                    placeholder="Ej: Brahman blanco, Gyr, F1 Angus"
-                    value={ganado.raza}
-                    onChange={(e) => setGanado((g) => ({ ...g, raza: e.target.value }))}
                   />
                 </div>
               </div>
@@ -664,12 +1230,12 @@ function ProduccionModal({
                     value={ganado.sistemaPastoreo}
                     onChange={(e) => setGanado((g) => ({ ...g, sistemaPastoreo: e.target.value }))}
                   >
-                    <option value="Pastoreo Rotacional">Pastoreo Rotacional intensivo</option>
-                    <option value="Silvopastoril">Sistema Silvopastoril</option>
-                    <option value="Pastoreo Continuo">Pastoreo Continuo</option>
-                    <option value="Estabulado / Confinamiento">Estabulado / Confinamiento</option>
+                    {CATALOGO_GANADERIA.sistemasPastoreo.map((sp) => (
+                      <option key={sp} value={sp}>{sp}</option>
+                    ))}
                   </select>
                 </div>
+
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
                     Fecha de ingreso al potrero *
@@ -686,26 +1252,45 @@ function ProduccionModal({
             </div>
           )}
 
-          {/* DYNAMIC FORM 4: PISCICULTURA */}
+          {/* ── 4. PISCICULTURA ────────────────────────────────────────────── */}
           {tipo === 'PISCICULTURA' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Especie *
-                  </label>
-                  <select
-                    className="input-field"
-                    value={pesca.especie}
-                    onChange={(e) => setPesca((p) => ({ ...p, especie: e.target.value }))}
-                  >
-                    <option value="Tilapia roja">Tilapia roja (Oreochromis)</option>
-                    <option value="Tilapia negra">Tilapia negra / Nilótica</option>
-                    <option value="Cachama blanca">Cachama blanca</option>
-                    <option value="Trucha arcoiris">Trucha arcoíris</option>
-                    <option value="Bocachico">Bocachico</option>
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Especie de pez *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setPesca((p) => ({ ...p, usarEspecieManual: !p.usarEspecieManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {pesca.usarEspecieManual ? 'Elegir de lista' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {pesca.usarEspecieManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Yamú, Carpa, Sábalo..."
+                      value={pesca.especieManual}
+                      onChange={(e) => setPesca((p) => ({ ...p, especieManual: e.target.value }))}
+                      required
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={pesca.especie}
+                      onChange={(e) => setPesca((p) => ({ ...p, especie: e.target.value }))}
+                    >
+                      {CATALOGO_PISCICULTURA.especies.map((sp) => (
+                        <option key={sp} value={sp}>{sp}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
+
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
                     Cantidad sembrada (alevinos) *
@@ -777,35 +1362,77 @@ function ProduccionModal({
             </div>
           )}
 
-          {/* DYNAMIC FORM 5: AVICULTURA */}
+          {/* ── 5. AVICULTURA ────────────────────────────────────────────── */}
           {tipo === 'AVICULTURA' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Tipo de ave *
-                  </label>
-                  <select
-                    className="input-field"
-                    value={aves.tipoAve}
-                    onChange={(e) => setAves((a) => ({ ...a, tipoAve: e.target.value }))}
-                  >
-                    <option value="Pollo de engorde">Pollo de engorde</option>
-                    <option value="Gallina ponedora">Gallina ponedora (Huevos)</option>
-                    <option value="Codorniz">Codorniz</option>
-                    <option value="Pavo">Pavo / Gallipavo</option>
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Tipo de ave *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setAves((a) => ({ ...a, usarTipoAveManual: !a.usarTipoAveManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {aves.usarTipoAveManual ? 'Elegir de lista' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {aves.usarTipoAveManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Patos, Gansos, Avestruces..."
+                      value={aves.tipoAveManual}
+                      onChange={(e) => setAves((a) => ({ ...a, tipoAveManual: e.target.value }))}
+                      required
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={aves.tipoAve}
+                      onChange={(e) => setAves((a) => ({ ...a, tipoAve: e.target.value }))}
+                    >
+                      {CATALOGO_AVICULTURA.tipos.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
+
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Línea genética / Raza
-                  </label>
-                  <input
-                    className="input-field"
-                    placeholder="Ej: Ross 308, Cobb 500, Hy-Line Brown"
-                    value={aves.lineaRaza}
-                    onChange={(e) => setAves((a) => ({ ...a, lineaRaza: e.target.value }))}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Línea genética / Raza
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setAves((a) => ({ ...a, usarLineaManual: !a.usarLineaManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {aves.usarLineaManual ? 'Elegir de lista' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {aves.usarLineaManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Criolla campesina, Rhode Island..."
+                      value={aves.lineaRazaManual}
+                      onChange={(e) => setAves((a) => ({ ...a, lineaRazaManual: e.target.value }))}
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={aves.lineaRaza}
+                      onChange={(e) => setAves((a) => ({ ...a, lineaRaza: e.target.value }))}
+                    >
+                      {CATALOGO_AVICULTURA.lineas.map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
 
@@ -851,7 +1478,7 @@ function ProduccionModal({
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Fecha estimada de salida / beneficio
+                    Fecha estimada de beneficio / salida
                   </label>
                   <input
                     className="input-field"
@@ -864,34 +1491,77 @@ function ProduccionModal({
             </div>
           )}
 
-          {/* DYNAMIC FORM 6: PORCICULTURA */}
+          {/* ── 6. PORCICULTURA ────────────────────────────────────────────── */}
           {tipo === 'PORCICULTURA' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Orientación productiva *
-                  </label>
-                  <select
-                    className="input-field"
-                    value={porcinos.tipoExplotacion}
-                    onChange={(e) => setPorcinos((p) => ({ ...p, tipoExplotacion: e.target.value }))}
-                  >
-                    <option value="Ceba / Engorde">Ceba / Engorde</option>
-                    <option value="Cría y Lechones">Cría y Venta de Lechones</option>
-                    <option value="Ciclo Completo">Ciclo Completo</option>
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Orientación productiva *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setPorcinos((p) => ({ ...p, usarExplotacionManual: !p.usarExplotacionManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {porcinos.usarExplotacionManual ? 'Elegir de lista' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {porcinos.usarExplotacionManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Producción de lechones destetados..."
+                      value={porcinos.tipoExplotacionManual}
+                      onChange={(e) => setPorcinos((p) => ({ ...p, tipoExplotacionManual: e.target.value }))}
+                      required
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={porcinos.tipoExplotacion}
+                      onChange={(e) => setPorcinos((p) => ({ ...p, tipoExplotacion: e.target.value }))}
+                    >
+                      {CATALOGO_PORCICULTURA.explotaciones.map((exp) => (
+                        <option key={exp} value={exp}>{exp}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
+
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Raza / Cruzamiento
-                  </label>
-                  <input
-                    className="input-field"
-                    placeholder="Ej: Pietrain x Duroc, Landrace"
-                    value={porcinos.lineaRaza}
-                    onChange={(e) => setPorcinos((p) => ({ ...p, lineaRaza: e.target.value }))}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Raza / Cruzamiento
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setPorcinos((p) => ({ ...p, usarRazaManual: !p.usarRazaManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {porcinos.usarRazaManual ? 'Elegir de lista' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {porcinos.usarRazaManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Duroc puro, Hampshire, Criollo..."
+                      value={porcinos.lineaRazaManual}
+                      onChange={(e) => setPorcinos((p) => ({ ...p, lineaRazaManual: e.target.value }))}
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={porcinos.lineaRaza}
+                      onChange={(e) => setPorcinos((p) => ({ ...p, lineaRaza: e.target.value }))}
+                    >
+                      {CATALOGO_PORCICULTURA.razas.map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
 
@@ -925,35 +1595,6 @@ function ProduccionModal({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Peso inicial prom. (kg)
-                  </label>
-                  <input
-                    className="input-field"
-                    type="number"
-                    step="0.5"
-                    placeholder="Ej: 25"
-                    value={porcinos.pesoInicialKg}
-                    onChange={(e) => setPorcinos((p) => ({ ...p, pesoInicialKg: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Peso objetivo (kg)
-                  </label>
-                  <input
-                    className="input-field"
-                    type="number"
-                    step="0.5"
-                    placeholder="Ej: 105"
-                    value={porcinos.pesoObjetivoKg}
-                    onChange={(e) => setPorcinos((p) => ({ ...p, pesoObjetivoKg: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
                     Fecha de ingreso / inicio ceba *
                   </label>
                   <input
@@ -979,24 +1620,45 @@ function ProduccionModal({
             </div>
           )}
 
-          {/* DYNAMIC FORM 6: APICULTURA */}
+          {/* ── 7. APICULTURA ────────────────────────────────────────────── */}
           {tipo === 'APICULTURA' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Tipo / Especie de abeja *
-                  </label>
-                  <select
-                    className="input-field"
-                    value={apic.tipoAbeja}
-                    onChange={(e) => setApic((a) => ({ ...a, tipoAbeja: e.target.value }))}
-                  >
-                    <option value="Apis mellifera (Africanizada)">Apis mellifera (Africanizada)</option>
-                    <option value="Apis mellifera (Europea/Italiana)">Apis mellifera (Europea/Italiana)</option>
-                    <option value="Meliponas (Sin aguijón)">Meliponas (Sin aguijón)</option>
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                      Especie de abeja *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setApic((a) => ({ ...a, usarTipoAbejaManual: !a.usarTipoAbejaManual }))}
+                      style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      {apic.usarTipoAbejaManual ? 'Elegir de lista' : '+ Manual'}
+                    </button>
+                  </div>
+
+                  {apic.usarTipoAbejaManual || modoIngreso === 'MANUAL' ? (
+                    <input
+                      className="input-field"
+                      placeholder="Ej: Tetragonisca angustula (Angelita)..."
+                      value={apic.tipoAbejaManual}
+                      onChange={(e) => setApic((a) => ({ ...a, tipoAbejaManual: e.target.value }))}
+                      required
+                    />
+                  ) : (
+                    <select
+                      className="input-field"
+                      value={apic.tipoAbeja}
+                      onChange={(e) => setApic((a) => ({ ...a, tipoAbeja: e.target.value }))}
+                    >
+                      {CATALOGO_APICULTURA.especies.map((sp) => (
+                        <option key={sp} value={sp}>{sp}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
+
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
                     Propósito productivo
@@ -1006,12 +1668,9 @@ function ProduccionModal({
                     value={apic.proposito}
                     onChange={(e) => setApic((a) => ({ ...a, proposito: e.target.value }))}
                   >
-                    <option value="Miel">Miel de abejas</option>
-                    <option value="Polen">Polen</option>
-                    <option value="Propóleo">Propóleo</option>
-                    <option value="Cera">Cera</option>
-                    <option value="Polinización">Servicio de Polinización</option>
-                    <option value="Núcleos">Venta de Núcleos / Reinas</option>
+                    {CATALOGO_APICULTURA.propositos.map((pr) => (
+                      <option key={pr} value={pr}>{pr}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1047,7 +1706,7 @@ function ProduccionModal({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                    Fecha de postura / inicio *
+                    Fecha de inicio *
                   </label>
                   <input
                     className="input-field"
@@ -1069,24 +1728,10 @@ function ProduccionModal({
                   />
                 </div>
               </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 6, fontWeight: 500 }}>
-                  Producción estimada (kg de miel por ciclo)
-                </label>
-                <input
-                  className="input-field"
-                  type="number"
-                  step="0.1"
-                  placeholder="Ej: 350"
-                  value={apic.kilosEstimados}
-                  onChange={(e) => setApic((a) => ({ ...a, kilosEstimados: e.target.value }))}
-                />
-              </div>
             </div>
           )}
 
-          {/* DYNAMIC FORM 8: OTRA ACTIVIDAD */}
+          {/* ── 8. OTRA ACTIVIDAD PRODUCTIVA ──────────────────────────────── */}
           {tipo === 'OTRA' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
@@ -1095,7 +1740,7 @@ function ProduccionModal({
                 </label>
                 <input
                   className="input-field"
-                  placeholder="Ej: Silvopastoreo maderable, Lombricultura, Forraje hidropónico"
+                  placeholder="Ej: Silvopastoreo maderable, Lombricultura, Forraje hidropónico..."
                   value={otra.nombreActividad}
                   onChange={(e) => setOtra((o) => ({ ...o, nombreActividad: e.target.value }))}
                   required
@@ -1121,7 +1766,7 @@ function ProduccionModal({
                   </label>
                   <input
                     className="input-field"
-                    placeholder="Ej: Toneladas, Litros, Kilos, Árboles"
+                    placeholder="Ej: Toneladas, Litros, Kilos, Árboles..."
                     value={otra.unidad}
                     onChange={(e) => setOtra((o) => ({ ...o, unidad: e.target.value }))}
                   />
@@ -1238,7 +1883,6 @@ export default function ProduccionesPage() {
       if (prodsRes.status === 'rejected') {
         const err = prodsRes.reason;
         console.error('Error al cargar producciones:', err);
-        // Only show toast if it was a real failure (not an empty list)
         if (err?.response?.status && err.response.status !== 404) {
           useToastStore.getState().error('No se pudieron cargar los ciclos de producción.');
         }
@@ -1353,6 +1997,7 @@ export default function ProduccionesPage() {
           <option value="AVICULTURA">Avicultura</option>
           <option value="PORCICULTURA">Porcicultura</option>
           <option value="APICULTURA">Apicultura</option>
+          <option value="OTRA">Otra Actividad</option>
         </select>
 
         <select
