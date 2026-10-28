@@ -32,6 +32,8 @@ import MapPicker from '@/components/maps/MapPicker';
 import FincaParcelasMap from '@/components/maps/FincaParcelasMap';
 import FincaPerimeterDrawer from '@/components/maps/FincaPerimeterDrawer';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
+import SearchableSelect from '@/components/common/SearchableSelect';
+import { COLOMBIA_GEO, findDepartamentoGeo, findMunicipioGeo } from '@/lib/geoColombia';
 
 const TIPOS_EXPLOTACION = [
   { value: 'MIXTA', label: 'Mixta (Agrícola y Pecuaria)' },
@@ -233,6 +235,59 @@ function FincaModal({
     }
   }, [finca]);
 
+  // Opciones de departamentos disponibles (con Cesar prioritario)
+  const departamentosOptions = useMemo(() => {
+    return COLOMBIA_GEO.map((d) => ({
+      label: d.nombre,
+      value: d.nombre,
+      subtitle: `${d.municipios.length} municipios`,
+    }));
+  }, []);
+
+  // Opciones de municipios según el departamento seleccionado
+  const municipiosOptions = useMemo(() => {
+    const dep = findDepartamentoGeo(form.departamento);
+    if (!dep) return [];
+    return dep.municipios.map((m) => ({
+      label: m.nombre,
+      value: m.nombre,
+      subtitle: `${m.lat.toFixed(4)}, ${m.lng.toFixed(4)}`,
+    }));
+  }, [form.departamento]);
+
+  // Al cambiar departamento: centrar coordenadas y actualizar municipios
+  const handleDepartamentoChange = (nuevoDep: string) => {
+    const depGeo = findDepartamentoGeo(nuevoDep);
+    if (depGeo) {
+      const primerMun = depGeo.municipios[0];
+      setForm((prev) => ({
+        ...prev,
+        departamento: depGeo.nombre,
+        municipio: primerMun ? primerMun.nombre : '',
+        latitude: primerMun ? String(primerMun.lat) : String(depGeo.lat),
+        longitude: primerMun ? String(primerMun.lng) : String(depGeo.lng),
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, departamento: nuevoDep }));
+    }
+  };
+
+  // Al cambiar municipio: actualizar coordenadas automáticamente para centrar el mapa
+  const handleMunicipioChange = (nuevoMun: string) => {
+    const munGeo = findMunicipioGeo(form.departamento, nuevoMun);
+    if (munGeo) {
+      setForm((prev) => ({
+        ...prev,
+        municipio: munGeo.nombre,
+        latitude: String(munGeo.lat),
+        longitude: String(munGeo.lng),
+      }));
+      useToastStore.getState().info(`Ubicación: ${munGeo.nombre}, ${form.departamento}. Mapa georreferenciado.`);
+    } else {
+      setForm((prev) => ({ ...prev, municipio: nuevoMun }));
+    }
+  };
+
   const toggleActividad = (id: string) => {
     setForm((prev) => {
       const exists = prev.actividades.includes(id);
@@ -427,31 +482,40 @@ function FincaModal({
             </div>
           </div>
 
-          {/* Ubicación Política */}
-          <div className="form-grid-3-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+          {/* Ubicación Política con Buscador Filtrable de Departamento y Municipio */}
+          <div className="form-grid-3-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Departamento</label>
-              <input
-                type="text"
-                className="input-field"
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 5 }}>
+                Departamento *
+              </label>
+              <SearchableSelect
+                options={departamentosOptions}
                 value={form.departamento}
-                onChange={(e) => setForm({ ...form, departamento: e.target.value })}
+                onChange={handleDepartamentoChange}
+                placeholder="Seleccionar departamento..."
+                searchPlaceholder="Buscar departamento (ej: Cesar)..."
               />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Municipio</label>
-              <input
-                type="text"
-                className="input-field"
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 5 }}>
+                Municipio *
+              </label>
+              <SearchableSelect
+                options={municipiosOptions}
                 value={form.municipio}
-                onChange={(e) => setForm({ ...form, municipio: e.target.value })}
+                onChange={handleMunicipioChange}
+                placeholder="Seleccionar municipio..."
+                searchPlaceholder="Buscar municipio (ej: Valledupar)..."
+                disabled={!form.departamento}
               />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Corregimiento / Vereda</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block', marginBottom: 5 }}>
+                Corregimiento / Vereda
+              </label>
               <input
                 type="text"
-                placeholder="Ej: Aguas Blancas"
+                placeholder="Ej: Aguas Blancas, Caracolí"
                 className="input-field"
                 value={form.vereda}
                 onChange={(e) => setForm({ ...form, vereda: e.target.value })}

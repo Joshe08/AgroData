@@ -467,68 +467,87 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
         </div>
       )}
 
-      {/* ── 2. ALERTAS DE OPERACIÓN (STOCK Y MAQUINARIA) ───────────────────── */}
-      <div style={{ marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {/* Alerta de Maquinaria */}
-        {((data.maquinariaMantenimiento || 0) > 0 || (data.maquinariaAveriada || 0) > 0) && (
-          <div
-            style={{
-              padding: '13px 18px',
-              background: (data.maquinariaAveriada || 0) > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
-              border: `1px solid ${(data.maquinariaAveriada || 0) > 0 ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)'}`,
-              borderRadius: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 12,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Wrench size={18} color={(data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24'} />
-              <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-                <strong style={{ color: (data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24' }}>
-                  Atención en Maquinaria:
-                </strong>{' '}
-                {(data.maquinariaMantenimiento || 0) + (data.maquinariaAveriada || 0)} equipo(s) requieren atención (
-                {(data.maquinariaMantenimiento || 0) > 0 && `${data.maquinariaMantenimiento} en mantenimiento`}
-                {(data.maquinariaMantenimiento || 0) > 0 && (data.maquinariaAveriada || 0) > 0 && ', '}
-                {(data.maquinariaAveriada || 0) > 0 && `${data.maquinariaAveriada} averiado(s)`}
-                ).
-              </span>
-            </div>
-            <a
-              href="/dashboard/maquinaria"
+      {/* ── 2. ALERTAS DE OPERACIÓN CONSOLIDADAS ──────────────────────────── */}
+      {(alertasInventario > 0 || (data.maquinariaMantenimiento || 0) > 0 || (data.maquinariaAveriada || 0) > 0) ? (
+        <div style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* Alerta de Maquinaria (única, concisa y directa) */}
+          {((data.maquinariaMantenimiento || 0) > 0 || (data.maquinariaAveriada || 0) > 0) && (
+            <div
               style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: (data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24',
-                textDecoration: 'underline',
+                padding: '12px 16px',
+                background: (data.maquinariaAveriada || 0) > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
+                border: `1px solid ${(data.maquinariaAveriada || 0) > 0 ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)'}`,
+                borderRadius: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 10,
               }}
             >
-              Gestionar maquinaria &rarr;
-            </a>
-          </div>
-        )}
-
-        {/* Alerta de Stock de Insumos */}
-        {alertasInventario > 0 ? (
-          <div style={{ padding: '13px 18px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <AlertTriangle size={18} color="#fbbf24" />
-              <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-                <strong style={{ color: '#fbbf24' }}>Atención:</strong> {alertasInventario} insumo(s) con stock mínimo crítico.
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Wrench size={17} color={(data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24'} />
+                <span style={{ fontSize: 13, color: 'var(--color-text)' }}>
+                  <strong style={{ color: (data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24' }}>
+                    Mantenimiento de Maquinaria:
+                  </strong>{' '}
+                  {(data.maquinariaMantenimiento || 0) + (data.maquinariaAveriada || 0)} equipo(s) requieren atención (
+                  {(data.maquinariaMantenimiento || 0) > 0 && `${data.maquinariaMantenimiento} en servicio`}
+                  {(data.maquinariaMantenimiento || 0) > 0 && (data.maquinariaAveriada || 0) > 0 && ', '}
+                  {(data.maquinariaAveriada || 0) > 0 && `${data.maquinariaAveriada} fuera de servicio`}
+                  ).
+                </span>
+              </div>
+              <a
+                href="/dashboard/maquinaria"
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: (data.maquinariaAveriada || 0) > 0 ? '#f87171' : '#fbbf24',
+                  textDecoration: 'none',
+                }}
+              >
+                Revisar maquinaria &rarr;
+              </a>
             </div>
-            <a href="/dashboard/inventario" style={{ fontSize: 12, fontWeight: 600, color: '#fbbf24', textDecoration: 'underline' }}>Ver insumos →</a>
-          </div>
-        ) : (!data.maquinariaMantenimiento && !data.maquinariaAveriada) ? (
-          <div style={{ padding: '12px 18px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Operaciones al día · Insumos, maquinaria y predios en condiciones normales.</span>
-          </div>
-        ) : null}
-      </div>
+          )}
+
+          {/* Alerta de Stock de Insumos */}
+          {alertasInventario > 0 && (
+            <div
+              style={{
+                padding: '12px 16px',
+                background: 'rgba(245,158,11,0.08)',
+                border: '1px solid rgba(245,158,11,0.25)',
+                borderRadius: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 10,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <AlertTriangle size={17} color="#fbbf24" />
+                <span style={{ fontSize: 13, color: 'var(--color-text)' }}>
+                  <strong style={{ color: '#fbbf24' }}>Stock Crítico:</strong> {alertasInventario} insumo(s) alcanzaron el nivel mínimo de bodega.
+                </span>
+              </div>
+              <a
+                href="/dashboard/inventario"
+                style={{ fontSize: 12, fontWeight: 600, color: '#fbbf24', textDecoration: 'none' }}
+              >
+                Ver inventario &rarr;
+              </a>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ marginBottom: 20, padding: '10px 16px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} />
+          <span style={{ fontSize: 12.5, color: 'var(--color-text-muted)' }}>Operaciones al día · Insumos, maquinaria y predios en condiciones normales.</span>
+        </div>
+      )}
 
       {/* ── 3. FILA PRINCIPAL: GRÁFICA FINANCIERA + CLIMA & AGROIA ─────────
               La gráfica ocupa el espacio principal; clima y AgroIA van en
@@ -663,82 +682,6 @@ function EjecutivoDashboard({ data }: { data: DashboardData }) {
           )}
         </div>
       </div>
-
-      {/* ── 4.5 SECCIÓN: MAQUINARIA QUE REQUIERE ATENCIÓN ────────────────── */}
-      {data.maquinariasEnAtencion && data.maquinariasEnAtencion.length > 0 && (
-        <div className="card" style={{ padding: '20px 24px', marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Wrench size={18} color="#fbbf24" />
-              </div>
-              <div>
-                <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>
-                  Maquinaria en Mantenimiento y Revisión
-                </h3>
-                <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                  Equipos en taller, fuera de servicio o con mantenimiento preventivo programado
-                </p>
-              </div>
-            </div>
-            <a
-              href="/dashboard/maquinaria"
-              style={{ fontSize: 12, color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
-            >
-              Gestionar maquinaria &rarr;
-            </a>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
-            {data.maquinariasEnAtencion.map((m) => {
-              const isDanado = m.estado === 'DAÑADO' || m.estado === 'DANADO';
-              const isMant = m.estado === 'MANTENIMIENTO';
-              const badgeColor = isDanado ? '#f87171' : isMant ? '#fbbf24' : '#60a5fa';
-              const badgeBg = isDanado ? 'rgba(239,68,68,0.12)' : isMant ? 'rgba(245,158,11,0.12)' : 'rgba(59,130,246,0.12)';
-              const label = isDanado ? 'Fuera de Servicio' : isMant ? 'En Mantenimiento' : 'Próximo a Servicio';
-
-              return (
-                <div
-                  key={m.id}
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: 10,
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>
-                      {m.nombre}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        padding: '2px 8px',
-                        borderRadius: 6,
-                        background: badgeBg,
-                        color: badgeColor,
-                      }}
-                    >
-                      {label}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-text-muted)' }}>
-                    <span>{m.tipo} · {m.finca?.nombre || 'Predio General'}</span>
-                    {m.proximoMantenimiento && (
-                      <span>Vence: {m.proximoMantenimiento.split('T')[0]}</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* ── 5. ACCESOS RÁPIDOS ────────────────────────────────────────────── */}
       <div className="card" style={{ padding: '20px 24px' }}>

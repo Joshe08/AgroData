@@ -131,6 +131,15 @@ export default function LeafletFincaPerimeterDrawerInner({
     }
   }, [initialPoints]);
 
+  // Reposicionar mapa dinámicamente si cambia el centro (al seleccionar departamento o municipio)
+  useEffect(() => {
+    if (mapInstanceRef.current && centerLat != null && centerLng != null && !isNaN(centerLat) && !isNaN(centerLng)) {
+      if (!pointsRef.current || pointsRef.current.length < 2) {
+        mapInstanceRef.current.flyTo([centerLat, centerLng], 14, { duration: 1 });
+      }
+    }
+  }, [centerLat, centerLng]);
+
   // Mantener refs sincronizadas (sin causar re-renders ni re-inits del mapa)
   useEffect(() => {
     pointsRef.current = points;

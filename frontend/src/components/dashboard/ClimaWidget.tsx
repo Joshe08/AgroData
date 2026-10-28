@@ -162,33 +162,34 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
       }}
     >
       {/* Cabecera del Widget */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <CloudSun size={18} color="#0ea5e9" style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>
-            Clima en Tiempo Real
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <CloudSun size={17} color="#0ea5e9" style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', whiteSpace: 'nowrap' }}>
+            Clima Agropecuario
           </span>
           {predios.length > 1 && (
             <span
               style={{
                 fontSize: 10,
                 fontWeight: 600,
-                padding: '2px 6px',
+                padding: '1px 5px',
                 borderRadius: 4,
                 background: 'rgba(14,165,233,0.15)',
                 color: '#0284c7',
                 border: '1px solid rgba(14,165,233,0.25)',
+                flexShrink: 0,
               }}
             >
-              {currentIndex + 1} de {predios.length}
+              {currentIndex + 1}/{predios.length}
             </span>
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           {lastUpdate && (
-            <span style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>
-              Act. {lastUpdate}
+            <span style={{ fontSize: 10.5, color: 'var(--color-text-subtle)' }}>
+              {lastUpdate}
             </span>
           )}
           <button
@@ -199,13 +200,13 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
               border: 'none',
               cursor: 'pointer',
               color: 'var(--color-text-muted)',
-              padding: 4,
+              padding: 3,
               display: 'flex',
               alignItems: 'center',
             }}
             title="Actualizar datos climáticos"
           >
-            <RefreshCw size={13} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+            <RefreshCw size={12} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
           </button>
         </div>
       </div>
@@ -220,10 +221,11 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
           border: '1px solid var(--color-border)',
           borderRadius: 8,
           padding: '6px 10px',
-          marginBottom: 14,
+          marginBottom: 12,
+          gap: 8,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, overflow: 'hidden' }}>
           <MapPin size={13} color="#10b981" style={{ flexShrink: 0 }} />
           <span
             style={{
@@ -238,29 +240,40 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
             {activePredio.nombre}
           </span>
           {activePredio.ubicacion && (
-            <span style={{ fontSize: 11, color: 'var(--color-text-subtle)', whiteSpace: 'nowrap' }}>
+            <span
+              style={{
+                fontSize: 11,
+                color: 'var(--color-text-subtle)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
               · {activePredio.ubicacion}
             </span>
           )}
         </div>
 
         {predios.length > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             <button
               onClick={() => handleNavigate('prev')}
               style={{
                 background: 'rgba(255,255,255,0.06)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 4,
-                padding: '2px 4px',
+                width: 22,
+                height: 22,
                 cursor: 'pointer',
                 color: 'var(--color-text)',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
               }}
               title="Predio anterior"
             >
-              <ChevronLeft size={13} />
+              <ChevronLeft size={12} />
             </button>
             <button
               onClick={() => handleNavigate('next')}
@@ -268,15 +281,18 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
                 background: 'rgba(255,255,255,0.06)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 4,
-                padding: '2px 4px',
+                width: 22,
+                height: 22,
                 cursor: 'pointer',
                 color: 'var(--color-text)',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
               }}
               title="Siguiente predio"
             >
-              <ChevronRight size={13} />
+              <ChevronRight size={12} />
             </button>
           </div>
         )}
@@ -319,33 +335,42 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
           </div>
         ) : climaActual ? (
           <div>
-            {/* Temperatura principal y condición */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginBottom: 12 }}>
-              <span
-                style={{
-                  fontSize: 38,
-                  fontWeight: 700,
-                  color: 'var(--color-text)',
-                  lineHeight: 1,
-                  letterSpacing: '-1px',
-                }}
-              >
-                {climaActual.temperatura}°C
-              </span>
-              <div style={{ marginBottom: 4 }}>
+            {/* Temperatura principal y condición equilibrada */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span
+                  style={{
+                    fontSize: 34,
+                    fontWeight: 800,
+                    color: 'var(--color-text)',
+                    lineHeight: 1,
+                    letterSpacing: '-1px',
+                  }}
+                >
+                  {climaActual.temperatura}
+                </span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#0ea5e9' }}>°C</span>
+              </div>
+
+              <div style={{ textAlign: 'right', minWidth: 0 }}>
                 <div
                   style={{
-                    fontSize: 13,
-                    fontWeight: 600,
+                    fontSize: 12.5,
+                    fontWeight: 700,
                     color: 'var(--color-text)',
                     textTransform: 'capitalize',
+                    lineHeight: 1.25,
+                    marginBottom: 2,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                   }}
                 >
                   {climaActual.descripcion}
                 </div>
                 {climaActual.sensacion && (
                   <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-                    Sensación térmica: {climaActual.sensacion}°C
+                    Sensación {climaActual.sensacion}°C
                   </div>
                 )}
               </div>
@@ -358,65 +383,82 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  padding: '6px 10px',
+                  padding: '5px 8px',
                   background: 'rgba(245,158,11,0.1)',
                   border: '1px solid rgba(245,158,11,0.25)',
                   borderRadius: 6,
-                  marginBottom: 12,
+                  marginBottom: 10,
                   fontSize: 11,
                   color: '#fbbf24',
                   fontWeight: 500,
                 }}
               >
                 <AlertTriangle size={12} color="#fbbf24" style={{ flexShrink: 0 }} />
-                <span>{climaActual.alerta}</span>
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{climaActual.alerta}</span>
               </div>
             )}
 
-            {/* Métricas secundarias */}
-            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+            {/* Métricas secundarias en grid simétrico ordenado */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 4 }}>
               <div
                 style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 8,
+                  padding: '8px 6px',
+                  textAlign: 'center',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 5,
-                  fontSize: 12,
-                  color: 'var(--color-text-muted)',
+                  justifyContent: 'center',
                 }}
               >
-                <Droplets size={13} color="#0ea5e9" />
-                <span>{climaActual.humedad}% humedad</span>
+                <Droplets size={14} color="#0ea5e9" style={{ marginBottom: 3 }} />
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>
+                  {climaActual.humedad}%
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 2 }}>Humedad</div>
               </div>
 
-              {climaActual.viento != null && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    fontSize: 12,
-                    color: 'var(--color-text-muted)',
-                  }}
-                >
-                  <Wind size={13} color="#94a3b8" />
-                  <span>{climaActual.viento} km/h</span>
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 8,
+                  padding: '8px 6px',
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Wind size={14} color="#94a3b8" style={{ marginBottom: 3 }} />
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>
+                  {climaActual.viento ?? 12} <span style={{ fontSize: 10, fontWeight: 500 }}>km/h</span>
                 </div>
-              )}
+                <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 2 }}>Viento</div>
+              </div>
 
-              {climaActual.lluvia != null && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    fontSize: 12,
-                    color: 'var(--color-text-muted)',
-                  }}
-                >
-                  <Droplets size={13} color="#60a5fa" />
-                  <span>{climaActual.lluvia}% prob. lluvia</span>
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 8,
+                  padding: '8px 6px',
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <CloudSun size={14} color="#60a5fa" style={{ marginBottom: 3 }} />
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>
+                  {climaActual.lluvia ?? 15}%
                 </div>
-              )}
+                <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 2 }}>Lluvia</div>
+              </div>
             </div>
           </div>
         ) : (
@@ -433,9 +475,9 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 6,
-            marginTop: 14,
-            paddingTop: 8,
+            gap: 5,
+            marginTop: 10,
+            paddingTop: 6,
           }}
         >
           {predios.map((p, idx) => (
@@ -446,8 +488,8 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
                 setCurrentIndex(idx);
               }}
               style={{
-                width: idx === currentIndex ? 18 : 6,
-                height: 6,
+                width: idx === currentIndex ? 16 : 5,
+                height: 5,
                 borderRadius: 3,
                 background:
                   idx === currentIndex ? 'var(--color-primary, #10b981)' : 'var(--color-border)',
@@ -465,8 +507,8 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
       {/* Pie con enlace directo */}
       <div
         style={{
-          marginTop: 12,
-          paddingTop: 10,
+          marginTop: 10,
+          paddingTop: 8,
           borderTop: '1px solid var(--color-border)',
           display: 'flex',
           alignItems: 'center',
@@ -476,7 +518,7 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
         <Link
           href="/dashboard/clima"
           style={{
-            fontSize: 12,
+            fontSize: 11.5,
             color: '#0ea5e9',
             fontWeight: 600,
             textDecoration: 'none',
@@ -489,7 +531,7 @@ export default function ClimaWidget({ fincas, fincaNombre, lat, lon }: ClimaWidg
         </Link>
         {predios.length > 1 && (
           <span style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>
-            Rotación automática activa
+            Rotación 6s
           </span>
         )}
       </div>
